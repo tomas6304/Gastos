@@ -1,7 +1,18 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>Libreta de Gastos</title>
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Gastos</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Gastos">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#f3f5f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d1412" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
 <style>
@@ -30,6 +41,8 @@
   --shadow:0 10px 30px rgba(0,0,0,.5); color-scheme:dark}
 
 html,body{height:100%}
+html{padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;overscroll-behavior-y:none}
 [hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;-webkit-tap-highlight-color:transparent}
 .app{max-width:520px;margin:0 auto;padding-inline:16px;padding-block:8px 180px}
@@ -187,7 +200,13 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .fact{display:flex;flex-direction:column;gap:2px;min-width:0}
 .fact .k{font-size:.75rem;color:var(--muted)}
 .fact .v{font-weight:600;overflow-wrap:anywhere}
+.data-tools{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:14px}
+.data-tools .lbl{font-size:.78rem;font-weight:600;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.ghost{border:1px solid var(--line);border-radius:12px;padding:12px;font-weight:600;font-size:.95rem;text-align:left;color:var(--ink)}
+.data-tools p{margin:0;font-size:.8rem;color:var(--muted);line-height:1.4}
 </style>
+</head>
+<body>
 
 <main class="app" id="app">
 <div class="tab" id="tab-gastos">
@@ -272,7 +291,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
         <option value="EUR">Euro (EUR)</option><option value="USD">Dólar (USD)</option>
       </select></div>
     <button class="primary" type="submit">Guardar ajustes</button>
-    <button class="link" type="button" id="export" hidden style="align-self:center;padding:8px">Exportar todos los gastos (CSV)</button>
+    <div class="data-tools">
+      <span class="lbl">Tus datos</span>
+      <button class="ghost" type="button" id="backup">Guardar copia de seguridad</button>
+      <button class="ghost" type="button" id="restore">Restaurar una copia</button>
+      <button class="ghost" type="button" id="export">Exportar a Excel (CSV)</button>
+      <input type="file" id="restore-file" accept="application/json,.json" hidden>
+      <p>Tus gastos se guardan solo en este iPhone. Guarda una copia de vez en cuando en Archivos o iCloud Drive para no perderlos.</p>
+    </div>
   </form>
 </div>
 
@@ -322,7 +348,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
     return Number.isFinite(n) ? Math.round(n * 100) / 100 : NaN;
   };
 
-  /* ---------- storage: claude db (synced, private) with local fallback ---------- */
+  /* ---------- storage: saved on this device (localStorage) ---------- */
   const LS_KEY = "gastos.v1";
   const local = {
     load() { try { const d = JSON.parse(localStorage.getItem(LS_KEY)); if (d) { expenses = d.expenses || []; Object.assign(settings, d.settings || {}); } } catch {} },
@@ -350,29 +376,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
     }
   };
 
-  async function connect() {
-    if (!window.claude?.use) { showNotice("local"); return; }
-    try {
-      const [db, user] = await Promise.all([claude.use("db"), claude.use("user")]);
-      const uid = user ? await user.id() : null;
-      if (!db || !uid) { showNotice("local"); return; }
-      const profile = db.doc("data/users/" + uid + "/profile");
-      const col = profile.collection("expenses");
-      remote = {profile, col};
-      profile.onSnapshot(s => { if (s.exists) { Object.assign(settings, s.data()); render(); } }, () => {});
-      col.onSnapshot(snap => {
-        expenses = snap.docs.map(d => ({id: d.id, ...d.data()}));
-        $("#notice").hidden = true;
-        render();
-      }, () => { remote = null; showNotice("local"); local.load(); render(); });
-      $("#export").hidden = !(await claude.use("downloads"));
-    } catch { remote = null; showNotice("local"); }
-  }
-  function showNotice(kind) {
-    const n = $("#notice");
-    n.textContent = kind === "local" ? "Tus gastos se guardan solo en este dispositivo. Inicia sesión en Claude para sincronizarlos." : "";
-    n.hidden = false;
-  }
+  // Ask the browser not to evict saved data (no-op where unsupported)
+  try { navigator.storage?.persist?.(); } catch {}
 
   /* ---------- render ---------- */
   let tab = "gastos";
@@ -528,12 +533,52 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
     catch { toast("No se pudieron guardar los ajustes"); }
   });
 
+  // Hand a file to iOS: the share sheet ("Guardar en Archivos") when available, else a normal download
+  async function saveFile(name, text, type) {
+    const file = new File([text], name, {type});
+    if (navigator.canShare && navigator.canShare({files: [file]})) {
+      try { await navigator.share({files: [file]}); return true; }
+      catch (e) { if (e.name === "AbortError") return false; }
+    }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(file); a.download = name;
+    document.body.append(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+    return true;
+  }
+
   $("#export").onclick = async () => {
-    const dl = await claude.use("downloads"); if (!dl) return;
-    const esc = s => `"${String(s ?? "").replace(/"/g, '""')}"`;
-    const rows = [["fecha","categoria","nota","importe","moneda"].join(","),
-      ...[...expenses].sort((a, b) => a.date.localeCompare(b.date)).map(e => [e.date, esc(catById(e.cat).name), esc(e.note), e.amount, settings.currency].join(","))];
-    try { await dl.save({filename: `gastos-${ymd(new Date())}.csv`, data: rows.join("\n")}); } catch {}
+    const q = s => `"${String(s ?? "").replace(/"/g, '""')}"`;
+    const rows = [["fecha","categoria","nota","importe","moneda"].join(";"),
+      ...[...expenses].sort((a, b) => a.date.localeCompare(b.date))
+        .map(e => [e.date, q(catById(e.cat).name), q(e.note), String(e.amount).replace(".", ","), settings.currency].join(";"))];
+    await saveFile(`gastos-${ymd(new Date())}.csv`, "﻿" + rows.join("\n"), "text/csv");
+  };
+
+  $("#backup").onclick = async () => {
+    const data = JSON.stringify({app: "gastos", version: 1, saved: new Date().toISOString(), settings, expenses}, null, 1);
+    if (await saveFile(`gastos-copia-${ymd(new Date())}.json`, data, "application/json")) toast("Copia lista");
+  };
+
+  $("#restore").onclick = () => $("#restore-file").click();
+  $("#restore-file").onchange = async ev => {
+    const f = ev.target.files[0]; ev.target.value = "";
+    if (!f) return;
+    try {
+      const d = JSON.parse(await f.text());
+      if (!Array.isArray(d.expenses)) throw new Error("bad");
+      const have = new Set(expenses.map(e => e.id));
+      const valid = d.expenses.filter(e => e && Number(e.amount) > 0 && /^\d{4}-\d{2}-\d{2}$/.test(e.date));
+      const fresh = valid.filter(e => !have.has(e.id))
+        .map(e => ({id: String(e.id || Date.now().toString(36) + Math.random().toString(36).slice(2, 6)),
+          amount: Number(e.amount), cat: CATS.some(c => c.id === e.cat) ? e.cat : "otros",
+          note: String(e.note || "").slice(0, 60), date: e.date, created: Number(e.created) || Date.now()}));
+      expenses = expenses.concat(fresh);
+      if (d.settings && !settings.budget) Object.assign(settings, {budget: Number(d.settings.budget) || 0, currency: d.settings.currency || settings.currency});
+      local.save(); render();
+      closeSheet($("#settings-sheet"));
+      toast(fresh.length ? `${fresh.length} gastos restaurados` : "Esa copia no tiene gastos nuevos");
+    } catch { toast("Ese archivo no es una copia de Gastos"); }
   };
 
   $("#add").onclick = () => openExpense(null);
@@ -852,8 +897,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   let startTab = "gastos";
   try { if (localStorage.getItem("gastos.tab") === "analisis") startTab = "analisis"; } catch {}
   setTab(startTab);
-  connect();
+
+  if ("serviceWorker" in navigator && location.protocol === "https:") {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
 })();
 </script>
-
-</body></html>
+</body>
+</html>
