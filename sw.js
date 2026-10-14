@@ -1,6 +1,6 @@
 // Lets Gastos open without internet. Bump VERSION when you upload a new index.html.
-const VERSION = "gastos-v1";
-const CORE = ["./", "index.html", "manifest.webmanifest", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png"];
+const VERSION = "gastos-v2";
+const CORE = ["./", "index.html", "manifest.webmanifest", "apple-touch-icon.png", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
