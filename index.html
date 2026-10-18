@@ -554,6 +554,24 @@ details ol{padding-left:20px;margin:8px 0 0}
   </div>
 
   <div class="set-group">
+    <span class="lbl">Apple Pay automático</span>
+    <div class="set-card">
+      <p class="hint">Cuando pagas con Apple Pay, un atajo del iPhone deja el pago en tu buzón de Cloudflare y la app lo anota sola al abrirse.</p>
+      <div class="field"><label for="ib-url">Dirección del buzón</label>
+        <input class="input" id="ib-url" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://gastos-buzon.tu-usuario.workers.dev"></div>
+      <div class="field"><label for="ib-token">Clave secreta</label>
+        <div class="inline"><input class="input num" id="ib-token" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Toca Generar">
+          <button type="button" class="alt" id="ib-gen">Generar</button><button type="button" id="ib-copy">Copiar</button></div></div>
+      <p class="hint">La misma clave va en Cloudflare (como secreto TOKEN) y en el atajo. No la compartas.</p>
+      <button class="ghost" type="button" id="ib-test">Probar conexión y buscar pagos</button>
+      <p class="hint" id="ib-status"></p>
+      <div class="field" id="ib-map-field" hidden><span class="lbl">Tus tarjetas de Apple Pay</span>
+        <div id="ib-map" style="display:flex;flex-direction:column;gap:10px"></div>
+        <p class="hint">Elige a qué tarjeta de crédito o cuenta corresponde cada tarjeta de Wallet, para que el gasto vaya al resumen o al saldo correcto.</p></div>
+    </div>
+  </div>
+
+  <div class="set-group">
     <span class="lbl">Seguridad</span>
     <div class="set-card">
       <div class="switch-row"><span>Bloquear con código<small>Te lo pide al abrir la app</small></span>
@@ -574,7 +592,7 @@ details ol{padding-left:20px;margin:8px 0 0}
       <p class="hint">Tus datos se guardan solo en este iPhone. Guarda una copia de vez en cuando en Archivos o iCloud Drive para no perderlos.</p>
     </div>
   </div>
-  <p class="foot">Gastos · versión 5</p>
+  <p class="foot">Gastos · versión 6</p>
 </div>
 </main>
 
@@ -936,7 +954,8 @@ details ol{padding-left:20px;margin:8px 0 0}
   let transfers = []; // {id, from, to, amount, toAmount, date, note}; from/to: account id, "card:<id>" or "asset:<id>"
   let assets = [];    // {id, kind, name, amount, tna, days, start, coin, qty, value, hist:[{date, value}]}
   let settings = {budget:0, currency:guessCurrency(), remindDays:3, fxSource:"mep", fx:null, fxManual:0, showUsd:false,
-    infl:{}, inflManual:{}, inflAt:0, inflAdjust:false, lock:{on:false, hash:"", salt:"", cred:""}, crypto:null, netHist:{}};
+    infl:{}, inflManual:{}, inflAt:0, inflAdjust:false, lock:{on:false, hash:"", salt:"", cred:""}, crypto:null, netHist:{},
+    inbox:{url:"", token:"", at:0}, payMap:{}, paySeen:[]};
   let ui = {tab:"home", period:1, pagosView:"fijos", ahorroView:"cuentas", typeFilter:"todo", catFilter:"", lastCat:{gasto:"comida", ingreso:"sueldo"}, dismissed:{}, lastAcc:""};
   const COINS = {bitcoin:"BTC", ethereum:"ETH", tether:"USDT", "usd-coin":"USDC", solana:"SOL"};
   const ASSET_KINDS = {plazo_fijo:"Plazo fijo", fci:"Fondo común", cripto:"Cripto", acciones:"Acciones", otro:"Inversión"};
@@ -1539,6 +1558,7 @@ details ol{padding-left:20px;margin:8px 0 0}
     if (t.inst) tag(`CUOTA ${t.inst.n}/${t.inst.of}`);
     if (t.recId) tag("FIJO");
     if (t.photo) tag("FOTO");
+    if (t.src === "applepay") tag("APPLE PAY");
     r.onclick = () => openTx(t);
     return r;
   }
@@ -2288,6 +2308,7 @@ details ol{padding-left:20px;margin:8px 0 0}
     $("#pin-change").hidden = !settings.lock.on;
     faceAvailable().then(ok => { $("#faceid-row").hidden = !(ok && settings.lock.on); });
     $("#faceid-switch").setAttribute("aria-checked", !!settings.lock.cred);
+    renderInboxSettings();
     $("#data-stats").textContent = `${plural(txs.length, "movimiento", "movimientos")}, ${plural(accounts.length, "cuenta", "cuentas")}, ${plural(assets.length, "inversión", "inversiones")}, ${plural(recs.length, "fijo", "fijos")}, ${plural(goals.length, "meta", "metas")} y ${plural(debts.length, "deuda", "deudas")} guardados.`;
   }
   const siriUrl = () => location.origin + location.pathname + "?accion=gasto&monto=[monto]&cat=comida&nota=[nota]";
@@ -3099,6 +3120,7 @@ details ol{padding-left:20px;margin:8px 0 0}
   function unlock() {
     unlocked = true; $("#lock").hidden = true; pinBuf = "";
     if (afterUnlock) { const f = afterUnlock; afterUnlock = null; f(); }
+    pullInbox(false);
   }
   $$("#keypad [data-k]").forEach(b => b.onclick = async () => {
     const k = b.dataset.k;
@@ -3164,7 +3186,7 @@ details ol{padding-left:20px;margin:8px 0 0}
     const photos = {};
     try { for (const t of txs) if (t.photo && !photos[t.photo]) { const b = await getPhoto(t.photo); if (b) photos[t.photo] = await blobToDataURL(b); } } catch {}
     const data = JSON.stringify({app:"gastos", version:4, saved:new Date().toISOString(),
-      settings:{...settings, lock:{on:false, hash:"", salt:"", cred:""}}, categories:cats, recurring:recs, cards, favs, goals, debts, accounts, transfers, assets, expenses:txs, photos});
+      settings:{...settings, lock:{on:false, hash:"", salt:"", cred:""}, inbox:{url:settings.inbox?.url || "", token:"", at:0}}, categories:cats, recurring:recs, cards, favs, goals, debts, accounts, transfers, assets, expenses:txs, photos});
     if (await saveFile(`gastos-copia-${todayStr()}.json`, data, "application/json")) toast("Copia lista");
   };
   $("#restore").onclick = () => $("#restore-file").click();
@@ -3289,6 +3311,103 @@ details ol{padding-left:20px;margin:8px 0 0}
     t.hidden = false; clearTimeout(tt); tt = setTimeout(() => t.hidden = true, action ? 5000 : 2600);
   }
 
+  /* ---------- Apple Pay inbox (Cloudflare Worker filled by a Wallet automation) ---------- */
+  const ibBase = () => (settings.inbox?.url || "").trim().replace(/\/+$/, "");
+  const ibReady = () => /^(https:\/\/.+|http:\/\/localhost[:/])/.test(ibBase()) && (settings.inbox?.token || "").length >= 16;
+  async function ibFetch(path, opts = {}) {
+    const r = await fetch(ibBase() + path, {...opts, cache:"no-store",
+      headers:{Authorization:"Bearer " + settings.inbox.token, "Content-Type":"application/json", ...(opts.headers || {})}});
+    if (r.status === 401) throw new Error("clave");
+    if (!r.ok) throw new Error("http " + r.status);
+    return r.json();
+  }
+  // "$ 4.200,00", "ARS 4,200.00", "4200" → 4200
+  const parseMonto = s => parseAmount(String(s || "").replace(/[^\d.,-]/g, ""));
+  function txFromInbox(it) {
+    const amount = parseMonto(it.monto);
+    if (!(amount > 0)) return null;
+    const merchant = String(it.comercio || "").trim(), note = (String(it.nota || "").trim() || merchant).slice(0, 60);
+    const when = new Date(it.fecha), date = isNaN(when) ? todayStr() : ymd(when);
+    const want = fold(it.cat).replace(/[^a-z0-9]+/g, "");
+    let cat = want ? catsOf("gasto").find(c => fold(c.name).replace(/[^a-z0-9]+/g, "") === want || fold(c.id) === want) : null;
+    if (!cat && merchant) { // same shop as before → same category
+      const prev = txs.filter(t => t.type === "gasto" && fold(t.note) === fold(merchant)).sort((a, b) => b.date.localeCompare(a.date))[0];
+      if (prev) cat = catById(prev.cat);
+    }
+    const cardName = String(it.tarjeta || "").trim();
+    if (cardName && !settings.paySeen.includes(cardName)) settings.paySeen.push(cardName);
+    const map = settings.payMap[cardName] || "";
+    const t = {id:uid(), type:"gasto", amount, cat:(cat || fallbackCat("gasto")).id, note, date, created:Date.now(), src:"applepay", inboxId:String(it.id)};
+    if (map.startsWith("card:") && cardById(map.slice(5))) Object.assign(t, {method:"credito", card:map.slice(5), acc:""});
+    else if (map.startsWith("acc:") && accById(map.slice(4))) Object.assign(t, {method:"debito", card:"", acc:map.slice(4)});
+    else Object.assign(t, {method:"debito", card:"", acc:defaultAcc("debito", "local")});
+    return t;
+  }
+  let ibBusy = false;
+  async function pullInbox(manual) {
+    if (!ibReady() || ibBusy || !unlocked) { if (manual && !ibReady()) toast("Completa la dirección del buzón y la clave"); return; }
+    if (!navigator.onLine) { if (manual) toast("Sin conexión a internet"); return; }
+    ibBusy = true;
+    const status = $("#ib-status");
+    try {
+      const {items = []} = await ibFetch("/pagos");
+      const seen = new Set(txs.map(t => t.inboxId).filter(Boolean)), added = [], bad = [];
+      items.sort((a, b) => String(a.fecha).localeCompare(String(b.fecha))).forEach(it => {
+        if (seen.has(String(it.id))) return;
+        const t = txFromInbox(it);
+        if (t) { txs.push(t); added.push(t); } else bad.push(it);
+      });
+      settings.inbox.at = Date.now();
+      save();
+      if (items.length) await ibFetch("/pagos/listo", {method:"POST", body:JSON.stringify({ids:items.map(i => i.id)})});
+      if (added.length) {
+        renderAll();
+        const one = added[0];
+        toast(added.length === 1 ? `Apple Pay: anotado ${one.note || "un pago"} por ${money(one.amount)}` : `Se anotaron ${added.length} pagos de Apple Pay`,
+          added.length === 1 ? {label:"Ver", run:() => openTx(one)} : null);
+      } else if (manual) toast(bad.length ? "Llegó un pago sin importe válido. Revisa el atajo." : "Conectado. No hay pagos nuevos.");
+      if (status) status.textContent = `Conectado. Última revisión: ${new Date().toLocaleTimeString(LOCALE, {hour:"2-digit", minute:"2-digit"})}`;
+      if (ui.tab === "mas") renderInboxSettings();
+    } catch (e) {
+      const msg = e.message === "clave" ? "La clave no coincide con la de Cloudflare." : "No se pudo conectar con el buzón. Revisa la dirección.";
+      if (status) status.textContent = msg;
+      if (manual) toast(msg);
+    } finally { ibBusy = false; }
+  }
+  function renderInboxSettings() {
+    if (document.activeElement !== $("#ib-url")) $("#ib-url").value = settings.inbox.url || "";
+    if (document.activeElement !== $("#ib-token")) $("#ib-token").value = settings.inbox.token || "";
+    if (!$("#ib-status").textContent && settings.inbox.at) $("#ib-status").textContent = `Última revisión: ${new Date(settings.inbox.at).toLocaleString(LOCALE, {day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"})}`;
+    const box = $("#ib-map"); box.innerHTML = "";
+    $("#ib-map-field").hidden = !settings.paySeen.length;
+    settings.paySeen.forEach(name => {
+      const l = document.createElement("label"); l.className = "field";
+      l.innerHTML = `<span class="lbl" style="text-transform:none;letter-spacing:0"></span><select class="input"></select>`;
+      l.querySelector("span").textContent = name;
+      const sel = l.querySelector("select");
+      sel.innerHTML = `<option value="">Débito (cuenta habitual)</option>`
+        + cards.map(c => `<option value="card:${esc(c.id)}">Crédito · ${esc(c.name)}</option>`).join("")
+        + accounts.map(a => `<option value="acc:${esc(a.id)}">Débito · ${esc(a.name)}</option>`).join("");
+      sel.value = [...sel.options].some(o => o.value === settings.payMap[name]) ? settings.payMap[name] : "";
+      sel.onchange = () => { settings.payMap[name] = sel.value; save(); toast("Guardado"); };
+      box.append(l);
+    });
+  }
+  $("#ib-url").addEventListener("change", e => { settings.inbox.url = e.target.value.trim(); save(); });
+  $("#ib-token").addEventListener("change", e => { settings.inbox.token = e.target.value.trim(); save(); });
+  $("#ib-gen").onclick = () => {
+    if (settings.inbox.token && $("#ib-gen").dataset.armed !== "1") { $("#ib-gen").dataset.armed = "1"; $("#ib-gen").textContent = "¿Seguro?"; toast("Si generas otra, tendrás que cambiarla también en Cloudflare y en el atajo"); return; }
+    delete $("#ib-gen").dataset.armed; $("#ib-gen").textContent = "Generar";
+    settings.inbox.token = b64(rand(24)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    save(); renderInboxSettings(); toast("Clave nueva generada. Cópiala");
+  };
+  $("#ib-copy").onclick = async () => {
+    if (!settings.inbox.token) return toast("Primero genera una clave");
+    try { await navigator.clipboard.writeText(settings.inbox.token); toast("Clave copiada"); }
+    catch { $("#ib-token").select(); toast("Mantén pulsada la clave para copiarla"); }
+  };
+  $("#ib-test").onclick = () => { settings.inbox.url = $("#ib-url").value.trim(); settings.inbox.token = $("#ib-token").value.trim(); save(); pullInbox(true); };
+
   // Coming back from the background: lock again after a minute, add the day's fixed payments
   let lastDay = todayStr();
   document.addEventListener("visibilitychange", () => {
@@ -3304,6 +3423,7 @@ details ol{padding-left:20px;margin:8px 0 0}
     if (usesUsd() && (!settings.fx || Date.now() - settings.fx.at > 3 * 3600e3)) fetchFx(false);
     if (settings.currency === "ARS" && Date.now() - (settings.inflAt || 0) > 5 * 864e5) fetchInfl(false);
     if (assets.some(a => a.kind === "cripto") && (!settings.crypto || Date.now() - settings.crypto.at > 3600e3)) fetchCrypto(false);
+    pullInbox(false);
   }
 
   /* ---------- start ---------- */
