@@ -311,6 +311,37 @@ details ol{padding-left:20px;margin:8px 0 0}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .toast button{color:#0e7a5c}}
 :root[data-theme="dark"] .toast button{color:#0e7a5c}
 
+/* insights */
+.ins-list{display:flex;flex-direction:column}
+.ins{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.ins:first-child{border-top:0;padding-top:0}
+.ins .ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:none;font-weight:700;font-family:var(--f-display);font-size:1rem}
+.ins.bad .ic{background:var(--danger-soft);color:var(--danger)}
+.ins.warn .ic{background:var(--warn-soft);color:var(--warn)}
+.ins.good .ic{background:var(--accent-soft);color:var(--accent)}
+.ins.info .ic{background:var(--bg);color:var(--muted)}
+.ins p{margin:0;flex:1;font-size:.9rem;line-height:1.4;min-width:0}
+.ins p small{display:block;color:var(--muted);font-size:.8rem;margin-top:2px}
+.ins .x{color:var(--muted);padding:2px 6px;font-size:1.2rem;line-height:1;flex:none}
+.seg.small button{font-size:.76rem;padding:8px 2px}
+.acct-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.acct-actions .ghost{text-align:center}
+.net-v{font-family:var(--f-display);font-weight:700;font-size:clamp(2rem,9vw,2.6rem);line-height:1;margin:0;overflow-wrap:anywhere}
+
+/* month recap */
+.recap{position:fixed;inset:0;z-index:52;background:var(--bg);overflow-y:auto;padding:calc(12px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px))}
+.recap-inner{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.recap-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.recap-top h2{font-family:var(--f-display);font-size:1.2rem;margin:0;text-transform:capitalize;text-align:center;flex:1}
+.recap-hero{background:var(--accent);color:var(--accent-ink);border-radius:22px;padding:22px;display:flex;flex-direction:column;gap:8px}
+.recap-hero .k{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;font-weight:600;opacity:.85}
+.recap-hero .v{font-family:var(--f-display);font-weight:700;font-size:clamp(2.4rem,11vw,3.2rem);line-height:1;overflow-wrap:anywhere}
+.recap-hero .s{font-size:.92rem;opacity:.9}
+.hl{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.hl li{font-size:.92rem;line-height:1.45;padding-left:16px;position:relative}
+.hl li::before{content:"";position:absolute;left:0;top:.55em;width:6px;height:6px;border-radius:2px;background:var(--accent)}
+.hl b{font-weight:600}
+
 /* lock screen + photo viewer */
 .lock{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px 16px calc(24px + env(safe-area-inset-bottom,0px))}
 .lock-inner{display:flex;flex-direction:column;align-items:center;gap:16px;width:100%;max-width:300px;text-align:center}
@@ -354,7 +385,11 @@ details ol{padding-left:20px;margin:8px 0 0}
 
   <section aria-label="Gastos rápidos"><div class="quick" id="quick"></div></section>
 
+  <section class="card" id="recap-prompt" hidden></section>
+
   <section class="card" id="upcoming" hidden></section>
+
+  <section class="card" id="insights" hidden aria-label="Avisos"></section>
 
   <section class="card" id="cats" hidden aria-label="Por categoría">
     <span class="eyebrow">Gastos por categoría</span>
@@ -393,6 +428,7 @@ details ol{padding-left:20px;margin:8px 0 0}
     </div>
     <div class="switch-row" id="infl-row"><span>Ajustar por inflación<small id="infl-note"></small></span><button type="button" class="switch" id="infl-switch" role="switch" aria-checked="false" aria-label="Ajustar por inflación"></button></div>
     <p class="range" id="d-range"></p>
+    <button class="ghost" type="button" id="open-recap" style="text-align:center">Ver resumen del mes</button>
   </header>
   <div id="dash" class="tab"></div>
 </div>
@@ -411,15 +447,16 @@ details ol{padding-left:20px;margin:8px 0 0}
   <div id="pagos" class="tab"></div>
 </div>
 
-<!-- ============ AHORRO ============ -->
+<!-- ============ DINERO ============ -->
 <div class="tab" id="tab-ahorro" role="tabpanel" hidden>
-  <header class="page-head">
-    <h1>Ahorro</h1>
-    <div class="seg" id="ahorro-view" role="group" aria-label="Ver">
-      <button type="button" data-v="metas" aria-pressed="true">Metas</button>
-      <button type="button" data-v="deudas" aria-pressed="false">Deudas y préstamos</button>
-    </div>
-  </header>
+  <header class="page-head"><h1>Dinero</h1></header>
+  <section class="card" id="net-card"></section>
+  <div class="seg small" id="ahorro-view" role="group" aria-label="Ver">
+    <button type="button" data-v="cuentas" aria-pressed="true">Cuentas</button>
+    <button type="button" data-v="inversiones" aria-pressed="false">Inversiones</button>
+    <button type="button" data-v="metas" aria-pressed="false">Metas</button>
+    <button type="button" data-v="deudas" aria-pressed="false">Deudas</button>
+  </div>
   <div id="ahorro" class="tab"></div>
 </div>
 
@@ -537,7 +574,7 @@ details ol{padding-left:20px;margin:8px 0 0}
       <p class="hint">Tus datos se guardan solo en este iPhone. Guarda una copia de vez en cuando en Archivos o iCloud Drive para no perderlos.</p>
     </div>
   </div>
-  <p class="foot">Gastos · versión 4</p>
+  <p class="foot">Gastos · versión 5</p>
 </div>
 </main>
 
@@ -552,7 +589,7 @@ details ol{padding-left:20px;margin:8px 0 0}
     <button class="tabbtn" role="tab" data-tab="pagos" aria-selected="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M6 15h4"/></svg>Pagos<span class="count" id="pagos-count" hidden></span></button>
     <button class="tabbtn" role="tab" data-tab="ahorro" aria-selected="false">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>Ahorro</button>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h15a3 3 0 0 1 3 3v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 7V6a2 2 0 0 1 2-2h11v3M17 14h.01"/></svg>Dinero</button>
     <button class="tabbtn" role="tab" data-tab="mas" aria-selected="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Ajustes</button>
   </div>
@@ -583,6 +620,7 @@ details ol{padding-left:20px;margin:8px 0 0}
     <div class="field" id="tx-method-field"><span class="lbl">Medio de pago</span><div class="chips" id="tx-methods" role="group" aria-label="Medio de pago"></div></div>
     <div class="field" id="tx-card-field"><label for="tx-card">Tarjeta</label><select class="input" id="tx-card"></select>
       <p class="hint" id="tx-card-hint" hidden>Añade tus tarjetas en Pagos → Tarjetas y cuotas para ver cuánto viene en cada resumen.</p></div>
+    <div class="field" id="tx-acc-field"><label for="tx-acc" id="tx-acc-lbl">Cuenta</label><select class="input" id="tx-acc"></select></div>
     <div class="two" id="tx-inst-row">
       <div class="field"><label for="tx-inst">Cuotas</label>
         <select class="input" id="tx-inst"><option value="1">1 pago</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>9</option><option>10</option><option>12</option><option>18</option><option>24</option></select></div>
@@ -623,6 +661,7 @@ details ol{padding-left:20px;margin:8px 0 0}
     </div>
     <div class="field" id="rec-method-field"><span class="lbl">Medio de pago</span><div class="chips" id="rec-methods" role="group" aria-label="Medio de pago"></div></div>
     <div class="field" id="rec-card-field"><label for="rec-card">Tarjeta</label><select class="input" id="rec-card"></select></div>
+    <div class="field" id="rec-acc-field"><label for="rec-acc">Cuenta</label><select class="input" id="rec-acc"></select></div>
     <div class="switch-row" id="rec-active-row"><span>Activo</span><button type="button" class="switch" id="rec-active" role="switch" aria-checked="true" aria-label="Activo"></button></div>
     <p class="hint" id="rec-hint"></p>
     <p class="err" id="rec-err" hidden></p>
@@ -731,6 +770,97 @@ details ol{padding-left:20px;margin:8px 0 0}
   </form>
 </div>
 
+<!-- cuenta -->
+<div class="scrim" id="acc-sheet" hidden>
+  <form class="sheet" id="acc-form" role="dialog" aria-modal="true" aria-labelledby="acc-title" novalidate>
+    <div class="grip"></div>
+    <div class="sheet-head"><h2 id="acc-title">Nueva cuenta</h2><button type="button" class="link" data-close>Cancelar</button></div>
+    <div class="field"><label for="acc-name">Nombre</label><input class="input" id="acc-name" maxlength="30" autocomplete="off" placeholder="Ej.: Mercado Pago, Banco Nación"></div>
+    <div class="field"><label for="acc-kind">Tipo</label>
+      <select class="input" id="acc-kind"><option value="efectivo">Efectivo</option><option value="banco">Cuenta bancaria</option><option value="billetera">Billetera virtual</option><option value="usd">Dólares</option></select></div>
+    <div class="field"><label for="acc-bal" id="acc-bal-lbl">Saldo actual</label>
+      <div class="amount-wrap"><span id="acc-sym">$</span><input id="acc-bal" class="amount-input" inputmode="decimal" autocomplete="off" placeholder="0" aria-label="Saldo actual"></div></div>
+    <div class="field"><span class="lbl">Color</span><div class="swatches" id="acc-colors" role="group" aria-label="Color"></div></div>
+    <p class="hint" id="acc-hint">Pon lo que tienes hoy. A partir de ahora, los gastos e ingresos que anotes en esta cuenta mueven el saldo.</p>
+    <p class="err" id="acc-err" hidden></p>
+    <button class="primary" type="submit">Guardar</button>
+    <button class="danger" id="acc-delete" type="button" hidden>Eliminar cuenta</button>
+  </form>
+</div>
+
+<!-- mover dinero -->
+<div class="scrim" id="xfer-sheet" hidden>
+  <form class="sheet" id="xfer-form" role="dialog" aria-modal="true" aria-labelledby="xfer-title" novalidate>
+    <div class="grip"></div>
+    <div class="sheet-head"><h2 id="xfer-title">Mover dinero</h2><button type="button" class="link" data-close>Cancelar</button></div>
+    <div class="two">
+      <div class="field"><label for="xfer-from">Desde</label><select class="input" id="xfer-from"></select></div>
+      <div class="field"><label for="xfer-to">Hacia</label><select class="input" id="xfer-to"></select></div>
+    </div>
+    <div class="amount-wrap"><span id="xfer-sym">$</span><input id="xfer-amount" class="amount-input" inputmode="decimal" autocomplete="off" placeholder="0" aria-label="Importe"></div>
+    <div class="field" id="xfer-to-field"><label for="xfer-to-amount" id="xfer-to-lbl">Recibes</label>
+      <input class="input num" id="xfer-to-amount" inputmode="decimal" autocomplete="off"></div>
+    <div class="two">
+      <div class="field"><label for="xfer-date">Fecha</label><input class="input" type="date" id="xfer-date"></div>
+      <div class="field"><label for="xfer-note">Nota</label><input class="input" id="xfer-note" maxlength="60" autocomplete="off" placeholder="Opcional"></div>
+    </div>
+    <p class="hint" id="xfer-hint">Mover dinero entre tus cuentas no cuenta como gasto ni como ingreso.</p>
+    <p class="err" id="xfer-err" hidden></p>
+    <button class="primary" type="submit">Guardar</button>
+    <button class="danger" id="xfer-delete" type="button" hidden>Eliminar</button>
+  </form>
+</div>
+
+<!-- inversión -->
+<div class="scrim" id="asset-sheet" hidden>
+  <form class="sheet" id="asset-form" role="dialog" aria-modal="true" aria-labelledby="asset-title" novalidate>
+    <div class="grip"></div>
+    <div class="sheet-head"><h2 id="asset-title">Nueva inversión</h2><button type="button" class="link" data-close>Cancelar</button></div>
+    <div class="field"><label for="asset-kind">Tipo</label>
+      <select class="input" id="asset-kind"><option value="plazo_fijo">Plazo fijo</option><option value="fci">Fondo común (FCI)</option><option value="cripto">Cripto</option><option value="acciones">Acciones o CEDEARs</option><option value="otro">Otra inversión</option></select></div>
+    <div class="field"><label for="asset-name">Nombre</label><input class="input" id="asset-name" maxlength="40" autocomplete="off" placeholder="Ej.: Plazo fijo Galicia"></div>
+    <div id="asset-pf">
+      <div class="field"><label for="asset-capital">Capital</label><input class="input num" id="asset-capital" inputmode="decimal" autocomplete="off" placeholder="1.000.000"></div>
+      <div class="two" style="margin-top:12px">
+        <div class="field"><label for="asset-tna">TNA (%)</label><input class="input num" id="asset-tna" inputmode="decimal" autocomplete="off" placeholder="32"></div>
+        <div class="field"><label for="asset-days">Plazo (días)</label><input class="input num" id="asset-days" inputmode="numeric" autocomplete="off" placeholder="30"></div>
+      </div>
+      <div class="two" style="margin-top:12px">
+        <div class="field"><label for="asset-start">Desde</label><input class="input" type="date" id="asset-start"></div>
+        <div class="field" id="asset-from-field"><label for="asset-from">Sale de la cuenta</label><select class="input" id="asset-from"></select></div>
+      </div>
+    </div>
+    <div class="two" id="asset-crypto">
+      <div class="field"><label for="asset-coin">Moneda</label>
+        <select class="input" id="asset-coin"><option value="bitcoin">Bitcoin (BTC)</option><option value="ethereum">Ethereum (ETH)</option><option value="tether">USDT</option><option value="usd-coin">USDC</option><option value="solana">Solana (SOL)</option></select></div>
+      <div class="field"><label for="asset-qty">Cantidad</label><input class="input num" id="asset-qty" inputmode="decimal" autocomplete="off" placeholder="0,05"></div>
+    </div>
+    <div class="field" id="asset-value-field"><label for="asset-value">Valor actual</label>
+      <input class="input num" id="asset-value" inputmode="decimal" autocomplete="off" placeholder="Cuánto vale hoy">
+      <div class="hist" id="asset-hist"></div></div>
+    <p class="calc" id="asset-calc" hidden></p>
+    <p class="err" id="asset-err" hidden></p>
+    <button class="primary" type="submit">Guardar</button>
+    <div class="field" id="asset-collect" hidden><label for="asset-to">Cobrar en la cuenta</label>
+      <div class="inline"><select class="input" id="asset-to"></select><button type="button" id="asset-collect-btn">Cobrar</button></div></div>
+    <button class="danger" id="asset-delete" type="button" hidden>Eliminar inversión</button>
+  </form>
+</div>
+
+<!-- resumen del mes -->
+<div class="recap" id="recap" hidden role="dialog" aria-modal="true" aria-labelledby="recap-title">
+  <div class="recap-inner">
+    <div class="recap-top">
+      <button class="icon-btn" type="button" id="recap-prev" aria-label="Mes anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <h2 id="recap-title">Resumen</h2>
+      <button class="icon-btn" type="button" id="recap-next" aria-label="Mes siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+    <div id="recap-body" class="tab"></div>
+    <button class="primary" type="button" id="recap-save">Guardar como imagen</button>
+    <button class="ghost" type="button" id="recap-close" style="text-align:center">Cerrar</button>
+  </div>
+</div>
+
 <!-- código -->
 <div class="scrim" id="pin-sheet" hidden>
   <form class="sheet" id="pin-form" role="dialog" aria-modal="true" aria-labelledby="pin-title" novalidate>
@@ -802,9 +932,15 @@ details ol{padding-left:20px;margin:8px 0 0}
   let favs = [];   // {id, name, amount, type, cat, method}
   let goals = [];  // {id, name, target, deadline, color, history:[{date, amount}]}
   let debts = [];  // {id, dir, person, amount, date, note, payments:[{date, amount}], settled}
+  let accounts = [];  // {id, name, kind:"efectivo"|"banco"|"billetera"|"usd", initial, color}
+  let transfers = []; // {id, from, to, amount, toAmount, date, note}; from/to: account id, "card:<id>" or "asset:<id>"
+  let assets = [];    // {id, kind, name, amount, tna, days, start, coin, qty, value, hist:[{date, value}]}
   let settings = {budget:0, currency:guessCurrency(), remindDays:3, fxSource:"mep", fx:null, fxManual:0, showUsd:false,
-    infl:{}, inflManual:{}, inflAt:0, inflAdjust:false, lock:{on:false, hash:"", salt:"", cred:""}};
-  let ui = {tab:"home", period:1, pagosView:"fijos", ahorroView:"metas", typeFilter:"todo", catFilter:"", lastCat:{gasto:"comida", ingreso:"sueldo"}};
+    infl:{}, inflManual:{}, inflAt:0, inflAdjust:false, lock:{on:false, hash:"", salt:"", cred:""}, crypto:null, netHist:{}};
+  let ui = {tab:"home", period:1, pagosView:"fijos", ahorroView:"cuentas", typeFilter:"todo", catFilter:"", lastCat:{gasto:"comida", ingreso:"sueldo"}, dismissed:{}, lastAcc:""};
+  const COINS = {bitcoin:"BTC", ethereum:"ETH", tether:"USDT", "usd-coin":"USDC", solana:"SOL"};
+  const ASSET_KINDS = {plazo_fijo:"Plazo fijo", fci:"Fondo común", cripto:"Cripto", acciones:"Acciones", otro:"Inversión"};
+  const ACC_KINDS = {efectivo:"Efectivo", banco:"Cuenta bancaria", billetera:"Billetera virtual", usd:"Dólares"};
   let view = new Date(); view.setDate(1);
 
   /* ---------- helpers ---------- */
@@ -879,6 +1015,10 @@ details ol{padding-left:20px;margin:8px 0 0}
         if (Array.isArray(d.favs)) favs = d.favs;
         if (Array.isArray(d.goals)) goals = d.goals;
         if (Array.isArray(d.debts)) debts = d.debts;
+        if (Array.isArray(d.accounts)) accounts = d.accounts;
+        if (Array.isArray(d.transfers)) transfers = d.transfers;
+        if (Array.isArray(d.assets)) assets = d.assets;
+        settings.netHist ||= {};
       }
     } catch {}
     for (const c of DEFAULT_CATS) if (c.fixed && !cats.some(x => x.id === c.id)) cats.push({...c});
@@ -889,10 +1029,10 @@ details ol{padding-left:20px;margin:8px 0 0}
     return {...e, id:String(e.id || uid()), amount:Number(e.amount), type:e.type === "ingreso" ? "ingreso" : "gasto"};
   }
   function save() {
-    try { localStorage.setItem(LS_KEY, JSON.stringify({version:4, expenses:txs, settings, categories:cats, recurring:recs, cards, favs, goals, debts})); }
+    try { localStorage.setItem(LS_KEY, JSON.stringify({version:5, expenses:txs, settings, categories:cats, recurring:recs, cards, favs, goals, debts, accounts, transfers, assets})); }
     catch { toast("No se pudo guardar. Libera espacio en el iPhone e inténtalo de nuevo."); }
   }
-  function saveUI() { try { localStorage.setItem("gastos.ui", JSON.stringify({tab:ui.tab, period:ui.period, pagosView:ui.pagosView, ahorroView:ui.ahorroView, lastCat:ui.lastCat})); } catch {} }
+  function saveUI() { try { localStorage.setItem("gastos.ui", JSON.stringify({tab:ui.tab, period:ui.period, pagosView:ui.pagosView, ahorroView:ui.ahorroView, lastCat:ui.lastCat, dismissed:ui.dismissed, lastAcc:ui.lastAcc})); } catch {} }
   try { navigator.storage?.persist?.(); } catch {}
 
   /* ---------- photos (IndexedDB) ---------- */
@@ -951,7 +1091,7 @@ details ol{padding-left:20px;margin:8px 0 0}
       if (!r.active) continue;
       const ds = occurrences(r, genFrom(r), today);
       for (const d of ds) {
-        txs.push({id:uid(), type:r.type, amount:r.amount, cat:r.cat, note:r.note, method:r.method || "", card:r.card || "", date:d, recId:r.id, created:Date.now()});
+        txs.push({id:uid(), type:r.type, amount:r.amount, cat:r.cat, note:r.note, method:r.method || "", card:r.card || "", acc:r.acc || "", date:d, recId:r.id, created:Date.now()});
         n++;
       }
       if (ds.length) r.lastGen = ds[ds.length - 1];
@@ -982,6 +1122,149 @@ details ol{padding-left:20px;margin:8px 0 0}
     }).filter(g => g.future.length);
   }
 
+  /* ---------- accounts, investments, net worth ---------- */
+  const accById = id => accounts.find(a => a.id === id);
+  const isUsdAcc = a => a && a.kind === "usd";
+  const accSym = a => isUsdAcc(a) ? "US$" : symbol();
+  const accMoney = (a, v) => isUsdAcc(a) ? usd(v) : money(v);
+  // How much a movement moves an account, in that account's currency
+  const txIn = (a, t) => isUsdAcc(a) ? (t.usd || t.amount / (t.rate || fxRate() || 1)) : t.amount;
+  function accBalance(a, upto = todayStr()) {
+    let b = Number(a.initial) || 0;
+    for (const t of txs) if (t.acc === a.id && t.date <= upto) b += (t.type === "ingreso" ? 1 : -1) * txIn(a, t);
+    for (const x of transfers) {
+      if (x.date > upto) continue;
+      if (x.from === a.id) b -= x.amount;
+      if (x.to === a.id) b += x.toAmount ?? x.amount;
+    }
+    return round2(b);
+  }
+  const accLocal = a => isUsdAcc(a) ? accBalance(a) * (fxRate() || 0) : accBalance(a);
+  function cardPaid(c, st) {
+    const paid = transfers.filter(x => x.to === "card:" + c.id && x.date > st.close && x.date <= addDays(st.due, 20)).reduce((s, x) => s + (x.toAmount ?? x.amount), 0);
+    return st.amount > 0 && paid >= st.amount - 1;
+  }
+  const pfEnd = a => addDays(a.start, Number(a.days) || 0);
+  const pfFinal = a => round2(a.amount * (1 + (a.tna || 0) / 100 * (a.days || 0) / 365));
+  function assetValue(a) {
+    if (a.kind === "plazo_fijo") {
+      const upto = todayStr() < pfEnd(a) ? todayStr() : pfEnd(a);
+      const days = Math.max(0, Math.round((parseD(upto) - parseD(a.start)) / 864e5));
+      return round2(a.amount * (1 + (a.tna || 0) / 100 * days / 365));
+    }
+    if (a.kind === "cripto") { const px = settings.crypto?.[a.coin], r = fxRate(); return px && r ? a.qty * px * r : 0; }
+    return Number(a.value) || 0;
+  }
+  function netWorth() {
+    const local = accounts.filter(a => !isUsdAcc(a)).reduce((s, a) => s + accBalance(a), 0);
+    const usdBal = accounts.filter(isUsdAcc).reduce((s, a) => s + accBalance(a), 0);
+    const inv = assets.reduce((s, a) => s + assetValue(a), 0);
+    const open = debts.filter(d => !d.settled), left = d => Math.max(0, d.amount - (d.payments || []).reduce((s, p) => s + p.amount, 0));
+    const owed = open.filter(d => d.dir === "me_deben").reduce((s, d) => s + left(d), 0), owe = open.filter(d => d.dir === "debo").reduce((s, d) => s + left(d), 0);
+    const total = local + usdBal * (fxRate() || 0) + inv + owed - owe;
+    return {local, usdBal, inv, owed, owe, total};
+  }
+  function defaultAcc(method, cur) {
+    if (!accounts.length) return "";
+    if (cur === "usd") { const u = accounts.find(isUsdAcc); if (u) return u.id; }
+    const pick = kinds => accounts.find(a => kinds.includes(a.kind))?.id;
+    if (method === "efectivo") return pick(["efectivo"]) || "";
+    if (method === "debito" || method === "transferencia") return (accById(ui.lastAcc) && !isUsdAcc(accById(ui.lastAcc)) && accById(ui.lastAcc).kind !== "efectivo" ? ui.lastAcc : pick(["banco", "billetera"])) || "";
+    return accById(ui.lastAcc) ? ui.lastAcc : "";
+  }
+  function accOptions(sel, current, {none = "Sin cuenta", only} = {}) {
+    const list = only ? accounts.filter(only) : accounts;
+    sel.innerHTML = (none ? `<option value="">${esc(none)}</option>` : "") + list.map(a => `<option value="${esc(a.id)}">${esc(a.name)}${isUsdAcc(a) ? " (US$)" : ""}</option>`).join("");
+    sel.value = list.some(a => a.id === current) ? current : (none ? "" : list[0]?.id || "");
+  }
+
+  /* ---------- smart notices ---------- */
+  function insights() {
+    const out = [], now = new Date(), today = todayStr(), key = ym(now), day = now.getDate(), dim = daysIn(now.getFullYear(), now.getMonth());
+    const plain = t => t.type === "gasto" && !t.recId && !t.inst;
+    const gMonth = txs.filter(t => t.type === "gasto" && t.date.startsWith(key) && t.date <= today);
+    const budget = Number(settings.budget) || 0;
+    // money available vs payments in the next week
+    if (accounts.some(a => !isUsdAcc(a))) {
+      const avail = accounts.filter(a => !isUsdAcc(a)).reduce((s, a) => s + accBalance(a), 0);
+      const due = sum(upcomingItems(7).filter(u => u.type === "gasto"));
+      if (due > avail) out.push({key:`cash-${today}`, level:"bad", icon:"!", score:1e12,
+        text:`Tus pagos de los próximos 7 días (${money(due)}) superan el dinero que tienes en pesos`, sub:`Tienes ${money(avail)} entre tus cuentas.`});
+    }
+    // budget pace
+    if (budget && day >= 5 && day < dim) {
+      const spent = sum(gMonth), proj = spent / day * dim;
+      if (spent <= budget && proj > budget * 1.03) out.push({key:`pace-${key}`, level:"warn", icon:"↑", score:proj - budget,
+        text:`A este ritmo terminarías el mes en ${money(proj)}, ${money(proj - budget)} por encima del presupuesto`,
+        sub:`Para llegar, gasta como máximo ${money((budget - spent) / (dim - day + 1))} por día.`});
+    }
+    // categories vs the last three months
+    if (day >= 7) {
+      const prevKeys = [1, 2, 3].map(i => addMonthsYm(key, -i));
+      catsOf("gasto").forEach(c => {
+        const hist = prevKeys.map(k => sum(txs.filter(t => plain(t) && t.cat === c.id && t.date.startsWith(k)))).filter(v => v > 0);
+        if (hist.length < 2) return;
+        const avg = hist.reduce((a, b) => a + b, 0) / hist.length;
+        const spent = sum(gMonth.filter(t => plain(t) && t.cat === c.id)), proj = spent / day * dim;
+        if (proj > avg * 1.3 && spent > avg * .4) out.push({key:`cat-${c.id}-${key}`, level:"warn", icon:"↑", score:proj - avg,
+          text:`Vas un ${Math.round((proj / avg - 1) * 100)}% por encima de lo habitual en ${c.name}`, sub:`Llevas ${money(spent)}; sueles gastar ${money(avg)} al mes.`});
+        else if (day >= 15 && proj < avg * .7) out.push({key:`catok-${c.id}-${key}`, level:"good", icon:"↓", score:(avg - proj) / 10,
+          text:`Vas bien en ${c.name}: un ${Math.round((1 - proj / avg) * 100)}% menos que lo habitual`, sub:`Llevas ${money(spent)}; sueles gastar ${money(avg)} al mes.`});
+      });
+    }
+    // fixed payments whose amount changed
+    recs.filter(r => r.active && r.type === "gasto").forEach(r => {
+      const list = txs.filter(t => t.recId === r.id).sort((a, b) => a.date.localeCompare(b.date));
+      if (list.length < 2) return;
+      const [a, b] = list.slice(-2);
+      if (b.amount > a.amount * 1.02 && b.date >= addDays(today, -40)) out.push({key:`rec-${r.id}-${b.date}`, level:"info", icon:"↑", score:b.amount - a.amount,
+        text:`${r.note} subió un ${Math.round((b.amount / a.amount - 1) * 100)}%`, sub:`Pasó de ${money(a.amount)} a ${money(b.amount)}.`});
+    });
+    // things bought often that got more expensive
+    const since = addDays(today, -180), byNote = new Map();
+    txs.filter(t => plain(t) && t.note && t.date >= since).forEach(t => { const k = fold(t.note); if (!byNote.has(k)) byNote.set(k, []); byNote.get(k).push(t); });
+    for (const list of byNote.values()) {
+      if (list.length < 3) continue;
+      list.sort((a, b) => a.date.localeCompare(b.date));
+      const last = list[list.length - 1], prev = list.slice(0, -1).map(t => t.amount).sort((a, b) => a - b), med = prev[Math.floor(prev.length / 2)];
+      if (last.date >= addDays(today, -14) && last.amount > med * 1.15) out.push({key:`price-${fold(last.note)}-${last.id}`, level:"info", icon:"$", score:last.amount - med,
+        text:`${last.note} te costó un ${Math.round((last.amount / med - 1) * 100)}% más que antes`, sub:`La última vez pagaste ${money(last.amount)}; solías pagar ${money(med)}.`});
+    }
+    // an unusually large expense this week
+    txs.filter(t => plain(t) && t.date >= addDays(today, -7) && t.date <= today).forEach(t => {
+      const same = txs.filter(x => plain(x) && x.cat === t.cat && x.id !== t.id && x.date >= addDays(today, -120)).map(x => x.amount).sort((a, b) => a - b);
+      if (same.length < 5) return;
+      const med = same[Math.floor(same.length / 2)];
+      if (t.amount > med * 3) out.push({key:`big-${t.id}`, level:"info", icon:"!", score:t.amount - med,
+        text:`Gasto fuera de lo común en ${catById(t.cat).name}: ${t.note || "sin nota"} por ${money(t.amount)}`, sub:`Normalmente gastas unos ${money(med)} en esa categoría.`});
+    });
+    // last month's savings
+    if (day <= 10) {
+      const pk = addMonthsYm(key, -1), pi = sum(txs.filter(t => t.type === "ingreso" && t.date.startsWith(pk))), pgs = sum(txs.filter(t => t.type === "gasto" && t.date.startsWith(pk)));
+      if (pi > 0 && pi > pgs) out.push({key:`saved-${pk}`, level:"good", icon:"✓", score:1,
+        text:`El mes pasado ahorraste ${money(pi - pgs)}, el ${Math.round((pi - pgs) / pi * 100)}% de lo que ingresaste`});
+    }
+    const rank = {bad:0, warn:1, info:2, good:3};
+    return out.filter(i => !ui.dismissed[i.key]).sort((a, b) => rank[a.level] - rank[b.level] || b.score - a.score);
+  }
+  function insightList(items, {dismiss = true} = {}) {
+    const box = document.createElement("div"); box.className = "ins-list";
+    items.forEach(i => {
+      const el = document.createElement("div"); el.className = "ins " + i.level;
+      el.innerHTML = `<span class="ic" aria-hidden="true"></span><p><span></span>${i.sub ? "<small></small>" : ""}</p>`;
+      el.querySelector(".ic").textContent = i.icon;
+      el.querySelector("p span").textContent = i.text;
+      if (i.sub) el.querySelector("small").textContent = i.sub;
+      if (dismiss) {
+        const x = document.createElement("button"); x.type = "button"; x.className = "x"; x.textContent = "×"; x.setAttribute("aria-label", "Ocultar aviso");
+        x.onclick = () => { ui.dismissed[i.key] = true; saveUI(); renderAll(); };
+        el.append(x);
+      }
+      box.append(el);
+    });
+    return box;
+  }
+
   /* ---------- upcoming payments (fijos + card due dates) ---------- */
   function upcomingItems(days) {
     const today = todayStr(), end = addDays(today, days), out = [];
@@ -993,10 +1276,15 @@ details ol{padding-left:20px;margin:8px 0 0}
     for (const c of cards) {
       const cy = cardCycles(c);
       for (const [st, closed] of [[cy.last, true], [cy.current, false]]) {
-        if (st.due >= today && st.due <= end && st.amount > 0)
+        if (st.due >= today && st.due <= end && st.amount > 0 && !cardPaid(c, st))
           out.push({date:st.due, name:`Tarjeta ${c.name}`, amount:st.amount, type:"gasto", sub:closed ? "Vence el resumen" : "Resumen aún abierto", card:true,
             open:() => { ui.pagosView = "tarjetas"; setTab("pagos"); }});
       }
+    }
+    for (const a of assets) {
+      if (a.kind !== "plazo_fijo") continue;
+      const e = pfEnd(a);
+      if (e >= today && e <= end) out.push({date:e, name:`Vence ${a.name}`, amount:pfFinal(a), type:"ingreso", sub:"Plazo fijo", open:() => openAsset(a)});
     }
     return out.sort((a, b) => a.date.localeCompare(b.date) || b.amount - a.amount);
   }
@@ -1039,6 +1327,17 @@ details ol{padding-left:20px;margin:8px 0 0}
       if (manual) toast("Inflación actualizada");
       renderAll();
     } catch { if (manual) toast("No se pudo actualizar. Revisa tu conexión o cárgala a mano."); }
+  }
+  async function fetchCrypto(manual) {
+    try {
+      const r = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${Object.keys(COINS).join(",")}&vs_currencies=usd`, {cache:"no-store"});
+      if (!r.ok) throw new Error(r.status);
+      const d = await r.json(), px = {at:Date.now()};
+      Object.keys(COINS).forEach(k => { if (d[k]?.usd > 0) px[k] = Number(d[k].usd); });
+      if (!px.bitcoin) throw new Error("vacío");
+      settings.crypto = px; save(); renderAll();
+      if (manual) toast("Precios de cripto actualizados");
+    } catch { if (manual) toast("No se pudieron actualizar los precios de cripto."); }
   }
 
   /* ---------- files: share sheet / download / calendar ---------- */
@@ -1267,7 +1566,8 @@ details ol{padding-left:20px;margin:8px 0 0}
     const g = month.filter(t => t.type === "gasto"), inc = month.filter(t => t.type === "ingreso");
     const tg = sum(g), ti = sum(inc), rate = fxRate();
     $("#total").textContent = money(tg);
-    const usdBit = settings.showUsd && usesUsd() && rate ? `<span>≈ <b>${usd(tg / rate)}</b></span>` : "";
+    const usdBit = (settings.showUsd && usesUsd() && rate ? `<span>≈ <b>${usd(tg / rate)}</b></span>` : "")
+      + (isCurrent && accounts.some(a => !isUsdAcc(a)) ? `<span>Disponible <b>${money(accounts.filter(a => !isUsdAcc(a)).reduce((s, a) => s + accBalance(a), 0))}</b></span>` : "");
     $("#inc-row").innerHTML = (ti > 0
       ? `<span>Ingresos <b class="pos">+${money(ti)}</b></span><span>Balance <b class="${ti - tg >= 0 ? "pos" : "neg"}">${signed(ti - tg)}</b></span>`
       : `<button class="link" type="button" id="add-income">+ Anotar un ingreso</button>`) + usdBit;
@@ -1319,6 +1619,24 @@ details ol{padding-left:20px;margin:8px 0 0}
       $("#see-pagos").onclick = () => setTab("pagos");
     }
 
+    // smart notices (current month only)
+    const insBox = $("#insights"), ins = isCurrent ? insights().slice(0, 3) : [];
+    insBox.hidden = !ins.length; insBox.innerHTML = "";
+    if (ins.length) { insBox.innerHTML = `<h2>Para tener en cuenta</h2>`; insBox.append(insightList(ins)); }
+
+    // last month's recap, during the first week
+    const rp = $("#recap-prompt"), pk = addMonthsYm(ym(now), -1);
+    const showRp = isCurrent && now.getDate() <= 7 && !ui.dismissed["recap-" + pk] && txs.some(t => t.date.startsWith(pk));
+    rp.hidden = !showRp; rp.innerHTML = "";
+    if (showRp) {
+      rp.innerHTML = `<div class="card-head"><h2>Tu resumen de ${esc(parseD(pk + "-15").toLocaleDateString(LOCALE, {month:"long"}))} está listo</h2>
+        <button type="button" class="x link" aria-label="Ocultar" style="color:var(--muted);font-size:1.2rem">×</button></div>
+        <p class="sub">En qué se fue la plata, cuánto ahorraste y cómo te fue frente al mes anterior.</p>
+        <button type="button" class="primary">Ver resumen</button>`;
+      rp.querySelector(".primary").onclick = () => openRecap(pk);
+      rp.querySelector(".x").onclick = () => { ui.dismissed["recap-" + pk] = true; saveUI(); renderHome(); };
+    }
+
     const byCat = {};
     g.forEach(e => byCat[e.cat] = (byCat[e.cat] || 0) + e.amount);
     const ranked = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
@@ -1349,7 +1667,8 @@ details ol{padding-left:20px;margin:8px 0 0}
     box.append(add);
   }
   function quickAdd(f) {
-    const t = {id:uid(), type:f.type || "gasto", amount:f.amount, cat:f.cat, note:f.name, date:todayStr(), method:f.method || "", card:f.card || "", created:Date.now()};
+    const t = {id:uid(), type:f.type || "gasto", amount:f.amount, cat:f.cat, note:f.name, date:todayStr(), method:f.method || "", card:f.card || "",
+      acc:f.method === "credito" ? "" : defaultAcc(f.method || "", "local"), created:Date.now()};
     txs.push(t); save();
     view = new Date(); view.setDate(1);
     renderAll();
@@ -1477,6 +1796,9 @@ details ol{padding-left:20px;margin:8px 0 0}
       <div class="kpi"><span class="k">Fijos y cuotas</span><span class="v num">${tg ? Math.round((fixedG + instG) / tg * 100) : 0}%</span><span class="s">Fijos ${kmoney(fixedG)} · cuotas ${kmoney(instG)}</span></div>
       <div class="kpi"><span class="k">Movimientos</span><span class="v num">${g.length}</span><span class="s">${g.length ? `Gasto medio ${money(tg / g.length)}` : "Sin gastos"}</span></div>`;
     host.append(kp);
+
+    const allIns = insights();
+    if (allIns.length) { const ci = card("Avisos", "Lo que vemos en tus gastos de este mes"); ci.append(insightList(allIns)); host.append(ci); }
 
     if (period === 1) {
       const c = card("Gasto por día", "Toca una barra para ver el detalle"); host.append(c);
@@ -1672,19 +1994,20 @@ details ol{padding-left:20px;margin:8px 0 0}
     }
     const today = todayStr();
     cards.forEach(c => {
-      const cy = cardCycles(c), pend = sum(txs.filter(t => t.card === c.id && t.inst && t.date > cy.current.close));
+      const cy = cardCycles(c), pend = sum(txs.filter(t => t.card === c.id && t.inst && t.date > cy.current.close)), paid = cardPaid(c, cy.last);
       const el = document.createElement("section"); el.className = "card";
       el.innerHTML = `<div class="card-head"><h2 style="display:flex;align-items:center;gap:8px"><i class="dot" style="background:${cvar(c)};width:12px;height:12px"></i><span></span></h2>
         <button class="link" type="button">Editar</button></div>
         <div>
           <div class="kv"><span class="k"><span>Resumen en curso</span><span>Cierra ${esc(relDay(cy.current.close))} · vence ${esc(fmtShort(cy.current.due))}</span></span><span class="v">${money(cy.current.amount)}</span></div>
-          <div class="kv"><span class="k"><span>Último resumen</span><span>${cy.last.due >= today ? "Vence " + esc(relDay(cy.last.due)) : "Venció el " + esc(fmtShort(cy.last.due))}</span></span><span class="v ${cy.last.due >= today && cy.last.amount ? "neg" : ""}">${money(cy.last.amount)}</span></div>
+          <div class="kv"><span class="k"><span>Último resumen</span><span>${paid ? "Pagado" : cy.last.due >= today ? "Vence " + esc(relDay(cy.last.due)) : "Venció el " + esc(fmtShort(cy.last.due))}</span></span><span class="v ${!paid && cy.last.due >= today && cy.last.amount ? "neg" : ""}">${money(cy.last.amount)}</span></div>
           ${pend ? `<div class="kv"><span class="k"><span>Cuotas en resúmenes futuros</span><span>Después del cierre del ${esc(fmtShort(cy.current.close))}</span></span><span class="v">${money(pend)}</span></div>` : ""}
         </div>
-        <button class="ghost" type="button">Añadir vencimientos al Calendario</button>`;
+        <div class="acct-actions"><button class="ghost pay" type="button">Pagar resumen</button><button class="ghost cal" type="button">Avisos en Calendario</button></div>`;
       el.querySelector("h2 span").textContent = c.name;
       el.querySelector(".card-head .link").onclick = () => openCard(c);
-      el.querySelector(".ghost").onclick = () => openCalendar(cardIcs(c));
+      el.querySelector(".cal").onclick = () => openCalendar(cardIcs(c));
+      el.querySelector(".pay").onclick = () => openXfer(null, {to:"card:" + c.id, amount:paid ? cy.current.amount : cy.last.amount});
       host.append(el);
     });
     const groups = installmentGroups();
@@ -1708,9 +2031,125 @@ details ol{padding-left:20px;margin:8px 0 0}
 
   /* ---------- AHORRO ---------- */
   function renderAhorro() {
+    if (!["cuentas", "inversiones", "metas", "deudas"].includes(ui.ahorroView)) ui.ahorroView = "cuentas";
     $$("#ahorro-view button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === ui.ahorroView));
-    if (ui.ahorroView === "deudas") renderDeudas(); else renderMetas();
+    renderNet();
+    ({cuentas:renderCuentas, inversiones:renderInversiones, metas:renderMetas, deudas:renderDeudas})[ui.ahorroView]();
     updateFab();
+  }
+
+  function renderNet() {
+    const box = $("#net-card"), n = netWorth(), rate = fxRate();
+    const any = accounts.length || assets.length || debts.some(d => !d.settled);
+    if (!any) {
+      box.innerHTML = `<span class="eyebrow">Patrimonio</span><p class="hint">Añade tus cuentas (efectivo, banco, Mercado Pago, dólares) y tus inversiones para ver cuánto tienes en total y cómo cambia mes a mes.</p>`;
+      return;
+    }
+    const nk = ym(new Date());
+    if (settings.netHist[nk] !== round2(n.total)) { settings.netHist[nk] = round2(n.total); save(); }
+    const hasUsd = accounts.some(isUsdAcc);
+    const row = (k, sub, v, cls = "") => `<div class="kv"><span class="k"><span>${k}</span>${sub ? `<span>${sub}</span>` : ""}</span><span class="v ${cls}">${v}</span></div>`;
+    box.innerHTML = `<span class="eyebrow">Patrimonio</span><p class="net-v num ${n.total < 0 ? "neg" : ""}">${money(n.total)}</p>
+      ${hasUsd && rate ? `<p class="hint">≈ ${usd(n.total / rate)} al dólar ${FX_NAMES[settings.fxSource]}</p>` : ""}
+      ${hasUsd && !rate ? `<p class="hint">Falta la cotización del dólar para sumar tus dólares. Actualízala en Ajustes.</p>` : ""}
+      <div>
+        ${accounts.some(a => !isUsdAcc(a)) ? row("Cuentas en pesos", "", money(n.local)) : ""}
+        ${hasUsd ? row("Dólares", rate ? `≈ ${money(n.usdBal * rate)}` : "", usd(n.usdBal)) : ""}
+        ${assets.length ? row("Inversiones", "", money(n.inv)) : ""}
+        ${n.owed ? row("Te deben", "", "+" + money(n.owed), "pos") : ""}
+        ${n.owe ? row("Debes", "", "−" + money(n.owe), "neg") : ""}
+      </div>`;
+    const keys = Object.keys(settings.netHist).sort().slice(-12);
+    if (keys.length >= 2) {
+      const prev = settings.netHist[keys[keys.length - 2]], diff = n.total - prev;
+      box.insertAdjacentHTML("beforeend", `<p class="hint">${diff >= 0 ? "Subió" : "Bajó"} ${money(Math.abs(diff))} desde ${esc(monthShort(keys[keys.length - 2]))}.</p>`);
+      const vals = keys.map(k => Math.max(0, settings.netHist[k]));
+      if (vals.some(v => v > 0)) barChart(chartHost(box), keys.map(k => monthShort(k).split(" ")[0]), [{name:"Patrimonio", color:"var(--accent)", values:vals}], {titles:keys.map(monthShort)});
+    }
+  }
+
+  function renderCuentas() {
+    const host = $("#ahorro"); host.textContent = "";
+    if (!accounts.length) {
+      host.innerHTML = `<div class="empty"><h2>Añade tus cuentas</h2><p>Efectivo, banco, Mercado Pago o dólares. Pon el saldo de hoy y la app lo va actualizando con cada gasto e ingreso que anotes en esa cuenta.</p></div>`;
+      return;
+    }
+    const c = card("Tus cuentas"); host.append(c);
+    const rows = document.createElement("div"); rows.className = "rows rows-in";
+    accounts.forEach(a => {
+      const bal = accBalance(a), b = document.createElement("button"); b.type = "button"; b.className = "row";
+      const last = txs.filter(t => t.acc === a.id && t.date <= todayStr()).sort((x, y) => y.date.localeCompare(x.date))[0];
+      b.innerHTML = `<span class="badge" style="background:${cvar(a)}"></span><span class="txt"><span class="t1"></span><span class="t2"></span></span>
+        <span class="amt num ${bal < 0 ? "neg" : ""}">${accMoney(a, bal)}${isUsdAcc(a) && fxRate() ? `<small>≈ ${money(bal * fxRate())}</small>` : ""}</span>`;
+      b.querySelector(".badge").textContent = a.name[0].toUpperCase();
+      b.querySelector(".t1").textContent = a.name;
+      b.querySelector(".t2").textContent = ACC_KINDS[a.kind] + (last ? ` · último: ${last.note || catById(last.cat, last.type).name}` : "");
+      b.onclick = () => openAcc(a);
+      rows.append(b);
+    });
+    c.append(rows);
+    const act = document.createElement("div"); act.className = "acct-actions";
+    act.innerHTML = `<button class="ghost" type="button" data-a="move">Mover dinero</button><button class="ghost" type="button" data-a="card"${cards.length ? "" : " hidden"}>Pagar tarjeta</button>`;
+    act.querySelector('[data-a="move"]').onclick = () => openXfer(null);
+    act.querySelector('[data-a="card"]').onclick = () => {
+      const c0 = cards[0], cy = cardCycles(c0);
+      openXfer(null, {to:"card:" + c0.id, amount:cardPaid(c0, cy.last) ? cy.current.amount : cy.last.amount});
+    };
+    host.append(act);
+    const recent = transfers.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10);
+    if (recent.length) {
+      const c2 = card("Movimientos entre cuentas"); host.append(c2);
+      const r2 = document.createElement("div"); r2.className = "rows rows-in";
+      recent.forEach(x => {
+        const b = document.createElement("button"); b.type = "button"; b.className = "row";
+        const fa = accById(x.from);
+        b.innerHTML = `<span class="badge" style="background:var(--c9)">⇄</span><span class="txt"><span class="t1"></span><span class="t2"></span></span><span class="amt num">${fa ? accMoney(fa, x.amount) : money(x.amount)}</span>`;
+        b.querySelector(".t1").textContent = `${endpointName(x.from)} → ${endpointName(x.to)}`;
+        b.querySelector(".t2").textContent = [fmtShort(x.date), x.note].filter(Boolean).join(" · ");
+        b.onclick = () => openXfer(x);
+        r2.append(b);
+      });
+      c2.append(r2);
+    }
+    const noAcc = txs.filter(t => !t.acc && t.date >= addDays(todayStr(), -30) && !(t.method === "credito")).length;
+    if (noAcc) host.insertAdjacentHTML("beforeend", `<p class="hint" style="padding:0 4px">${plural(noAcc, "movimiento", "movimientos")} de los últimos 30 días no tienen cuenta asignada y no mueven ningún saldo. Puedes asignarla al editarlos.</p>`);
+  }
+  function endpointName(id) {
+    if (!id) return "—";
+    if (id.startsWith("card:")) return "Tarjeta " + (cardById(id.slice(5))?.name || "eliminada");
+    if (id.startsWith("asset:")) return assets.find(a => a.id === id.slice(6))?.name || "Inversión";
+    return accById(id)?.name || "Cuenta eliminada";
+  }
+
+  function renderInversiones() {
+    const host = $("#ahorro"); host.textContent = "";
+    if (!assets.length) {
+      host.innerHTML = `<div class="empty"><h2>Anota tus inversiones</h2><p>Plazos fijos con su interés calculado, fondos comunes, cripto con precio actualizado, acciones o CEDEARs. Todo suma a tu patrimonio.</p></div>`;
+      return;
+    }
+    const c = card("Tus inversiones", `Valen ${money(assets.reduce((s, a) => s + assetValue(a), 0))} en total`); host.append(c);
+    const rows = document.createElement("div"); rows.className = "rows rows-in";
+    const today = todayStr();
+    assets.forEach(a => {
+      const v = assetValue(a), b = document.createElement("button"); b.type = "button"; b.className = "row";
+      let sub = ASSET_KINDS[a.kind], small = "";
+      if (a.kind === "plazo_fijo") { const e = pfEnd(a); sub += e < today ? ` · venció el ${fmtShort(e)}, cóbralo` : ` · vence ${relDay(e)} · ${String(a.tna).replace(".", ",")}% TNA`; small = `al vencer ${money(pfFinal(a))}`; }
+      else if (a.kind === "cripto") { sub += ` · ${String(a.qty).replace(".", ",")} ${COINS[a.coin]}`; small = settings.crypto?.[a.coin] ? usd(a.qty * settings.crypto[a.coin]) : "sin precio"; }
+      else if (a.hist?.length > 1) { const first = a.hist[0]; const p = first.value ? (v - first.value) / first.value : 0; small = `${fmtPct(p)} desde ${fmtShort(first.date)}`; }
+      b.innerHTML = `<span class="badge" style="background:${a.kind === "cripto" ? "var(--c4)" : a.kind === "plazo_fijo" ? "var(--c1)" : "var(--c7)"}"></span><span class="txt"><span class="t1"></span><span class="t2"></span></span>
+        <span class="amt num">${v ? money(v) : "—"}${small ? `<small>${esc(small)}</small>` : ""}</span>`;
+      b.querySelector(".badge").textContent = ASSET_KINDS[a.kind][0];
+      b.querySelector(".t1").textContent = a.name;
+      b.querySelector(".t2").textContent = sub;
+      b.onclick = () => openAsset(a);
+      rows.append(b);
+    });
+    c.append(rows);
+    if (assets.some(a => a.kind === "cripto")) {
+      const p = document.createElement("p"); p.className = "hint"; p.style.padding = "0 4px";
+      p.textContent = settings.crypto ? `Precios de cripto de CoinGecko, actualizados ${new Date(settings.crypto.at).toLocaleString(LOCALE, {day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"})}. Se convierten con el dólar ${FX_NAMES[settings.fxSource]}.` : "Sin precios de cripto todavía. Se actualizan solos cuando hay internet.";
+      host.append(p);
+    }
   }
   $$("#ahorro-view button").forEach(b => b.onclick = () => { ui.ahorroView = b.dataset.v; saveUI(); renderAhorro(); });
   const goalSaved = g => (g.history || []).reduce((s, h) => s + h.amount, 0);
@@ -1849,7 +2288,7 @@ details ol{padding-left:20px;margin:8px 0 0}
     $("#pin-change").hidden = !settings.lock.on;
     faceAvailable().then(ok => { $("#faceid-row").hidden = !(ok && settings.lock.on); });
     $("#faceid-switch").setAttribute("aria-checked", !!settings.lock.cred);
-    $("#data-stats").textContent = `${plural(txs.length, "movimiento", "movimientos")}, ${plural(recs.length, "fijo", "fijos")}, ${plural(goals.length, "meta", "metas")} y ${plural(debts.length, "deuda", "deudas")} guardados.`;
+    $("#data-stats").textContent = `${plural(txs.length, "movimiento", "movimientos")}, ${plural(accounts.length, "cuenta", "cuentas")}, ${plural(assets.length, "inversión", "inversiones")}, ${plural(recs.length, "fijo", "fijos")}, ${plural(goals.length, "meta", "metas")} y ${plural(debts.length, "deuda", "deudas")} guardados.`;
   }
   const siriUrl = () => location.origin + location.pathname + "?accion=gasto&monto=[monto]&cat=comida&nota=[nota]";
   $("#s-budget").addEventListener("change", e => {
@@ -1885,7 +2324,7 @@ details ol{padding-left:20px;margin:8px 0 0}
     s.addEventListener("click", ev => { if (ev.target === s) closeSheet(s); });
     s.querySelectorAll("[data-close]").forEach(b => b.onclick = () => closeSheet(s));
   });
-  document.addEventListener("keydown", ev => { if (ev.key === "Escape") { $$(".scrim").forEach(closeSheet); $("#viewer").hidden = true; } });
+  document.addEventListener("keydown", ev => { if (ev.key === "Escape") { $$(".scrim").forEach(closeSheet); $("#viewer").hidden = true; $("#recap").hidden = true; } });
   function armDelete(btn, label, action) {
     let armed = false;
     btn.textContent = label; btn.classList.remove("armed");
@@ -1919,7 +2358,7 @@ details ol{padding-left:20px;margin:8px 0 0}
   const showErr = (el, msg) => { el.textContent = msg; el.hidden = false; };
 
   // movimiento
-  let txEdit = null, txType = "gasto", txCat = "", txMethod = "", txCur = "local", txFav = false;
+  let txEdit = null, txType = "gasto", txCat = "", txMethod = "", txCur = "local", txFav = false, txAccTouched = false;
   let txPhotoBlob = null, txPhotoId = "", txPhotoRemoved = false, txThumbUrl = "";
   function drawTxForm() {
     setSeg($("#tx-type"), txType);
@@ -1937,6 +2376,10 @@ details ol{padding-left:20px;margin:8px 0 0}
     const credit = txType === "gasto" && txMethod === "credito";
     $("#tx-card-field").hidden = !credit;
     $("#tx-card").hidden = !cards.length; $("#tx-card-hint").hidden = !!cards.length;
+    const showAcc = accounts.length > 0 && !credit;
+    $("#tx-acc-field").hidden = !showAcc;
+    $("#tx-acc-lbl").textContent = txType === "ingreso" ? "Entra en la cuenta" : "Sale de la cuenta";
+    if (showAcc && !txAccTouched) accOptions($("#tx-acc"), defaultAcc(txMethod, txCur));
     $("#tx-inst-row").hidden = !credit || !!txEdit;
     const inst = Number($("#tx-inst").value) || 1;
     $("#tx-first-field").style.visibility = inst > 1 ? "visible" : "hidden";
@@ -1976,6 +2419,8 @@ details ol{padding-left:20px;margin:8px 0 0}
     $("#tx-note").value = t ? (t.note || "") : (prefill.note || "");
     $("#tx-repeat").value = ""; $("#tx-inst").value = "1"; $("#tx-first").value = "0";
     cardOptions($("#tx-card"), t?.card || "");
+    txAccTouched = !!t;
+    accOptions($("#tx-acc"), t ? (t.acc || "") : defaultAcc(txMethod, txCur));
     const rec = t?.recId ? recs.find(r => r.id === t.recId) : null;
     const note = $("#tx-rec-note");
     note.hidden = !(rec || t?.inst);
@@ -2003,6 +2448,7 @@ details ol{padding-left:20px;margin:8px 0 0}
   });
   ["#tx-amount", "#tx-rate"].forEach(s => $(s).addEventListener("input", updateTxCalc));
   $("#tx-inst").addEventListener("change", drawTxForm);
+  $("#tx-acc").addEventListener("change", () => { txAccTouched = true; });
   $("#tx-fav").onclick = () => { txFav = !txFav; drawTxForm(); };
   $("#tx-photo-btn").onclick = () => $("#photo-file").click();
   $("#photo-file").onchange = async ev => {
@@ -2037,7 +2483,9 @@ details ol{padding-left:20px;margin:8px 0 0}
       if (txPhotoBlob) { photo = txPhotoId || uid(); await putPhoto(photo, txPhotoBlob); }
       else if (txPhotoRemoved && txPhotoId) await delPhoto(txPhotoId);
     } catch { return showErr(err, "No se pudo guardar la foto. Libera espacio en el iPhone e inténtalo de nuevo."); }
-    const base = {type:txType, amount, cat:txCat, note, date, method, card:cardId};
+    const acc = !$("#tx-acc-field").hidden ? $("#tx-acc").value : "";
+    if (acc) ui.lastAcc = acc;
+    const base = {type:txType, amount, cat:txCat, note, date, method, card:cardId, acc};
     const extra = t => { if (usdAmt) { t.usd = usdAmt; t.rate = rate; } else { delete t.usd; delete t.rate; } if (photo) t.photo = photo; else delete t.photo; return t; };
     let msg;
     if (txEdit) { Object.assign(txEdit, base); extra(txEdit); msg = "Cambios guardados"; }
@@ -2078,6 +2526,8 @@ details ol{padding-left:20px;margin:8px 0 0}
     $("#rec-method-field").hidden = recType !== "gasto";
     chips($("#rec-methods"), METHODS, recMethod, id => { recMethod = id; drawRecForm(); }, {allowNone:true});
     $("#rec-card-field").hidden = !(recType === "gasto" && recMethod === "credito" && cards.length);
+    $("#rec-acc-field").hidden = !accounts.length || (recType === "gasto" && recMethod === "credito");
+    $("#rec-acc-field label").textContent = recType === "ingreso" ? "Entra en la cuenta" : "Sale de la cuenta";
     $("#rec-active").setAttribute("aria-checked", recActive);
     const start = $("#rec-start").value, f = $("#rec-freq").value;
     $("#rec-hint").textContent = !start ? "" : start <= todayStr() && !recEdit
@@ -2094,6 +2544,7 @@ details ol{padding-left:20px;margin:8px 0 0}
     $("#rec-start").value = r ? (nextDue(r) || r.start) : addDays(todayStr(), 1);
     recShown = {start:$("#rec-start").value, freq:$("#rec-freq").value};
     cardOptions($("#rec-card"), r?.card || "");
+    accOptions($("#rec-acc"), r ? (r.acc || "") : defaultAcc("transferencia", "local"));
     $("#rec-active-row").hidden = !r;
     $("#rec-err").hidden = true;
     $("#rec-ics").hidden = !r;
@@ -2117,7 +2568,8 @@ details ol{padding-left:20px;margin:8px 0 0}
     if (!note) return showErr(err, "Ponle un nombre, por ejemplo Alquiler o Sueldo.");
     if (!isDate(start)) return showErr(err, "Elige la fecha del próximo pago.");
     const method = recType === "gasto" ? recMethod : "";
-    const data = {type:recType, amount, cat:recCat, note, method, card:method === "credito" ? $("#rec-card").value : "", freq:$("#rec-freq").value};
+    const data = {type:recType, amount, cat:recCat, note, method, card:method === "credito" ? $("#rec-card").value : "",
+      acc:$("#rec-acc-field").hidden ? "" : $("#rec-acc").value, freq:$("#rec-freq").value};
     let added;
     if (recEdit) {
       const wasActive = recEdit.active;
@@ -2326,6 +2778,303 @@ details ol{padding-left:20px;margin:8px 0 0}
     save(); closeSheet($("#fav-sheet")); renderAll(); toast("Gasto rápido guardado");
   });
 
+  // cuenta
+  let accEdit = null, accColor = "c1";
+  function drawAcc() {
+    $("#acc-sym").textContent = $("#acc-kind").value === "usd" ? "US$" : symbol();
+    swatches($("#acc-colors"), accColor, col => { accColor = col; drawAcc(); });
+  }
+  function openAcc(a) {
+    accEdit = a || null;
+    accColor = a ? a.color : (COLORS.find(c => !accounts.some(x => x.color === c)) || "c1");
+    $("#acc-title").textContent = a ? a.name : "Nueva cuenta";
+    $("#acc-name").value = a ? a.name : "";
+    $("#acc-kind").value = a ? a.kind : (accounts.some(x => x.kind === "efectivo") ? "banco" : "efectivo");
+    $("#acc-bal").value = a ? amountToInput(accBalance(a)) : "";
+    $("#acc-hint").textContent = a ? "Si el saldo no coincide con el real, corrígelo aquí. No cambia tus gastos anotados." : "Pon lo que tienes hoy. A partir de ahora, los gastos e ingresos que anotes en esta cuenta mueven el saldo.";
+    $("#acc-err").hidden = true;
+    $("#acc-delete").hidden = !a;
+    if (a) armDelete($("#acc-delete"), "Eliminar cuenta", () => {
+      accounts = accounts.filter(x => x.id !== a.id);
+      txs.forEach(t => { if (t.acc === a.id) t.acc = ""; }); recs.forEach(r => { if (r.acc === a.id) r.acc = ""; });
+      transfers = transfers.filter(x => x.from !== a.id && x.to !== a.id);
+      save(); closeSheet($("#acc-sheet")); renderAll(); toast("Cuenta eliminada. Tus gastos se conservan.");
+    });
+    drawAcc(); openSheet($("#acc-sheet"));
+    if (!a) setTimeout(() => $("#acc-name").focus(), 60);
+  }
+  $("#acc-kind").addEventListener("change", drawAcc);
+  $("#acc-form").addEventListener("submit", ev => {
+    ev.preventDefault();
+    const name = $("#acc-name").value.trim(), kind = $("#acc-kind").value, raw = $("#acc-bal").value.trim(), err = $("#acc-err");
+    const neg = raw.startsWith("-") || raw.startsWith("−"), bal = raw ? (neg ? -1 : 1) * parseAmount(raw.replace(/^[-−]/, "")) : 0;
+    if (!name) return showErr(err, "Escribe un nombre, por ejemplo Mercado Pago.");
+    if (!Number.isFinite(bal)) return showErr(err, "El saldo tiene que ser un número, por ejemplo 150000.");
+    if (accEdit) { Object.assign(accEdit, {name, kind, color:accColor}); accEdit.initial = round2((Number(accEdit.initial) || 0) + bal - accBalance(accEdit)); }
+    else accounts.push({id:uid(), name, kind, initial:bal, color:accColor});
+    save(); closeSheet($("#acc-sheet")); ui.ahorroView = "cuentas"; renderAll(); toast("Cuenta guardada");
+  });
+
+  // mover dinero
+  let xferEdit = null, xferToTouched = false;
+  const xferRate = () => fxRate() || 0;
+  function xferCurrencies() {
+    const from = accById($("#xfer-from").value), toId = $("#xfer-to").value, to = accById(toId);
+    return {from, to, fromUsd:isUsdAcc(from), toUsd:isUsdAcc(to), toCard:toId.startsWith("card:")};
+  }
+  function drawXfer() {
+    const c = xferCurrencies(), differ = c.fromUsd !== c.toUsd;
+    $("#xfer-sym").textContent = c.fromUsd ? "US$" : symbol();
+    $("#xfer-to-field").hidden = !differ;
+    $("#xfer-to-lbl").textContent = c.toUsd ? "Recibes (US$)" : `Recibes (${symbol()})`;
+    $("#xfer-title").textContent = c.toCard ? "Pagar tarjeta" : "Mover dinero";
+    $("#xfer-hint").textContent = c.toCard ? "El pago de la tarjeta descuenta el dinero de tu cuenta. No cuenta como gasto: los gastos ya se anotaron al comprar."
+      : differ ? "Compra o venta de dólares: pon cuánto sale y cuánto recibes. No cuenta como gasto." : "Mover dinero entre tus cuentas no cuenta como gasto ni como ingreso.";
+    if (differ && !xferToTouched) {
+      const a = parseAmount($("#xfer-amount").value), r = xferRate();
+      $("#xfer-to-amount").value = a > 0 && r ? amountToInput(round2(c.fromUsd ? a * r : a / r)) : "";
+    }
+  }
+  function openXfer(x, pre = {}) {
+    if (!accounts.length) { toast("Primero añade una cuenta"); ui.ahorroView = "cuentas"; setTab("ahorro"); openAcc(null); return; }
+    xferEdit = x || null; xferToTouched = !!x;
+    const fromSel = $("#xfer-from"), toSel = $("#xfer-to");
+    accOptions(fromSel, x?.from || pre.from || defaultAcc("transferencia", "local") || accounts[0].id, {none:null});
+    toSel.innerHTML = accounts.map(a => `<option value="${esc(a.id)}">${esc(a.name)}${isUsdAcc(a) ? " (US$)" : ""}</option>`).join("")
+      + cards.map(c => `<option value="card:${esc(c.id)}">Pagar tarjeta ${esc(c.name)}</option>`).join("");
+    const want = x?.to || pre.to || accounts.find(a => a.id !== fromSel.value)?.id || "";
+    toSel.value = [...toSel.options].some(o => o.value === want) ? want : toSel.options[0]?.value || "";
+    $("#xfer-amount").value = x ? amountToInput(x.amount) : (pre.amount ? amountToInput(round2(pre.amount)) : "");
+    $("#xfer-to-amount").value = x?.toAmount != null && x.toAmount !== x.amount ? amountToInput(x.toAmount) : "";
+    $("#xfer-date").value = x ? x.date : todayStr();
+    $("#xfer-note").value = x ? (x.note || "") : "";
+    $("#xfer-err").hidden = true;
+    $("#xfer-delete").hidden = !x;
+    if (x) armDelete($("#xfer-delete"), "Eliminar", () => { transfers = transfers.filter(y => y.id !== x.id); save(); closeSheet($("#xfer-sheet")); renderAll(); toast("Eliminado"); });
+    drawXfer(); openSheet($("#xfer-sheet"));
+  }
+  ["#xfer-from", "#xfer-to"].forEach(s => $(s).addEventListener("change", () => { xferToTouched = false; drawXfer(); }));
+  $("#xfer-amount").addEventListener("input", drawXfer);
+  $("#xfer-to-amount").addEventListener("input", () => { xferToTouched = true; });
+  $("#xfer-form").addEventListener("submit", ev => {
+    ev.preventDefault();
+    const from = $("#xfer-from").value, to = $("#xfer-to").value, amount = parseAmount($("#xfer-amount").value), err = $("#xfer-err");
+    if (!from || !to) return showErr(err, "Elige desde dónde y hacia dónde.");
+    if (from === to) return showErr(err, "Elige dos cuentas distintas.");
+    if (!(amount > 0)) return showErr(err, "Escribe el importe.");
+    let toAmount = amount;
+    if (!$("#xfer-to-field").hidden) { toAmount = parseAmount($("#xfer-to-amount").value); if (!(toAmount > 0)) return showErr(err, "Escribe cuánto recibes."); }
+    const date = isDate($("#xfer-date").value) ? $("#xfer-date").value : todayStr();
+    const data = {from, to, amount, toAmount, date, note:$("#xfer-note").value.trim()};
+    if (xferEdit) Object.assign(xferEdit, data); else transfers.push({id:uid(), ...data});
+    save(); closeSheet($("#xfer-sheet")); renderAll();
+    toast(to.startsWith("card:") ? "Pago de tarjeta registrado" : "Movimiento guardado");
+  });
+
+  // inversión
+  let assetEdit = null;
+  function drawAsset() {
+    const k = $("#asset-kind").value, a = assetEdit;
+    $("#asset-pf").hidden = k !== "plazo_fijo";
+    $("#asset-crypto").hidden = k !== "cripto";
+    $("#asset-value-field").hidden = k === "plazo_fijo" || k === "cripto";
+    $("#asset-from-field").hidden = !accounts.length || !!a;
+    $("#asset-hist").innerHTML = a && a.hist?.length ? a.hist.slice().reverse().slice(0, 6).map(h => `<div><span>${esc(fmtShort(h.date))}</span><span>${money(h.value)}</span></div>`).join("") : "";
+    let calc = "";
+    if (k === "plazo_fijo") {
+      const cap = parseAmount($("#asset-capital").value), tna = Number(String($("#asset-tna").value).replace(",", ".")), days = Number($("#asset-days").value), start = $("#asset-start").value;
+      if (cap > 0 && tna >= 0 && days > 0 && isDate(start)) {
+        const fin = round2(cap * (1 + tna / 100 * days / 365));
+        calc = `Al vencer, el ${esc(fmtLong(addDays(start, days)))}, cobras <b>${money(fin)}</b> (${money(fin - cap)} de intereses).`;
+      }
+    } else if (k === "cripto") {
+      const q = parseAmount($("#asset-qty").value), px = settings.crypto?.[$("#asset-coin").value], r = fxRate();
+      if (q > 0 && px) calc = `Hoy vale <b>${usd(q * px)}</b>${r ? ` ≈ ${money(q * px * r)}` : ""}.`;
+      else if (q > 0) calc = "Sin precio todavía. Se actualiza solo con internet.";
+    }
+    $("#asset-calc").innerHTML = calc; $("#asset-calc").hidden = !calc;
+    const canCollect = a && accounts.some(x => !isUsdAcc(x)) && (a.kind !== "plazo_fijo" || pfEnd(a) <= todayStr());
+    $("#asset-collect").hidden = !canCollect;
+    $("#asset-collect-btn").textContent = a?.kind === "plazo_fijo" ? "Cobrar" : "Vender";
+    $("#asset-collect label").textContent = a?.kind === "plazo_fijo" ? "Cobrar en la cuenta" : "Vender o rescatar a la cuenta";
+  }
+  function openAsset(a) {
+    assetEdit = a || null;
+    $("#asset-title").textContent = a ? a.name : "Nueva inversión";
+    $("#asset-kind").value = a ? a.kind : "plazo_fijo";
+    $("#asset-kind").disabled = !!a;
+    $("#asset-name").value = a ? a.name : "";
+    $("#asset-capital").value = a?.amount ? amountToInput(a.amount) : "";
+    $("#asset-tna").value = a?.tna != null ? String(a.tna).replace(".", ",") : "";
+    $("#asset-days").value = a?.days || "30";
+    $("#asset-start").value = a?.start || todayStr();
+    $("#asset-coin").value = a?.coin || "bitcoin";
+    $("#asset-qty").value = a?.qty ? String(a.qty).replace(".", ",") : "";
+    $("#asset-value").value = a?.value ? amountToInput(a.value) : "";
+    accOptions($("#asset-from"), "", {none:"No descontar de ninguna", only:x => !isUsdAcc(x)});
+    accOptions($("#asset-to"), defaultAcc("transferencia", "local"), {none:null, only:x => !isUsdAcc(x)});
+    $("#asset-err").hidden = true;
+    $("#asset-delete").hidden = !a;
+    if (a) armDelete($("#asset-delete"), "Eliminar inversión", () => { assets = assets.filter(x => x.id !== a.id); save(); closeSheet($("#asset-sheet")); renderAll(); toast("Inversión eliminada"); });
+    drawAsset(); openSheet($("#asset-sheet"));
+  }
+  ["#asset-kind", "#asset-coin", "#asset-start"].forEach(s => $(s).addEventListener("change", drawAsset));
+  ["#asset-capital", "#asset-tna", "#asset-days", "#asset-qty"].forEach(s => $(s).addEventListener("input", drawAsset));
+  $("#asset-collect-btn").onclick = () => {
+    const a = assetEdit, acc = $("#asset-to").value;
+    if (!a || !acc) return;
+    const v = a.kind === "plazo_fijo" ? pfFinal(a) : assetValue(a);
+    if (!(v > 0)) return showErr($("#asset-err"), "Esta inversión no tiene valor para cobrar.");
+    if (a.kind === "plazo_fijo") {
+      transfers.push({id:uid(), from:"asset:" + a.id, to:acc, amount:a.amount, toAmount:a.amount, date:todayStr(), note:`Cobro ${a.name}`});
+      if (v - a.amount > 0) {
+        const cat = catsOf("ingreso").find(c => c.id === "inversiones") || fallbackCat("ingreso");
+        txs.push({id:uid(), type:"ingreso", amount:round2(v - a.amount), cat:cat.id, note:`Intereses ${a.name}`, date:todayStr(), method:"", card:"", acc, created:Date.now()});
+      }
+    } else transfers.push({id:uid(), from:"asset:" + a.id, to:acc, amount:round2(v), toAmount:round2(v), date:todayStr(), note:`Venta ${a.name}`});
+    assets = assets.filter(x => x.id !== a.id);
+    save(); closeSheet($("#asset-sheet")); renderAll(); toast(`Cobraste ${money(v)} en ${accById(acc).name}`);
+  };
+  $("#asset-form").addEventListener("submit", ev => {
+    ev.preventDefault();
+    const k = $("#asset-kind").value, name = $("#asset-name").value.trim() || ASSET_KINDS[k], err = $("#asset-err"), today = todayStr();
+    const data = {kind:k, name};
+    if (k === "plazo_fijo") {
+      data.amount = parseAmount($("#asset-capital").value); data.tna = Number(String($("#asset-tna").value).replace(",", "."));
+      data.days = Math.round(Number($("#asset-days").value)); data.start = $("#asset-start").value;
+      if (!(data.amount > 0)) return showErr(err, "Escribe el capital que pusiste.");
+      if (!(data.tna >= 0) || !Number.isFinite(data.tna)) return showErr(err, "Escribe la tasa nominal anual, por ejemplo 32.");
+      if (!(data.days > 0)) return showErr(err, "Escribe el plazo en días, por ejemplo 30.");
+      if (!isDate(data.start)) return showErr(err, "Elige la fecha en que lo hiciste.");
+    } else if (k === "cripto") {
+      data.coin = $("#asset-coin").value; data.qty = Number(String($("#asset-qty").value).trim().replace(",", "."));
+      if (!(data.qty > 0)) return showErr(err, "Escribe la cantidad, por ejemplo 0,05.");
+    } else {
+      data.value = parseAmount($("#asset-value").value);
+      if (!(data.value > 0)) return showErr(err, "Escribe cuánto vale hoy.");
+    }
+    if (assetEdit) {
+      if (data.value && data.value !== assetEdit.value) (assetEdit.hist ||= []).push({date:today, value:data.value});
+      Object.assign(assetEdit, data);
+    } else {
+      const a = {id:uid(), ...data, hist:data.value ? [{date:today, value:data.value}] : []};
+      assets.push(a);
+      const from = $("#asset-from-field").hidden ? "" : $("#asset-from").value, cost = k === "plazo_fijo" ? data.amount : data.value;
+      if (from && cost > 0) transfers.push({id:uid(), from, to:"asset:" + a.id, amount:cost, toAmount:cost, date:k === "plazo_fijo" ? data.start : today, note:name});
+      if (k === "cripto" && !settings.crypto) fetchCrypto(false);
+    }
+    save(); closeSheet($("#asset-sheet")); ui.ahorroView = "inversiones"; renderAll(); toast("Inversión guardada");
+  });
+
+  /* ---------- month recap ---------- */
+  let recapKey = "";
+  function recapData(key) {
+    const nowKey = ym(new Date()), pk = addMonthsYm(key, -1), [y, m] = key.split("-").map(Number);
+    const inM = k => t => t.date.startsWith(k) && t.date <= todayStr();
+    const g = txs.filter(t => t.type === "gasto" && inM(key)(t)), inc = txs.filter(t => t.type === "ingreso" && inM(key)(t));
+    const pg = txs.filter(t => t.type === "gasto" && inM(pk)(t));
+    const tg = sum(g), ti = sum(inc), ptg = sum(pg);
+    const days = key === nowKey ? new Date().getDate() : daysIn(y, m - 1);
+    const noSpend = days - new Set(g.map(t => t.date)).size;
+    const by = {}, pby = {};
+    g.forEach(t => by[t.cat] = (by[t.cat] || 0) + t.amount); pg.forEach(t => pby[t.cat] = (pby[t.cat] || 0) + t.amount);
+    const cats2 = Object.entries(by).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({cat:catById(k), v}));
+    const biggest = g.length ? g.reduce((a, b) => b.amount > a.amount ? b : a) : null;
+    let rise = null, drop = null;
+    Object.keys({...by, ...pby}).forEach(k => {
+      const d = (by[k] || 0) - (pby[k] || 0);
+      if (pby[k] > 0 && d > 0 && (!rise || d > rise.d)) rise = {cat:catById(k), d, p:d / pby[k]};
+      if (pby[k] > 0 && d < 0 && (!drop || d < drop.d)) drop = {cat:catById(k), d, p:-d / pby[k]};
+    });
+    const fixedShare = tg ? sum(g.filter(t => t.recId || t.inst)) / tg : 0;
+    const goalIn = goals.reduce((s, gl) => s + (gl.history || []).filter(h => h.date.startsWith(key) && h.amount > 0).reduce((a, h) => a + h.amount, 0), 0);
+    return {key, pk, name:parseD(key + "-15").toLocaleDateString(LOCALE, {month:"long", year:"numeric"}).replace(" de ", " "),
+      pname:parseD(pk + "-15").toLocaleDateString(LOCALE, {month:"long"}), g, tg, ti, ptg, saved:ti - tg, days, noSpend, cats:cats2, biggest, rise, drop, fixedShare, goalIn, count:g.length};
+  }
+  function drawRecap() {
+    const d = recapData(recapKey), body = $("#recap-body"), first = txs.reduce((m, t) => t.date < m ? t.date : m, todayStr()).slice(0, 7);
+    $("#recap-title").textContent = d.name;
+    $("#recap-prev").disabled = recapKey <= first;
+    $("#recap-next").disabled = recapKey >= ym(new Date());
+    $("#recap-save").hidden = !d.g.length;
+    if (!d.g.length && !d.ti) { body.innerHTML = `<div class="empty"><h2>Sin movimientos</h2><p>No anotaste gastos ni ingresos en ${esc(d.name)}.</p></div>`; return; }
+    const delta = d.ptg > 0 ? (d.tg - d.ptg) / d.ptg : null;
+    const hl = [];
+    if (d.biggest) hl.push(`Tu gasto más grande fue <b>${esc(d.biggest.note || catById(d.biggest.cat).name)}</b>: ${money(d.biggest.amount)}, el ${esc(fmtShort(d.biggest.date))}.`);
+    if (d.rise) hl.push(`Donde más subiste: <b>${esc(d.rise.cat.name)}</b>, ${money(d.rise.d)} más que en ${esc(d.pname)} (${fmtPct(d.rise.p)}).`);
+    if (d.drop) hl.push(`Donde más ahorraste: <b>${esc(d.drop.cat.name)}</b>, ${money(-d.drop.d)} menos que en ${esc(d.pname)}.`);
+    if (d.fixedShare) hl.push(`El <b>${Math.round(d.fixedShare * 100)}%</b> de lo que gastaste fueron fijos y cuotas.`);
+    if (d.goalIn) hl.push(`Apartaste <b>${money(d.goalIn)}</b> para tus metas.`);
+    hl.push(`<b>${d.noSpend}</b> ${d.noSpend === 1 ? "día" : "días"} sin gastar de ${d.days}.`);
+    body.innerHTML = `
+      <div class="recap-hero"><span class="k">Gastaste</span><span class="v num">${money(d.tg)}</span>
+        <span class="s">${delta == null ? "Primer mes con datos para comparar" : `${delta > 0 ? "↑" : "↓"} ${Math.abs(Math.round(delta * 100))}% frente a ${esc(d.pname)} (${money(d.ptg)})`}</span></div>
+      <div class="kpis">
+        <div class="kpi"><span class="k">Ingresos</span><span class="v num pos">${kmoney(d.ti)}</span></div>
+        <div class="kpi"><span class="k">${d.saved >= 0 ? "Ahorraste" : "Te faltó"}</span><span class="v num ${d.saved >= 0 ? "" : "neg"}">${kmoney(Math.abs(d.saved))}</span>
+          <span class="s">${d.ti > 0 && d.saved > 0 ? `El ${Math.round(d.saved / d.ti * 100)}% de lo que ingresaste` : d.ti ? "Gastaste más de lo que ingresaste" : "Sin ingresos anotados"}</span></div>
+        <div class="kpi"><span class="k">Gasto diario</span><span class="v num">${kmoney(d.tg / d.days)}</span></div>
+        <div class="kpi"><span class="k">Movimientos</span><span class="v num">${d.count}</span></div>
+      </div>`;
+    if (d.cats.length) hbars(body, "En qué se fue la plata", null, d.cats.slice(0, 5).map(c => [c.cat.name, c.v, cvar(c.cat)]), d.tg);
+    const c = card("Lo más destacado"); c.insertAdjacentHTML("beforeend", `<ul class="hl">${hl.map(h => `<li>${h}</li>`).join("")}</ul>`); body.append(c);
+  }
+  function openRecap(key) { recapKey = key || ym(new Date()); drawRecap(); $("#recap").hidden = false; $("#recap").scrollTop = 0; }
+  $("#recap-prev").onclick = () => { recapKey = addMonthsYm(recapKey, -1); drawRecap(); };
+  $("#recap-next").onclick = () => { recapKey = addMonthsYm(recapKey, 1); drawRecap(); };
+  $("#recap-close").onclick = () => { $("#recap").hidden = true; };
+  $("#open-recap").onclick = () => openRecap(new Date().getDate() <= 7 ? addMonthsYm(ym(new Date()), -1) : ym(new Date()));
+  async function recapImage(key) {
+    const d = recapData(key);
+    try { await document.fonts?.ready; } catch {}
+    const W = 1080, H = 1350, P = 72, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+    const x = cv.getContext("2d"), css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#888";
+    const C = {bg:css("--bg"), ink:css("--ink"), muted:css("--muted"), accent:css("--accent"), accentInk:css("--accent-ink"), surface:css("--surface"), line:css("--line")};
+    const DISP = '"Bricolage Grotesque", system-ui, sans-serif', BODY = 'Figtree, system-ui, sans-serif';
+    const font = (w, s, f) => { x.font = `${w} ${s}px ${f}`; };
+    const fitFont = (text, w, s, f, max) => { let z = s; font(w, z, f); while (x.measureText(text).width > max && z > 24) { z -= 2; font(w, z, f); } };
+    const rr = (x0, y0, w, h, r, fill) => { x.beginPath(); x.moveTo(x0 + r, y0); x.arcTo(x0 + w, y0, x0 + w, y0 + h, r); x.arcTo(x0 + w, y0 + h, x0, y0 + h, r); x.arcTo(x0, y0 + h, x0, y0, r); x.arcTo(x0, y0, x0 + w, y0, r); x.closePath(); x.fillStyle = fill; x.fill(); };
+    x.fillStyle = C.bg; x.fillRect(0, 0, W, H);
+    font(600, 30, BODY); x.fillStyle = C.muted; x.fillText(("Resumen de " + d.name).toUpperCase(), P, P + 24);
+    rr(P, 130, W - 2 * P, 330, 44, C.accent);
+    x.fillStyle = C.accentInk; font(600, 30, BODY); x.globalAlpha = .85; x.fillText("GASTASTE", P + 48, 200); x.globalAlpha = 1;
+    fitFont(money(d.tg), 700, 124, DISP, W - 2 * P - 96); x.fillText(money(d.tg), P + 48, 330);
+    font(500, 34, BODY);
+    const delta = d.ptg > 0 ? (d.tg - d.ptg) / d.ptg : null;
+    x.fillText(delta == null ? "Primer mes con datos" : `${delta > 0 ? "↑" : "↓"} ${Math.abs(Math.round(delta * 100))}% frente a ${d.pname}`, P + 48, 410);
+    const stats = [["Ingresos", kmoney(d.ti)], [d.saved >= 0 ? "Ahorraste" : "Te faltó", kmoney(Math.abs(d.saved))], ["Días sin gastar", `${d.noSpend} de ${d.days}`]];
+    const bw = (W - 2 * P - 2 * 24) / 3;
+    stats.forEach(([k, v], i) => {
+      const x0 = P + i * (bw + 24);
+      rr(x0, 500, bw, 170, 32, C.surface);
+      x.fillStyle = C.muted; font(600, 24, BODY); x.fillText(k.toUpperCase(), x0 + 28, 552);
+      x.fillStyle = C.ink; fitFont(v, 700, 48, DISP, bw - 56); x.fillText(v, x0 + 28, 628);
+    });
+    x.fillStyle = C.muted; font(600, 26, BODY); x.fillText("EN QUÉ SE FUE LA PLATA", P, 740);
+    const top = d.cats.slice(0, 4), max = top[0]?.v || 1;
+    top.forEach((c, i) => {
+      const y0 = 790 + i * 100;
+      x.fillStyle = C.ink; font(500, 34, BODY); x.fillText(c.cat.name, P, y0 + 30);
+      const amt = money(c.v); font(600, 34, BODY); x.fillText(amt, W - P - x.measureText(amt).width, y0 + 30);
+      rr(P, y0 + 50, W - 2 * P, 18, 9, C.line);
+      rr(P, y0 + 50, Math.max(18, (W - 2 * P) * c.v / max), 18, 9, css("--" + (c.cat.color || "c9")));
+    });
+    if (d.biggest) {
+      x.fillStyle = C.muted; font(500, 30, BODY);
+      const t = `Gasto más grande: ${d.biggest.note || catById(d.biggest.cat).name} · ${money(d.biggest.amount)}`;
+      fitFont(t, 500, 30, BODY, W - 2 * P); x.fillText(t, P, 1230);
+    }
+    x.fillStyle = C.accent; font(700, 30, DISP); x.fillText("Gastos", P, H - 56);
+    return new Promise(res => cv.toBlob(res, "image/png"));
+  }
+  $("#recap-save").onclick = async () => {
+    try {
+      const blob = await recapImage(recapKey);
+      if (!blob) throw new Error("canvas");
+      if (await saveFile(`resumen-${recapKey}.png`, blob, "image/png")) toast("Imagen lista");
+    } catch { toast("No se pudo crear la imagen."); }
+  };
+
   /* ---------- lock (code + Face ID) ---------- */
   const b64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
   const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
@@ -2415,7 +3164,7 @@ details ol{padding-left:20px;margin:8px 0 0}
     const photos = {};
     try { for (const t of txs) if (t.photo && !photos[t.photo]) { const b = await getPhoto(t.photo); if (b) photos[t.photo] = await blobToDataURL(b); } } catch {}
     const data = JSON.stringify({app:"gastos", version:4, saved:new Date().toISOString(),
-      settings:{...settings, lock:{on:false, hash:"", salt:"", cred:""}}, categories:cats, recurring:recs, cards, favs, goals, debts, expenses:txs, photos});
+      settings:{...settings, lock:{on:false, hash:"", salt:"", cred:""}}, categories:cats, recurring:recs, cards, favs, goals, debts, accounts, transfers, assets, expenses:txs, photos});
     if (await saveFile(`gastos-copia-${todayStr()}.json`, data, "application/json")) toast("Copia lista");
   };
   $("#restore").onclick = () => $("#restore-file").click();
@@ -2435,9 +3184,15 @@ details ol{padding-left:20px;margin:8px 0 0}
         history:(Array.isArray(x.history) ? x.history : []).filter(h => isDate(h.date) && Number.isFinite(Number(h.amount))).map(h => ({date:h.date, amount:Number(h.amount)}))});
       mergeById(debts, d.debts, x => Number(x.amount) > 0 && {id:String(x.id), dir:x.dir === "debo" ? "debo" : "me_deben", amount:Number(x.amount), person:String(x.person || "Alguien").slice(0, 30), date:isDate(x.date) ? x.date : todayStr(), note:String(x.note || "").slice(0, 60),
         payments:(Array.isArray(x.payments) ? x.payments : []).filter(p => isDate(p.date) && Number(p.amount) > 0).map(p => ({date:p.date, amount:Number(p.amount)})), settled:!!x.settled});
+      mergeById(accounts, d.accounts, a => a.name && {id:String(a.id), name:String(a.name).slice(0, 30), kind:ACC_KINDS[a.kind] ? a.kind : "banco", initial:Number(a.initial) || 0, color:COLORS.includes(a.color) ? a.color : "c1"});
+      mergeById(transfers, d.transfers, x => Number(x.amount) > 0 && x.from && x.to && {id:String(x.id), from:String(x.from), to:String(x.to), amount:Number(x.amount),
+        toAmount:Number(x.toAmount) > 0 ? Number(x.toAmount) : Number(x.amount), date:isDate(x.date) ? x.date : todayStr(), note:String(x.note || "").slice(0, 60)});
+      mergeById(assets, d.assets, a => ASSET_KINDS[a.kind] && {id:String(a.id), kind:a.kind, name:String(a.name || ASSET_KINDS[a.kind]).slice(0, 40), amount:Number(a.amount) || 0, tna:Number(a.tna) || 0,
+        days:Number(a.days) || 0, start:isDate(a.start) ? a.start : todayStr(), coin:COINS[a.coin] ? a.coin : "bitcoin", qty:Number(a.qty) || 0, value:Number(a.value) || 0,
+        hist:(Array.isArray(a.hist) ? a.hist : []).filter(h => isDate(h.date) && Number(h.value) > 0).map(h => ({date:h.date, value:Number(h.value)}))});
       const have = new Set(txs.map(e => e.id));
       const fresh = d.expenses.map(normTx).filter(e => e && !have.has(e.id)).map(e => {
-        const t = {id:e.id, type:e.type, amount:e.amount, cat:String(e.cat), note:String(e.note || "").slice(0, 60), date:e.date, method:String(e.method || ""), card:String(e.card || ""), created:Number(e.created) || Date.now()};
+        const t = {id:e.id, type:e.type, amount:e.amount, cat:String(e.cat), note:String(e.note || "").slice(0, 60), date:e.date, method:String(e.method || ""), card:String(e.card || ""), acc:String(e.acc || ""), created:Number(e.created) || Date.now()};
         if (e.recId) t.recId = String(e.recId);
         if (e.inst && e.inst.g) t.inst = {g:String(e.inst.g), n:Number(e.inst.n) || 1, of:Number(e.inst.of) || 1, total:Number(e.inst.total) || e.amount};
         if (Number(e.usd) > 0) { t.usd = Number(e.usd); t.rate = Number(e.rate) || 0; }
@@ -2500,7 +3255,7 @@ details ol{padding-left:20px;margin:8px 0 0}
     const t = ui.tab;
     $("#fab").hidden = t === "mas";
     $("#fab-label").textContent = t === "pagos" ? (ui.pagosView === "tarjetas" ? "Nueva tarjeta" : "Nuevo fijo")
-      : t === "ahorro" ? (ui.ahorroView === "deudas" ? "Nueva deuda" : "Nueva meta") : "Añadir";
+      : t === "ahorro" ? ({cuentas:"Nueva cuenta", inversiones:"Nueva inversión", metas:"Nueva meta", deudas:"Nueva deuda"})[ui.ahorroView] || "Añadir" : "Añadir";
   }
   function renderAll() {
     fillCatFilter();
@@ -2521,7 +3276,7 @@ details ol{padding-left:20px;margin:8px 0 0}
   $$(".tabbtn").forEach(b => b.onclick = () => setTab(b.dataset.tab));
   $("#fab").onclick = () => {
     if (ui.tab === "pagos") return ui.pagosView === "tarjetas" ? openCard(null) : openRec(null);
-    if (ui.tab === "ahorro") return ui.ahorroView === "deudas" ? openDebt(null) : openGoal(null);
+    if (ui.tab === "ahorro") return ({cuentas:openAcc, inversiones:openAsset, metas:openGoal, deudas:openDebt})[ui.ahorroView](null);
     openTx(null);
   };
   let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (ui.tab === "dash") renderDash(); }, 150); });
@@ -2548,6 +3303,7 @@ details ol{padding-left:20px;margin:8px 0 0}
     if (!navigator.onLine) return;
     if (usesUsd() && (!settings.fx || Date.now() - settings.fx.at > 3 * 3600e3)) fetchFx(false);
     if (settings.currency === "ARS" && Date.now() - (settings.inflAt || 0) > 5 * 864e5) fetchInfl(false);
+    if (assets.some(a => a.kind === "cripto") && (!settings.crypto || Date.now() - settings.crypto.at > 3600e3)) fetchCrypto(false);
   }
 
   /* ---------- start ---------- */
