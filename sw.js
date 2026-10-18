@@ -1,5 +1,5 @@
-// Lets Gastos open without internet. Bump VERSION when you upload a new index.html.
-const VERSION = "gastos-v6";
+// Lets Gastos open without internet and shows its notifications. Bump VERSION when you upload a new index.html.
+const VERSION = "gastos-v8";
 const CORE = ["./", "index.html", "manifest.webmanifest", "apple-touch-icon.png", "icon-192.png", "icon-512.png"];
 const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];
 
@@ -30,4 +30,22 @@ self.addEventListener("fetch", e => {
     if (res.ok || res.type === "opaque") { const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)); }
     return res;
   })));
+});
+
+// Notifications sent by the Cloudflare mailbox (iOS requires showing one for every push)
+self.addEventListener("push", e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch { d = {body:e.data ? e.data.text() : ""}; }
+  e.waitUntil(self.registration.showNotification(d.title || "Gastos", {
+    body:d.body || "", tag:d.tag || undefined, icon:"icon-192.png", badge:"icon-192.png", data:{url:d.url || "./"},
+  }));
+});
+
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  const target = new URL(e.notification.data?.url || "./", self.registration.scope).href;
+  e.waitUntil(clients.matchAll({type:"window", includeUncontrolled:true}).then(list => {
+    for (const c of list) if ("focus" in c) { c.postMessage({type:"open", url:target}); return c.focus(); }
+    return clients.openWindow(target);
+  }));
 });

@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Gastos</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -43,6 +43,21 @@
 html,body{height:100%}
 html{padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
 body{margin:0;overscroll-behavior-y:none;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;-webkit-tap-highlight-color:transparent}
+/* feel like a native app: no double-tap zoom, no text selection or callouts on controls, pressed states */
+html{touch-action:manipulation}
+body.sheet-open{overflow:hidden}
+button,.tabbar,.seg,.chip,.qchip,.row,.up,.goal,.kpi,.card h2,.eyebrow,.lbl,.badge,.day-head,label{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,.code{-webkit-user-select:text;user-select:text}
+button{transition:transform .12s ease,opacity .12s ease}
+.primary:active,.ghost:active,.chip:active,.qchip:active,.sw:active,.inline button:active,.keypad button:active{transform:scale(.96)}
+.tabbtn:active{transform:scale(.92)}
+.fab:active{transform:translateX(-50%) scale(.95)}
+.link:active,.icon-btn:active{opacity:.55}
+.goal:active,.up:active{opacity:.75}
+.sheet.dragging{animation:none;transition:none}
+.sheet.settle{transition:transform .2s ease}
+.grip{margin-block:2px 6px;width:44px}
+@media (prefers-reduced-motion:reduce){button{transition:none}}
 [hidden]{display:none!important}
 .app{max-width:520px;margin:0 auto;padding-inline:16px;padding-block:8px 190px}
 .tab{display:flex;flex-direction:column;gap:20px}
@@ -572,6 +587,43 @@ details ol{padding-left:20px;margin:8px 0 0}
   </div>
 
   <div class="set-group">
+    <span class="lbl">Notificaciones</span>
+    <div class="set-card">
+      <p class="hint" id="nt-status">Usan tu buzón de Cloudflare: te avisan aunque la app esté cerrada.</p>
+      <button class="primary" type="button" id="nt-enable">Activar notificaciones</button>
+      <div id="nt-opts" style="display:flex;flex-direction:column;gap:12px">
+        <div class="switch-row"><span>Pagos y vencimientos<small id="nt-pay-sub">Fijos, tarjetas y plazos fijos</small></span>
+          <button type="button" class="switch" id="nt-pay" role="switch" aria-checked="true" aria-label="Pagos y vencimientos"></button></div>
+        <div class="switch-row"><span>Recordatorio diario<small>Para anotar los gastos del día</small></span>
+          <button type="button" class="switch" id="nt-daily" role="switch" aria-checked="false" aria-label="Recordatorio diario"></button></div>
+        <div class="field" id="nt-hour-field"><label for="nt-hour">Hora del recordatorio</label>
+          <select class="input" id="nt-hour"></select></div>
+        <div class="switch-row"><span>Resumen del mes<small>El día 1, cuando está listo</small></span>
+          <button type="button" class="switch" id="nt-recap" role="switch" aria-checked="true" aria-label="Resumen del mes"></button></div>
+        <div class="switch-row"><span>Avisos de presupuesto<small>Si vas camino a pasarte, a mitad de mes</small></span>
+          <button type="button" class="switch" id="nt-budget" role="switch" aria-checked="true" aria-label="Avisos de presupuesto"></button></div>
+        <div class="switch-row"><span>Confirmar pagos de Apple Pay<small>Un aviso cuando el pago llega al buzón</small></span>
+          <button type="button" class="switch" id="nt-ap" role="switch" aria-checked="false" aria-label="Confirmar pagos de Apple Pay"></button></div>
+        <button class="ghost" type="button" id="nt-test">Enviar una notificación de prueba</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="set-group">
+    <span class="lbl">Copia en la nube</span>
+    <div class="set-card">
+      <div class="switch-row"><span>Copia automática<small>Cifrada con tu clave. Ni Cloudflare puede leerla.</small></span>
+        <button type="button" class="switch" id="cl-on" role="switch" aria-checked="false" aria-label="Copia automática"></button></div>
+      <p class="hint" id="cl-status">Necesita el buzón de Apple Pay configurado arriba.</p>
+      <button class="ghost" type="button" id="cl-now">Guardar copia ahora</button>
+      <div class="field"><label for="cl-dates">Restaurar desde la nube</label>
+        <div class="inline"><select class="input" id="cl-dates"><option value="">Toca Buscar</option></select>
+          <button type="button" class="alt" id="cl-list">Buscar</button><button type="button" id="cl-restore">Restaurar</button></div></div>
+      <p class="hint">Restaurar suma lo que falte en este iPhone; no borra nada. Las fotos de tickets no van a la nube, solo en la copia manual.</p>
+    </div>
+  </div>
+
+  <div class="set-group">
     <span class="lbl">Seguridad</span>
     <div class="set-card">
       <div class="switch-row"><span>Bloquear con código<small>Te lo pide al abrir la app</small></span>
@@ -592,7 +644,7 @@ details ol{padding-left:20px;margin:8px 0 0}
       <p class="hint">Tus datos se guardan solo en este iPhone. Guarda una copia de vez en cuando en Archivos o iCloud Drive para no perderlos.</p>
     </div>
   </div>
-  <p class="foot">Gastos · versión 6</p>
+  <p class="foot">Gastos · versión 8</p>
 </div>
 </main>
 
@@ -955,7 +1007,9 @@ details ol{padding-left:20px;margin:8px 0 0}
   let assets = [];    // {id, kind, name, amount, tna, days, start, coin, qty, value, hist:[{date, value}]}
   let settings = {budget:0, currency:guessCurrency(), remindDays:3, fxSource:"mep", fx:null, fxManual:0, showUsd:false,
     infl:{}, inflManual:{}, inflAt:0, inflAdjust:false, lock:{on:false, hash:"", salt:"", cred:""}, crypto:null, netHist:{},
-    inbox:{url:"", token:"", at:0}, payMap:{}, paySeen:[]};
+    inbox:{url:"", token:"", at:0}, payMap:{}, paySeen:[],
+    notif:{on:false, pay:true, daily:false, hour:21, recap:true, budget:true, applepay:false, hash:"", at:0, count:0},
+    cloud:{on:false, at:0, hash:""}};
   let ui = {tab:"home", period:1, pagosView:"fijos", ahorroView:"cuentas", typeFilter:"todo", catFilter:"", lastCat:{gasto:"comida", ingreso:"sueldo"}, dismissed:{}, lastAcc:""};
   const COINS = {bitcoin:"BTC", ethereum:"ETH", tether:"USDT", "usd-coin":"USDC", solana:"SOL"};
   const ASSET_KINDS = {plazo_fijo:"Plazo fijo", fci:"Fondo común", cripto:"Cripto", acciones:"Acciones", otro:"Inversión"};
@@ -1047,9 +1101,12 @@ details ol{padding-left:20px;margin:8px 0 0}
     if (!e || !(Number(e.amount) > 0) || !isDate(e.date)) return null;
     return {...e, id:String(e.id || uid()), amount:Number(e.amount), type:e.type === "ingreso" ? "ingreso" : "gasto"};
   }
-  function save() {
+  let syncTimer = null;
+  // quiet: don't trigger the cloud copy / notification sync (used by the sync code itself)
+  function save(quiet) {
     try { localStorage.setItem(LS_KEY, JSON.stringify({version:5, expenses:txs, settings, categories:cats, recurring:recs, cards, favs, goals, debts, accounts, transfers, assets})); }
     catch { toast("No se pudo guardar. Libera espacio en el iPhone e inténtalo de nuevo."); }
+    if (!quiet) { clearTimeout(syncTimer); syncTimer = setTimeout(() => runSync(), 5000); }
   }
   function saveUI() { try { localStorage.setItem("gastos.ui", JSON.stringify({tab:ui.tab, period:ui.period, pagosView:ui.pagosView, ahorroView:ui.ahorroView, lastCat:ui.lastCat, dismissed:ui.dismissed, lastAcc:ui.lastAcc})); } catch {} }
   try { navigator.storage?.persist?.(); } catch {}
@@ -2309,6 +2366,7 @@ details ol{padding-left:20px;margin:8px 0 0}
     faceAvailable().then(ok => { $("#faceid-row").hidden = !(ok && settings.lock.on); });
     $("#faceid-switch").setAttribute("aria-checked", !!settings.lock.cred);
     renderInboxSettings();
+    renderSyncSettings();
     $("#data-stats").textContent = `${plural(txs.length, "movimiento", "movimientos")}, ${plural(accounts.length, "cuenta", "cuentas")}, ${plural(assets.length, "inversión", "inversiones")}, ${plural(recs.length, "fijo", "fijos")}, ${plural(goals.length, "meta", "metas")} y ${plural(debts.length, "deuda", "deudas")} guardados.`;
   }
   const siriUrl = () => location.origin + location.pathname + "?accion=gasto&monto=[monto]&cat=comida&nota=[nota]";
@@ -2339,13 +2397,42 @@ details ol{padding-left:20px;margin:8px 0 0}
   };
 
   /* ---------- sheets ---------- */
-  const openSheet = el => { el.hidden = false; hideTip(); el.querySelector(".sheet").scrollTop = 0; };
-  const closeSheet = el => { el.hidden = true; };
+  const syncBodyLock = () => document.body.classList.toggle("sheet-open", $$(".scrim").some(s => !s.hidden) || !$("#recap").hidden);
+  const openSheet = el => { el.hidden = false; hideTip(); const sh = el.querySelector(".sheet"); sh.scrollTop = 0; sh.style.transform = ""; syncBodyLock(); };
+  const closeSheet = el => { el.hidden = true; syncBodyLock(); };
+  // Swipe a sheet down from its top (grip or title) to close it, like iOS
+  $$(".scrim").forEach(scrim => {
+    const sh = scrim.querySelector(".sheet");
+    let y0 = null, dy = 0, t0 = 0;
+    sh.addEventListener("touchstart", e => {
+      const fromTop = e.target.closest(".grip, .sheet-head") && !e.target.closest("button, input, select");
+      if (!fromTop && sh.scrollTop > 0) return;
+      if (!fromTop && e.target.closest("input, select, textarea, .chips, .swatches, .inline")) return;
+      y0 = e.touches[0].clientY; dy = 0; t0 = Date.now();
+    }, {passive:true});
+    sh.addEventListener("touchmove", e => {
+      if (y0 == null) return;
+      dy = e.touches[0].clientY - y0;
+      if (dy <= 0 || (sh.scrollTop > 0)) { if (dy < -4) y0 = null; return; }
+      e.preventDefault();
+      sh.classList.add("dragging"); sh.style.transform = `translateY(${dy}px)`;
+    }, {passive:false});
+    sh.addEventListener("touchend", () => {
+      if (y0 == null) return;
+      const fast = dy > 60 && Date.now() - t0 < 250;
+      sh.classList.remove("dragging"); sh.classList.add("settle");
+      if (dy > 130 || fast) { sh.style.transform = "translateY(100%)"; setTimeout(() => { closeSheet(scrim); sh.classList.remove("settle"); sh.style.transform = ""; }, 180); }
+      else { sh.style.transform = ""; setTimeout(() => sh.classList.remove("settle"), 220); }
+      y0 = null; dy = 0;
+    });
+  });
+  // Block pinch-zoom (Safari ignores user-scalable for pinch in some versions)
+  ["gesturestart", "gesturechange"].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), {passive:false}));
   $$(".scrim").forEach(s => {
     s.addEventListener("click", ev => { if (ev.target === s) closeSheet(s); });
     s.querySelectorAll("[data-close]").forEach(b => b.onclick = () => closeSheet(s));
   });
-  document.addEventListener("keydown", ev => { if (ev.key === "Escape") { $$(".scrim").forEach(closeSheet); $("#viewer").hidden = true; $("#recap").hidden = true; } });
+  document.addEventListener("keydown", ev => { if (ev.key === "Escape") { $$(".scrim").forEach(closeSheet); $("#viewer").hidden = true; $("#recap").hidden = true; syncBodyLock(); } });
   function armDelete(btn, label, action) {
     let armed = false;
     btn.textContent = label; btn.classList.remove("armed");
@@ -3040,10 +3127,10 @@ details ol{padding-left:20px;margin:8px 0 0}
     if (d.cats.length) hbars(body, "En qué se fue la plata", null, d.cats.slice(0, 5).map(c => [c.cat.name, c.v, cvar(c.cat)]), d.tg);
     const c = card("Lo más destacado"); c.insertAdjacentHTML("beforeend", `<ul class="hl">${hl.map(h => `<li>${h}</li>`).join("")}</ul>`); body.append(c);
   }
-  function openRecap(key) { recapKey = key || ym(new Date()); drawRecap(); $("#recap").hidden = false; $("#recap").scrollTop = 0; }
+  function openRecap(key) { recapKey = key || ym(new Date()); drawRecap(); $("#recap").hidden = false; $("#recap").scrollTop = 0; syncBodyLock(); }
   $("#recap-prev").onclick = () => { recapKey = addMonthsYm(recapKey, -1); drawRecap(); };
   $("#recap-next").onclick = () => { recapKey = addMonthsYm(recapKey, 1); drawRecap(); };
-  $("#recap-close").onclick = () => { $("#recap").hidden = true; };
+  $("#recap-close").onclick = () => { $("#recap").hidden = true; syncBodyLock(); };
   $("#open-recap").onclick = () => openRecap(new Date().getDate() <= 7 ? addMonthsYm(ym(new Date()), -1) : ym(new Date()));
   async function recapImage(key) {
     const d = recapData(key);
@@ -3182,11 +3269,16 @@ details ol{padding-left:20px;margin:8px 0 0}
         e.usd ? num(e.usd) : "", e.rate ? num(e.rate) : ""].join(";"))];
     await saveFile(`gastos-${todayStr()}.csv`, "\ufeff" + rows.join("\n"), "text/csv");
   };
+  // Everything worth keeping, without secrets or values that change on their own (dólar, cripto)
+  function backupData(photos) {
+    const {fx, crypto:cr, notif, cloud, lock, inbox, ...rest} = settings;
+    return {app:"gastos", version:5, settings:{...rest, inbox:{url:inbox?.url || "", token:"", at:0}},
+      categories:cats, recurring:recs, cards, favs, goals, debts, accounts, transfers, assets, expenses:txs, ...(photos ? {photos} : {})};
+  }
   $("#backup").onclick = async () => {
     const photos = {};
     try { for (const t of txs) if (t.photo && !photos[t.photo]) { const b = await getPhoto(t.photo); if (b) photos[t.photo] = await blobToDataURL(b); } } catch {}
-    const data = JSON.stringify({app:"gastos", version:4, saved:new Date().toISOString(),
-      settings:{...settings, lock:{on:false, hash:"", salt:"", cred:""}, inbox:{url:settings.inbox?.url || "", token:"", at:0}}, categories:cats, recurring:recs, cards, favs, goals, debts, accounts, transfers, assets, expenses:txs, photos});
+    const data = JSON.stringify({...backupData(photos), saved:new Date().toISOString()});
     if (await saveFile(`gastos-copia-${todayStr()}.json`, data, "application/json")) toast("Copia lista");
   };
   $("#restore").onclick = () => $("#restore-file").click();
@@ -3194,8 +3286,14 @@ details ol{padding-left:20px;margin:8px 0 0}
     const f = ev.target.files[0]; ev.target.value = "";
     if (!f) return;
     try {
-      const d = JSON.parse(await f.text());
-      if (!Array.isArray(d.expenses)) throw new Error("bad");
+      const n = await restoreData(JSON.parse(await f.text()));
+      toast(n ? `${plural(n, "movimiento restaurado", "movimientos restaurados")}` : "Copia restaurada. No había movimientos nuevos.");
+    } catch { toast("Ese archivo no es una copia de Gastos"); }
+  };
+  // Adds whatever is missing on this iPhone; never deletes. Returns how many movements were added.
+  async function restoreData(d) {
+    {
+      if (!d || !Array.isArray(d.expenses)) throw new Error("bad");
       const mergeById = (target, list, clean) => { let n = 0; (Array.isArray(list) ? list : []).forEach(x => { const c = x && x.id && clean(x); if (c && !target.some(y => y.id === c.id)) { target.push(c); n++; } }); return n; };
       mergeById(cats, d.categories, c => c.name && {id:String(c.id), name:String(c.name).slice(0, 24), color:COLORS.includes(c.color) ? c.color : "c9", type:c.type === "ingreso" ? "ingreso" : "gasto", budget:Number(c.budget) || 0, fixed:!!c.fixed});
       mergeById(recs, d.recurring, r => Number(r.amount) > 0 && isDate(r.start) && {id:String(r.id), type:r.type === "ingreso" ? "ingreso" : "gasto", amount:Number(r.amount), cat:String(r.cat),
@@ -3234,16 +3332,21 @@ details ol{padding-left:20px;margin:8px 0 0}
         if (d.settings.infl && typeof d.settings.infl === "object") for (const [k, v] of Object.entries(d.settings.infl)) if (/^\d{4}-\d{2}$/.test(k) && Number.isFinite(Number(v)) && !Number.isFinite(settings.infl[k])) settings.infl[k] = Number(v);
       }
       save(); renderAll();
-      toast(fresh.length ? `${plural(fresh.length, "movimiento restaurado", "movimientos restaurados")}` : "Copia restaurada. No había movimientos nuevos.");
-    } catch { toast("Ese archivo no es una copia de Gastos"); }
-  };
+      return fresh.length;
+    }
+  }
 
   /* ---------- Siri / Atajos: ?accion=gasto&monto=2500&cat=comida&nota=Café ---------- */
   function handleUrlAction() {
     const p = new URLSearchParams(location.search);
-    const action = (p.get("accion") || "").toLowerCase();
-    if (!action) return;
+    const action = (p.get("accion") || "").toLowerCase(), go = (p.get("ir") || "").toLowerCase();
+    if (!action && !go) return;
     history.replaceState(null, "", location.pathname);
+    if (go) { // opened from a notification
+      const open = () => go === "resumen" ? openRecap(addMonthsYm(ym(new Date()), -1)) : ["home", "dash", "pagos", "ahorro", "mas"].includes(go) && setTab(go);
+      if (unlocked) open(); else afterUnlock = open;
+      return;
+    }
     const standalone = navigator.standalone === true || matchMedia("(display-mode: standalone)").matches;
     const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     if (isIOS && !standalone) $("#safari-banner").hidden = false;
@@ -3408,10 +3511,173 @@ details ol{padding-left:20px;margin:8px 0 0}
   };
   $("#ib-test").onclick = () => { settings.inbox.url = $("#ib-url").value.trim(); settings.inbox.token = $("#ib-token").value.trim(); save(); pullInbox(true); };
 
+  /* ---------- sync: cloud copy + notification agenda (both through the Cloudflare mailbox) ---------- */
+  const hashStr = s => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); } return (h >>> 0).toString(16) + ":" + s.length; };
+  const bytesToB64 = bytes => { let s = ""; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(s); };
+  const b64uToBytes = s => unb64(s.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - s.length % 4) % 4));
+  async function cloudKey() {
+    const raw = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(settings.inbox.token.trim() + ":gastos-copia"));
+    return crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt", "decrypt"]);
+  }
+  async function encryptText(text) {
+    const iv = rand(12), ct = new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM", iv}, await cloudKey(), new TextEncoder().encode(text)));
+    return {v:1, iv:bytesToB64(iv), data:bytesToB64(ct)};
+  }
+  async function decryptText(p) {
+    return new TextDecoder().decode(await crypto.subtle.decrypt({name:"AES-GCM", iv:unb64(p.iv)}, await cloudKey(), unb64(p.data)));
+  }
+  async function cloudSave(force) {
+    const c = settings.cloud;
+    if (!c.on || !ibReady() || !navigator.onLine) return false;
+    const obj = backupData(null), h = hashStr(JSON.stringify(obj));
+    if (!force && h === c.hash) return true;
+    await ibFetch("/copia", {method:"PUT", body:JSON.stringify(await encryptText(JSON.stringify({...obj, saved:new Date().toISOString()})))});
+    c.hash = h; c.at = Date.now(); save(true); renderSyncSettings();
+    return true;
+  }
+
+  function buildAgenda() {
+    const n = settings.notif, out = [], now = Date.now();
+    const at = (dateStr, h) => { const d = parseD(dateStr); d.setHours(h, 0, 0, 0); return d; };
+    const add = (id, d, title, body, url) => { if (d.getTime() > now + 60e3) out.push({id, at:d.toISOString(), title, body, url}); };
+    const slug = s => fold(s).replace(/[^a-z0-9]+/g, "").slice(0, 30);
+    if (n.pay) {
+      const days = Number(settings.remindDays) || 0;
+      upcomingItems(45).forEach(u => {
+        const rel = days === 0 ? "Hoy" : days === 1 ? "Mañana" : `El ${fmtLong(u.date)}`;
+        const what = u.type === "ingreso" ? "a cobrar" : u.card ? "vence el resumen" : "a pagar";
+        add(`pay-${slug(u.name)}-${u.date}`, at(days ? addDays(u.date, -days) : u.date, 9), u.name, `${rel}: ${money(u.amount)} ${what}`, "./?ir=pagos");
+        if (days && u.card) add(`pay-${slug(u.name)}-${u.date}-hoy`, at(u.date, 9), u.name, `Vence hoy: ${money(u.amount)}`, "./?ir=pagos");
+      });
+    }
+    if (n.daily) for (let i = 0; i < 30; i++) {
+      const d = addDays(todayStr(), i);
+      add(`daily-${d}`, at(d, Number(n.hour) || 21), "¿Anotaste tus gastos de hoy?", "Toca para anotarlos en Gastos.", "./?accion=nuevo");
+    }
+    if (n.recap) for (let k = 1; k <= 2; k++) {
+      const first = addMonthsYm(ym(new Date()), k) + "-01", prevName = parseD(addMonthsYm(first.slice(0, 7), -1) + "-15").toLocaleDateString(LOCALE, {month:"long"});
+      add(`recap-${first}`, at(first, 10), `Tu resumen de ${prevName} está listo`, "Mira en qué se fue la plata y cuánto ahorraste.", "./?ir=resumen");
+    }
+    const budget = Number(settings.budget) || 0;
+    if (n.budget && budget) {
+      const now2 = new Date(), key = ym(now2), day = now2.getDate(), dim = daysIn(now2.getFullYear(), now2.getMonth());
+      const spent = sum(txs.filter(t => t.type === "gasto" && t.date.startsWith(key) && t.date <= todayStr()));
+      const tomorrow = addDays(todayStr(), 1);
+      if (spent > budget) add(`budget-over-${key}`, at(tomorrow, 10), "Te pasaste del presupuesto", `Llevas ${money(spent)} de ${money(budget)} este mes.`, "./?ir=dash");
+      else if (day >= 5 && spent / day * dim > budget * 1.05) add(`budget-pace-${key}`, at(tomorrow, 10), "Vas camino a pasarte del presupuesto",
+        `A este ritmo terminarías el mes en ${money(spent / day * dim)}. Puedes gastar ${money((budget - spent) / (dim - day + 1))} por día.`, "./?ir=dash");
+    }
+    return out.sort((a, b) => a.at.localeCompare(b.at)).slice(0, 300);
+  }
+  async function syncAgenda(force) {
+    const n = settings.notif;
+    if (!n.on || !ibReady() || !navigator.onLine || !unlocked) return;
+    const payload = {items:buildAgenda(), prefs:{applepay:!!n.applepay}};
+    const h = hashStr(JSON.stringify(payload));
+    if (!force && h === n.hash && Date.now() - n.at < 6 * 3600e3) return;
+    try { await ibFetch("/push/agenda", {method:"PUT", body:JSON.stringify(payload)}); n.hash = h; n.at = Date.now(); n.count = payload.items.length; save(true); renderSyncSettings(); }
+    catch {}
+  }
+  function runSync() {
+    clearTimeout(syncTimer); syncTimer = null;
+    cloudSave().catch(() => { const s = $("#cl-status"); if (s) s.textContent = "No se pudo guardar la copia en la nube. Se reintenta solo."; });
+    syncAgenda();
+  }
+
+  const pushSupported = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+  async function enablePush() {
+    if (!ibReady()) { toast("Primero configura el buzón en Apple Pay automático"); return; }
+    if (!pushSupported()) { toast("Abre Gastos desde el ícono de la pantalla de inicio para activar notificaciones"); return; }
+    const perm = await Notification.requestPermission();
+    if (perm !== "granted") { toast("Sin permiso. Puedes darlo en Ajustes del iPhone → Notificaciones → Gastos"); renderSyncSettings(); return; }
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const {key} = await ibFetch("/push/clave");
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) sub = await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64uToBytes(key)});
+      await ibFetch("/push/suscribir", {method:"POST", body:JSON.stringify(sub)});
+      settings.notif.on = true; settings.notif.hash = ""; save(true);
+      await syncAgenda(true); renderSyncSettings(); toast("Notificaciones activadas");
+    } catch (e) { toast(e.message === "clave" ? "La clave del buzón no coincide" : "No se pudieron activar. Revisa la conexión y que el buzón esté actualizado."); }
+  }
+  async function disablePush() {
+    try {
+      const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
+      if (sub) { await ibFetch("/push/baja", {method:"POST", body:JSON.stringify({endpoint:sub.endpoint})}).catch(() => {}); await sub.unsubscribe(); }
+    } catch {}
+    settings.notif.on = false; save(true); renderSyncSettings(); toast("Notificaciones desactivadas en este iPhone");
+  }
+  function renderSyncSettings() {
+    const n = settings.notif, c = settings.cloud, st = $("#nt-status");
+    if (!st) return;
+    const perm = "Notification" in window ? Notification.permission : "default";
+    st.textContent = !ibReady() ? "Primero configura el buzón en Apple Pay automático, arriba."
+      : !pushSupported() ? "Para activarlas, abre Gastos desde el ícono de la pantalla de inicio (iOS 16.4 o más nuevo)."
+      : perm === "denied" ? "Están bloqueadas. Actívalas en Ajustes del iPhone → Notificaciones → Gastos."
+      : n.on ? `Activadas en este iPhone.${n.at ? ` ${plural(n.count || 0, "aviso programado", "avisos programados")}.` : ""}`
+      : "Te avisan aunque la app esté cerrada: vencimientos, pagos fijos, presupuesto y más.";
+    $("#nt-enable").textContent = n.on ? "Desactivar notificaciones" : "Activar notificaciones";
+    $("#nt-enable").className = n.on ? "ghost" : "primary";
+    $("#nt-opts").hidden = !n.on;
+    for (const [id, k] of [["#nt-pay", "pay"], ["#nt-daily", "daily"], ["#nt-recap", "recap"], ["#nt-budget", "budget"], ["#nt-ap", "applepay"]]) $(id).setAttribute("aria-checked", !!n[k]);
+    const days = Number(settings.remindDays) || 0;
+    $("#nt-pay-sub").textContent = `Fijos, tarjetas y plazos fijos · ${days ? `${plural(days, "día", "días")} antes` : "el mismo día"} (cámbialo en Recordatorios)`;
+    $("#nt-hour-field").hidden = !n.daily;
+    const hs = $("#nt-hour");
+    if (!hs.options.length) hs.innerHTML = Array.from({length:17}, (_, i) => i + 7).map(h => `<option value="${h}">${pad(h)}:00</option>`).join("");
+    hs.value = String(n.hour || 21);
+    $("#cl-on").setAttribute("aria-checked", !!c.on);
+    $("#cl-status").textContent = !ibReady() ? "Necesita el buzón de Apple Pay configurado arriba."
+      : c.at ? `Última copia: ${new Date(c.at).toLocaleString(LOCALE, {day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"})}` : c.on ? "Todavía no se guardó ninguna copia." : "Desactivada.";
+  }
+  $("#nt-enable").onclick = () => settings.notif.on ? disablePush() : enablePush();
+  for (const [id, k] of [["#nt-pay", "pay"], ["#nt-daily", "daily"], ["#nt-recap", "recap"], ["#nt-budget", "budget"], ["#nt-ap", "applepay"]])
+    $(id).onclick = () => { settings.notif[k] = !settings.notif[k]; save(true); renderSyncSettings(); syncAgenda(true); };
+  $("#nt-hour").onchange = e => { settings.notif.hour = Number(e.target.value); save(true); syncAgenda(true); toast("Hora guardada"); };
+  $("#nt-test").onclick = async () => {
+    try { const r = await ibFetch("/push/prueba", {method:"POST"}); toast(r.enviadas ? "Enviada. Debería llegarte en unos segundos." : "El buzón no tiene este iPhone registrado. Desactiva y vuelve a activar."); }
+    catch { toast("No se pudo enviar. ¿Actualizaste el código del buzón en Cloudflare?"); }
+  };
+  $("#cl-on").onclick = async () => {
+    if (!ibReady()) { toast("Primero configura el buzón en Apple Pay automático"); return; }
+    settings.cloud.on = !settings.cloud.on; settings.cloud.hash = ""; save(true); renderSyncSettings();
+    if (settings.cloud.on) { try { await cloudSave(true); toast("Copia en la nube activada y guardada"); } catch { toast("No se pudo guardar. ¿Actualizaste el código del buzón en Cloudflare?"); } }
+  };
+  $("#cl-now").onclick = async () => {
+    if (!ibReady()) { toast("Primero configura el buzón en Apple Pay automático"); return; }
+    const was = settings.cloud.on; settings.cloud.on = true;
+    try { await cloudSave(true); toast("Copia guardada en la nube"); } catch { toast("No se pudo guardar. ¿Actualizaste el código del buzón en Cloudflare?"); }
+    settings.cloud.on = was; save(true); renderSyncSettings();
+  };
+  $("#cl-list").onclick = async () => {
+    if (!ibReady()) { toast("Primero configura el buzón en Apple Pay automático"); return; }
+    try {
+      const {fechas = []} = await ibFetch("/copias");
+      $("#cl-dates").innerHTML = fechas.length ? fechas.map((f, i) => `<option value="${esc(f)}">${esc(fmtLong(f))}${i === 0 ? " (la más reciente)" : ""}</option>`).join("") : `<option value="">No hay copias todavía</option>`;
+    } catch { toast("No se pudieron buscar las copias"); }
+  };
+  $("#cl-restore").onclick = async () => {
+    const f = $("#cl-dates").value;
+    if (!f) { toast("Toca Buscar y elige una copia"); return; }
+    try {
+      const r = await fetch(ibBase() + "/copia?fecha=" + encodeURIComponent(f), {headers:{Authorization:"Bearer " + settings.inbox.token}, cache:"no-store"});
+      if (!r.ok) throw new Error("http");
+      let text;
+      try { text = await decryptText(await r.json()); } catch { toast("No se pudo abrir la copia: se hizo con otra clave"); return; }
+      const n = await restoreData(JSON.parse(text));
+      toast(n ? `${plural(n, "movimiento restaurado", "movimientos restaurados")}` : "Copia restaurada. No había movimientos nuevos.");
+    } catch { toast("No se pudo restaurar la copia"); }
+  };
+  // A tap on a notification while the app is already open
+  navigator.serviceWorker?.addEventListener?.("message", e => {
+    if (e.data?.type !== "open") return;
+    try { const u = new URL(e.data.url); history.replaceState(null, "", u.pathname + u.search); handleUrlAction(); } catch {}
+  });
+
   // Coming back from the background: lock again after a minute, add the day's fixed payments
   let lastDay = todayStr();
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") { hiddenAt = Date.now(); return; }
+    if (document.visibilityState === "hidden") { hiddenAt = Date.now(); if (syncTimer) runSync(); return; }
     if (settings.lock.on && unlocked && Date.now() - hiddenAt > 60000) showLock();
     const n = generateDue();
     if (n || lastDay !== todayStr()) { lastDay = todayStr(); renderAll(); }
@@ -3424,6 +3690,7 @@ details ol{padding-left:20px;margin:8px 0 0}
     if (settings.currency === "ARS" && Date.now() - (settings.inflAt || 0) > 5 * 864e5) fetchInfl(false);
     if (assets.some(a => a.kind === "cripto") && (!settings.crypto || Date.now() - settings.crypto.at > 3600e3)) fetchCrypto(false);
     pullInbox(false);
+    runSync();
   }
 
   /* ---------- start ---------- */
