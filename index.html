@@ -54,7 +54,8 @@ button{transition:transform .12s ease,opacity .12s ease}
 .fab:active{transform:translateX(-50%) scale(.95)}
 .link:active,.icon-btn:active{opacity:.55}
 .goal:active,.up:active{opacity:.75}
-.sheet.dragging{animation:none;transition:none}
+.sheet.dragging{transition:none}
+.sheet.enter{animation:up .22s ease-out}
 .sheet.settle{transition:transform .2s ease}
 .grip{margin-block:2px 6px;width:44px}
 @media (prefers-reduced-motion:reduce){button{transition:none}}
@@ -194,9 +195,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 /* sheet */
 .scrim{position:fixed;inset:0;background:rgba(5,12,9,.45);z-index:10;display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:var(--surface);width:100%;max-width:520px;border-radius:24px 24px 0 0;padding:10px 16px calc(20px + env(safe-area-inset-bottom,0px));
-  display:flex;flex-direction:column;gap:16px;max-height:92%;overflow-y:auto;animation:up .22s ease-out;box-sizing:border-box}
+  display:flex;flex-direction:column;gap:16px;max-height:92%;overflow-y:auto;box-sizing:border-box}
 @keyframes up{from{transform:translateY(40px)}to{transform:none}}
-@media (prefers-reduced-motion:reduce){.sheet{animation:none}.bar>i{transition:none}}
+@media (prefers-reduced-motion:reduce){.sheet.enter{animation:none}.bar>i{transition:none}}
 .grip{width:40px;height:5px;border-radius:3px;background:var(--line);align-self:center;flex:none}
 .sheet-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .sheet-head h2{font-family:var(--f-display);font-size:1.2rem;margin:0}
@@ -327,6 +328,15 @@ details ol{padding-left:20px;margin:8px 0 0}
 :root[data-theme="dark"] .toast button{color:#0e7a5c}
 
 /* markets (information only) */
+.pills{display:flex;gap:6px;overflow-x:auto;margin-inline:-16px;padding:2px 16px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.pills::-webkit-scrollbar{display:none}
+.pills button{flex:none;padding:8px 14px;border-radius:99px;background:var(--surface);border:1px solid var(--line);font-size:.86rem;font-weight:600;color:var(--muted);white-space:nowrap}
+.pills button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.conv{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
+.bigres{font-family:var(--f-display);font-weight:700;font-size:clamp(1.7rem,8vw,2.2rem);line-height:1.1;margin:0;overflow-wrap:anywhere}
+.tgbar{position:relative;height:10px;border-radius:5px;background:var(--line);overflow:visible}
+.tgbar i{position:absolute;left:0;top:0;height:100%;border-radius:5px}
+.tgbar b{position:absolute;top:-4px;width:2px;height:18px;background:var(--ink);border-radius:1px}
 a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-box}
 .mk-ctl{display:flex;flex-direction:column;gap:10px}
 .mk-ctl .row2{display:flex;gap:8px}
@@ -501,10 +511,13 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
   </div>
 
   <div id="dinero-mkt" class="tab" hidden>
-    <div class="seg small" id="mk-view" role="group" aria-label="Mercados">
-      <button type="button" data-v="cot" aria-pressed="true">Cotizaciones</button>
+    <div class="pills" id="mk-view" role="group" aria-label="Mercados">
+      <button type="button" data-v="cot" aria-pressed="true">Precios</button>
       <button type="button" data-v="comparar" aria-pressed="false">Comparar</button>
+      <button type="button" data-v="alertas" aria-pressed="false">Alertas</button>
+      <button type="button" data-v="dolar" aria-pressed="false">Dólar</button>
       <button type="button" data-v="tasas" aria-pressed="false">Tasas</button>
+      <button type="button" data-v="calc" aria-pressed="false">Calculadora</button>
       <button type="button" data-v="guia" aria-pressed="false">Guía</button>
     </div>
     <div class="mk-ctl" id="mk-ctl">
@@ -660,6 +673,9 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
           <button type="button" class="switch" id="nt-budget" role="switch" aria-checked="true" aria-label="Avisos de presupuesto"></button></div>
         <div class="switch-row"><span>Confirmar pagos de Apple Pay<small>Un aviso cuando el pago llega al buzón</small></span>
           <button type="button" class="switch" id="nt-ap" role="switch" aria-checked="false" aria-label="Confirmar pagos de Apple Pay"></button></div>
+        <div class="switch-row"><span>Resumen semanal de tu cartera<small>Los viernes a las 18:00: cuánto subió o bajó (CEDEARs, acciones y bonos)</small></span>
+          <button type="button" class="switch" id="nt-weekly" role="switch" aria-checked="false" aria-label="Resumen semanal de tu cartera"></button></div>
+        <button class="ghost" type="button" id="nt-weekly-test" hidden>Enviar el resumen semanal de prueba</button>
         <button class="ghost" type="button" id="nt-test">Enviar una notificación de prueba</button>
       </div>
     </div>
@@ -700,7 +716,7 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
       <p class="hint">Tus datos se guardan solo en este iPhone. Guarda una copia de vez en cuando en Archivos o iCloud Drive para no perderlos.</p>
     </div>
   </div>
-  <p class="foot">Gastos · versión 10</p>
+  <p class="foot">Gastos · versión 11</p>
 </div>
 </main>
 
@@ -937,6 +953,46 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
   </form>
 </div>
 
+<!-- alerta de precio -->
+<div class="scrim" id="al-sheet" hidden>
+  <form class="sheet" id="al-form" role="dialog" aria-modal="true" aria-labelledby="al-title" novalidate>
+    <div class="grip"></div>
+    <div class="sheet-head"><h2 id="al-title">Nueva alerta</h2><button type="button" class="link" data-close>Cancelar</button></div>
+    <div class="seg" id="al-kind" role="group" aria-label="Qué vigilar">
+      <button type="button" data-t="px" aria-pressed="true">Un instrumento</button>
+      <button type="button" data-t="fx" aria-pressed="false">El dólar</button>
+    </div>
+    <div class="field" id="al-sym-field"><label for="al-sym">Símbolo</label>
+      <input class="input" id="al-sym" list="al-syms" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Ej.: GGAL, AAPL, AL30"><datalist id="al-syms"></datalist></div>
+    <div class="field" id="al-casa-field"><label for="al-casa">Qué dólar</label>
+      <select class="input" id="al-casa"><option value="bolsa">Dólar MEP</option><option value="contadoconliqui">Dólar CCL</option><option value="blue">Dólar blue</option><option value="oficial">Dólar oficial</option><option value="tarjeta">Dólar tarjeta</option><option value="mayorista">Dólar mayorista</option></select></div>
+    <div class="seg" id="al-dir" role="group" aria-label="Cuándo avisar">
+      <button type="button" data-t="above" aria-pressed="true">Cuando suba hasta</button>
+      <button type="button" data-t="below" aria-pressed="false">Cuando baje hasta</button>
+    </div>
+    <div class="amount-wrap"><span id="al-sym-cur">$</span><input id="al-value" class="amount-input" inputmode="decimal" autocomplete="off" placeholder="0" aria-label="Precio"></div>
+    <p class="calc" id="al-now" hidden></p>
+    <p class="hint">Te llega una notificación una sola vez cuando se cumpla. Se revisa cada 15 minutos y necesita las notificaciones activadas en Ajustes.</p>
+    <p class="err" id="al-err" hidden></p>
+    <button class="primary" type="submit">Guardar alerta</button>
+    <button class="danger" id="al-delete" type="button" hidden>Eliminar alerta</button>
+  </form>
+</div>
+
+<!-- cartera objetivo -->
+<div class="scrim" id="tg-sheet" hidden>
+  <form class="sheet" id="tg-form" role="dialog" aria-modal="true" aria-labelledby="tg-title" novalidate>
+    <div class="grip"></div>
+    <div class="sheet-head"><h2 id="tg-title">Tu cartera objetivo</h2><button type="button" class="link" data-close>Cancelar</button></div>
+    <p class="hint">Define cómo quieres repartir tu dinero. Tiene que sumar 100%. La app solo compara con lo que tienes hoy.</p>
+    <div id="tg-fields" style="display:flex;flex-direction:column;gap:10px"></div>
+    <p class="calc" id="tg-sum"></p>
+    <p class="err" id="tg-err" hidden></p>
+    <button class="primary" type="submit">Guardar objetivo</button>
+    <button class="danger" id="tg-clear" type="button" hidden>Quitar objetivo</button>
+  </form>
+</div>
+
 <!-- detalle de un instrumento -->
 <div class="scrim" id="mk-sheet" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mk-title">
@@ -975,6 +1031,8 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
       </div>
       <div class="field" style="margin-top:12px"><label for="asset-mdate">Fecha de compra (opcional)</label><input class="input" type="date" id="asset-mdate">
         <p class="hint">Con la fecha, comparamos tu resultado con el dólar y la inflación de ese periodo.</p></div>
+      <div class="field" id="asset-mat-field" style="margin-top:12px"><label for="asset-mat">Vence el (opcional)</label><input class="input" type="date" id="asset-mat">
+        <p class="hint">Para bonos y letras. Aparece en tus próximos vencimientos y te avisa. Las fechas y los montos exactos los informa tu broker.</p></div>
       <p class="hint" id="asset-mhint" style="margin-top:8px"></p>
     </div>
     <div class="two" id="asset-crypto">
@@ -1081,14 +1139,16 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
   let debts = [];  // {id, dir, person, amount, date, note, payments:[{date, amount}], settled}
   let accounts = [];  // {id, name, kind:"efectivo"|"banco"|"billetera"|"usd", initial, color}
   let transfers = []; // {id, from, to, amount, toAmount, date, note}; from/to: account id, "card:<id>" or "asset:<id>"
-  let assets = [];    // {id, kind, name, amount, tna, days, start, coin, qty, value, hist:[{date, value}]}
+  let assets = [];    // {id, kind, name, amount, tna, days, start, coin, qty, value, hist:[{date, value}], ticker, cost, bought, maturity}
+  let alerts = [];    // {id, kind:"px"|"fx", sym, casa, dir:"above"|"below", value, ccy, label, fired:"" }
   let settings = {budget:0, currency:guessCurrency(), remindDays:3, fxSource:"mep", fx:null, fxManual:0, showUsd:false,
     infl:{}, inflManual:{}, inflAt:0, inflAdjust:false, lock:{on:false, hash:"", salt:"", cred:""}, crypto:null, netHist:{},
     inbox:{url:"", token:"", at:0}, payMap:{}, paySeen:[],
-    notif:{on:false, pay:true, daily:false, hour:21, recap:true, budget:true, applepay:false, hash:"", at:0, count:0},
+    notif:{on:false, pay:true, daily:false, hour:21, recap:true, budget:true, applepay:false, weekly:false, hash:"", at:0, count:0}, target:null,
     cloud:{on:false, at:0, hash:""}, mkt:{px:{}, favs:[]}};
   let ui = {tab:"home", period:1, pagosView:"fijos", ahorroView:"cuentas", typeFilter:"todo", catFilter:"", lastCat:{gasto:"comida", ingreso:"sueldo"}, dismissed:{}, lastAcc:"",
-    dineroMode:"mine", mkView:"cot", mkSet:"accion", mkSort:"vol", mkPeriod:"6M", mkCmp:["GGAL", "AAPL"], mkCmpP:"6M", mkCmpB:["mep", "infl"]};
+    dineroMode:"mine", mkView:"cot", mkSet:"accion", mkSort:"vol", mkPeriod:"6M", mkCmp:["GGAL", "AAPL"], mkCmpP:"6M", mkCmpB:["mep", "infl"],
+    calc:{init:1000000, month:100000, rate:30, years:5, infl:0}, conv:{amount:100, from:"USD", casa:"bolsa"}};
   const COINS = {bitcoin:"BTC", ethereum:"ETH", tether:"USDT", "usd-coin":"USDC", solana:"SOL"};
   const ASSET_KINDS = {plazo_fijo:"Plazo fijo", fci:"Fondo común", cripto:"Cripto", cedear:"CEDEAR", accion:"Acción", bono:"Bono", acciones:"Acciones", otro:"Inversión"};
   const MKT_KINDS = ["cedear", "accion", "bono"];   // valued with live market prices
@@ -1172,6 +1232,7 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
         if (Array.isArray(d.accounts)) accounts = d.accounts;
         if (Array.isArray(d.transfers)) transfers = d.transfers;
         if (Array.isArray(d.assets)) assets = d.assets;
+        if (Array.isArray(d.alerts)) alerts = d.alerts;
         settings.netHist ||= {};
         settings.mkt = {px:{...(settings.mkt?.px || {})}, favs:Array.isArray(settings.mkt?.favs) ? settings.mkt.favs : []};
       }
@@ -1186,11 +1247,11 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
   let syncTimer = null;
   // quiet: don't trigger the cloud copy / notification sync (used by the sync code itself)
   function save(quiet) {
-    try { localStorage.setItem(LS_KEY, JSON.stringify({version:5, expenses:txs, settings, categories:cats, recurring:recs, cards, favs, goals, debts, accounts, transfers, assets})); }
+    try { localStorage.setItem(LS_KEY, JSON.stringify({version:6, expenses:txs, settings, categories:cats, recurring:recs, cards, favs, goals, debts, accounts, transfers, assets, alerts})); }
     catch { toast("No se pudo guardar. Libera espacio en el iPhone e inténtalo de nuevo."); }
     if (!quiet) { clearTimeout(syncTimer); syncTimer = setTimeout(() => runSync(), 5000); }
   }
-  function saveUI() { try { localStorage.setItem("gastos.ui", JSON.stringify({tab:ui.tab, period:ui.period, pagosView:ui.pagosView, ahorroView:ui.ahorroView, lastCat:ui.lastCat, dismissed:ui.dismissed, lastAcc:ui.lastAcc, dineroMode:ui.dineroMode, mkView:ui.mkView, mkSet:ui.mkSet, mkSort:ui.mkSort, mkPeriod:ui.mkPeriod, mkCmp:ui.mkCmp, mkCmpP:ui.mkCmpP, mkCmpB:ui.mkCmpB})); } catch {} }
+  function saveUI() { try { localStorage.setItem("gastos.ui", JSON.stringify({tab:ui.tab, period:ui.period, pagosView:ui.pagosView, ahorroView:ui.ahorroView, lastCat:ui.lastCat, dismissed:ui.dismissed, lastAcc:ui.lastAcc, dineroMode:ui.dineroMode, mkView:ui.mkView, mkSet:ui.mkSet, mkSort:ui.mkSort, mkPeriod:ui.mkPeriod, mkCmp:ui.mkCmp, mkCmpP:ui.mkCmpP, mkCmpB:ui.mkCmpB, calc:ui.calc, conv:ui.conv})); } catch {} }
   try { navigator.storage?.persist?.(); } catch {}
 
   /* ---------- photos (IndexedDB) ---------- */
@@ -1445,9 +1506,12 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
       }
     }
     for (const a of assets) {
-      if (a.kind !== "plazo_fijo") continue;
-      const e = pfEnd(a);
-      if (e >= today && e <= end) out.push({date:e, name:`Vence ${a.name}`, amount:pfFinal(a), type:"ingreso", sub:"Plazo fijo", open:() => openAsset(a)});
+      if (a.kind === "plazo_fijo") {
+        const e = pfEnd(a);
+        if (e >= today && e <= end) out.push({date:e, name:`Vence ${a.name}`, amount:pfFinal(a), type:"ingreso", sub:"Plazo fijo", open:() => openAsset(a)});
+      } else if (MKT_KINDS.includes(a.kind) && isDate(a.maturity) && a.maturity >= today && a.maturity <= end) {
+        out.push({date:a.maturity, name:`Vence ${a.name}`, amount:assetValue(a), type:"ingreso", sub:`${ASSET_KINDS[a.kind]} · valor de hoy`, open:() => openAsset(a)});
+      }
     }
     return out.sort((a, b) => a.date.localeCompare(b.date) || b.amount - a.amount);
   }
@@ -2293,6 +2357,7 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
     const host = $("#ahorro"); host.textContent = "";
     if (!assets.length) {
       host.innerHTML = `<div class="empty"><h2>Anota tus inversiones</h2><p>Plazos fijos con su interés calculado, fondos comunes, cripto con precio actualizado, acciones o CEDEARs. Todo suma a tu patrimonio.</p></div>`;
+      targetCard(host);
       return;
     }
     const c = card("Tus inversiones", `Valen ${money(assets.reduce((s, a) => s + assetValue(a), 0))} en total`); host.append(c);
@@ -2318,6 +2383,8 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
     });
     c.append(rows);
     portfolioCard(host);
+    targetCard(host);
+    maturitiesCard(host);
     if (assets.some(a => MKT_KINDS.includes(a.kind))) {
       const p = document.createElement("p"); p.className = "hint"; p.style.padding = "0 4px";
       p.textContent = MK.at ? `Precios de data912.com, actualizados ${new Date(MK.at).toLocaleTimeString(LOCALE, {hour:"2-digit", minute:"2-digit"})}. Pueden tener demora.` : "Precios de data912.com. Se actualizan solos cuando hay internet y pueden tener demora.";
@@ -2499,12 +2566,20 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
 
   /* ---------- sheets ---------- */
   const syncBodyLock = () => document.body.classList.toggle("sheet-open", $$(".scrim").some(s => !s.hidden) || !$("#recap").hidden);
-  const openSheet = el => { el.hidden = false; hideTip(); const sh = el.querySelector(".sheet"); sh.scrollTop = 0; sh.style.transform = ""; syncBodyLock(); };
+  // The open animation runs only through the .enter class, so releasing a drag never replays it
+  const openSheet = el => {
+    el.hidden = false; hideTip(); const sh = el.querySelector(".sheet");
+    sh.scrollTop = 0; sh.style.transform = ""; el.style.background = ""; el.style.transition = "";
+    sh.classList.remove("settle", "dragging", "enter"); void sh.offsetWidth; sh.classList.add("enter"); syncBodyLock();
+    setTimeout(() => sh.classList.remove("enter"), 320);
+  };
   const closeSheet = el => { el.hidden = true; syncBodyLock(); };
   // Swipe a sheet down from its top (grip or title) to close it, like iOS
   $$(".scrim").forEach(scrim => {
     const sh = scrim.querySelector(".sheet");
     let y0 = null, dy = 0, t0 = 0;
+    sh.addEventListener("animationend", () => sh.classList.remove("enter"));
+    const reset = () => { sh.classList.remove("dragging", "settle"); sh.style.transform = ""; scrim.style.background = ""; scrim.style.transition = ""; };
     sh.addEventListener("touchstart", e => {
       const fromTop = e.target.closest(".grip, .sheet-head") && !e.target.closest("button, input, select");
       if (!fromTop && sh.scrollTop > 0) return;
@@ -2516,16 +2591,19 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
       dy = e.touches[0].clientY - y0;
       if (dy <= 0 || (sh.scrollTop > 0)) { if (dy < -4) y0 = null; return; }
       e.preventDefault();
-      sh.classList.add("dragging"); sh.style.transform = `translateY(${dy}px)`;
+      sh.classList.remove("enter"); sh.classList.add("dragging"); sh.style.transform = `translateY(${dy}px)`;
+      scrim.style.background = `rgba(5,12,9,${(.45 * (1 - Math.min(1, dy / (sh.offsetHeight || 600)))).toFixed(3)})`;
     }, {passive:false});
-    sh.addEventListener("touchend", () => {
+    const release = () => {
       if (y0 == null) return;
-      const fast = dy > 60 && Date.now() - t0 < 250;
-      sh.classList.remove("dragging"); sh.classList.add("settle");
-      if (dy > 130 || fast) { sh.style.transform = "translateY(100%)"; setTimeout(() => { closeSheet(scrim); sh.classList.remove("settle"); sh.style.transform = ""; }, 180); }
-      else { sh.style.transform = ""; setTimeout(() => sh.classList.remove("settle"), 220); }
+      const fast = dy > 60 && Date.now() - t0 < 250, close = dy > 130 || fast;
       y0 = null; dy = 0;
-    });
+      sh.classList.remove("dragging"); sh.classList.add("settle"); scrim.style.transition = "background .2s ease";
+      if (close) { sh.style.transform = "translateY(100%)"; scrim.style.background = "rgba(5,12,9,0)"; setTimeout(() => { closeSheet(scrim); reset(); }, 210); }
+      else { sh.style.transform = ""; scrim.style.background = ""; setTimeout(reset, 220); }
+    };
+    sh.addEventListener("touchend", release);
+    sh.addEventListener("touchcancel", release);
   });
   // Block pinch-zoom (Safari ignores user-scalable for pinch in some versions)
   ["gesturestart", "gesturechange"].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), {passive:false}));
@@ -3087,6 +3165,7 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
     $("#asset-pf").hidden = k !== "plazo_fijo";
     $("#asset-crypto").hidden = k !== "cripto";
     $("#asset-mkt").hidden = !MKT_KINDS.includes(k);
+    $("#asset-mat-field").hidden = k !== "bono";
     $("#asset-value-field").hidden = k === "plazo_fijo" || k === "cripto" || MKT_KINDS.includes(k);
     if (MKT_KINDS.includes(k)) {
       $("#asset-mqty-lbl").textContent = k === "bono" ? "Valor nominal (VN)" : "Cantidad";
@@ -3132,6 +3211,7 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
     $("#asset-mqty").value = a?.qty && MKT_KINDS.includes(a.kind) ? String(a.qty).replace(".", ",") : "";
     $("#asset-mcost").value = a?.cost ? amountToInput(a.cost) : "";
     $("#asset-mdate").value = a?.bought || "";
+    $("#asset-mat").value = a?.maturity || "";
     if (MK.idx == null) ensureMarkets();
     $("#asset-kind").disabled = !!a;
     $("#asset-name").value = a ? a.name : "";
@@ -3185,6 +3265,7 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
     } else if (MKT_KINDS.includes(k)) {
       data.ticker = sym; data.qty = parseAmount($("#asset-mqty").value); data.cost = parseAmount($("#asset-mcost").value) || 0;
       data.bought = isDate($("#asset-mdate").value) && $("#asset-mdate").value <= today ? $("#asset-mdate").value : "";
+      data.maturity = k === "bono" && isDate($("#asset-mat").value) ? $("#asset-mat").value : "";
       if (!sym) return showErr(err, "Escribe el símbolo, por ejemplo AAPL o GGAL.");
       if (MK.idx && !MK.idx[sym]) return showErr(err, `No encontré "${sym}" en el mercado. Revisa el símbolo o búscalo en Mercados.`);
       if (!(data.qty > 0)) return showErr(err, k === "bono" ? "Escribe el valor nominal que tienes." : "Escribe cuántas unidades tienes.");
@@ -3315,7 +3396,9 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
     $("#mk-ctl").hidden = ui.mkView !== "cot";
     const host = $("#mk"); host.textContent = "";
     if (ui.mkView === "comparar") return renderComparar(host);
-    if (ui.mkView === "tasas") { ensureTasas(); return renderTasas(host); }
+    if (ui.mkView === "alertas") return renderAlertas(host);
+    if (ui.mkView === "calc") return renderCalc(host);
+    if (ui.mkView === "tasas" || ui.mkView === "dolar") { ensureTasas(); return renderTasas(host); }
     if (ui.mkView === "guia") return renderGuia(host);
     ensureMarkets();
     $$("#mk-set button").forEach(b => b.setAttribute("aria-pressed", b.dataset.s === ui.mkSet));
@@ -3391,7 +3474,9 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
     const addBtn = document.createElement("button"); addBtn.type = "button"; addBtn.className = "primary";
     addBtn.textContent = held ? "Editar mi posición" : "Añadir a mi cartera";
     addBtn.onclick = () => { closeSheet($("#mk-sheet")); if (held) openAsset(held); else openAsset(null, {kind:q.set === "accion" ? "accion" : q.set === "cedear" ? "cedear" : "bono", ticker:q.sym}); };
-    body.append(addBtn, favBtn);
+    const alBtn = document.createElement("button"); alBtn.type = "button"; alBtn.className = "ghost"; alBtn.style.textAlign = "center"; alBtn.textContent = "🔔 Crear alerta de precio";
+    alBtn.onclick = () => { closeSheet($("#mk-sheet")); openAlert(null, {sym:q.sym}); };
+    body.append(addBtn, favBtn, alBtn);
     const extra = document.createElement("div"); extra.id = "mk-extra"; extra.style.cssText = "display:flex;flex-direction:column;gap:14px"; body.append(extra);
     const link = (href, text) => { const a = document.createElement("a"); a.className = "ghost"; a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = text; return a; };
     body.append(link(`https://www.tradingview.com/symbols/BCBA-${encodeURIComponent(base)}/`, "Ver gráfico en TradingView"));
@@ -3457,8 +3542,9 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
     svg("path", {d:`${d}L${x(n - 1)},${H - B}L${x(0)},${H - B}Z`, fill:col, opacity:".12"}, s);
     svg("path", {d, fill:"none", stroke:col, "stroke-width":2, "stroke-linejoin":"round", "stroke-linecap":"round"}, s);
     svg("line", {x1:L, x2:W - R, y1:H - B, y2:H - B, class:"grid"}, s);
-    svg("text", {x:L, y:T - 4, class:"axis"}, s).textContent = "máx " + fmt(max);
-    svg("text", {x:L, y:H - B - 5, class:"axis"}, s).textContent = "mín " + fmt(min);
+    const halo = "paint-order:stroke;stroke:var(--bg);stroke-width:4px;stroke-linejoin:round";
+    svg("text", {x:L, y:T - 4, class:"axis", style:halo}, s).textContent = "máx " + fmt(max);
+    svg("text", {x:W - R, y:H - B - 6, "text-anchor":"end", class:"axis", style:halo}, s).textContent = "mín " + fmt(min);
     svg("text", {x:L, y:H - 6, class:"axis"}, s).textContent = fmtShort(rows[0][0]);
     svg("text", {x:W - R, y:H - 6, "text-anchor":"end", class:"axis"}, s).textContent = fmtShort(rows[n - 1][0]);
     const dot = svg("circle", {r:4, fill:col, stroke:"var(--surface)", "stroke-width":2, cx:x(n - 1), cy:y(vals[n - 1])}, s);
@@ -3563,19 +3649,21 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
       return;
     }
     const kv = (k, sub, v) => `<div class="kv"><span class="k"><span>${esc(k)}</span>${sub ? `<span>${esc(sub)}</span>` : ""}</span><span class="v">${v}</span></div>`;
-    if (T.riesgo) { const c = card("Riesgo país", "Qué tan más caro le sale al país endeudarse que a EE.UU. Sube cuando el mercado ve más riesgo."); c.insertAdjacentHTML("beforeend", `<p class="net-v num">${Math.round(T.riesgo.valor)} <span class="hint" style="font-size:.9rem">puntos · ${esc(fmtShort(T.riesgo.fecha))}</span></p>`); host.append(c); }
-    if (T.dolares.length) {
+    const view = ui.mkView;
+    if (T.riesgo && view === "tasas") { const c = card("Riesgo país", "Qué tan más caro le sale al país endeudarse que a EE.UU. Sube cuando el mercado ve más riesgo."); c.insertAdjacentHTML("beforeend", `<p class="net-v num">${Math.round(T.riesgo.valor)} <span class="hint" style="font-size:.9rem">puntos · ${esc(fmtShort(T.riesgo.fecha))}</span></p>`); host.append(c); }
+    if (T.dolares.length && view === "dolar") converterCards(host, T);
+    if (T.dolares.length && view === "dolar") {
       const order = ["oficial", "blue", "bolsa", "contadoconliqui", "tarjeta", "mayorista", "cripto"];
       const c = card("Dólar hoy", "Compra y venta"); c.insertAdjacentHTML("beforeend", `<div>${T.dolares.slice().sort((a, b) => order.indexOf(a.casa) - order.indexOf(b.casa)).map(d => kv(d.nombre || d.casa, d.fechaActualizacion ? `Actualizado ${new Date(d.fechaActualizacion).toLocaleString(LOCALE, {day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"})}` : "", `${d.compra ? arsFmt(d.compra) : "—"} / ${arsFmt(d.venta)}`)).join("")}</div>`); host.append(c);
     }
     const infKeys = Object.keys(settings.infl || {}).filter(k => Number.isFinite(settings.infl[k])).sort(), lastInf = infKeys.length ? settings.infl[infKeys[infKeys.length - 1]] : null;
-    if (T.plazos.length) {
+    if (T.plazos.length && view === "tasas") {
       const c = card("Plazo fijo: tasas de los bancos", "TNA para clientes. En 30 días rinde la TNA × 30 / 365.");
       c.insertAdjacentHTML("beforeend", `<div>${T.plazos.map(b => kv(b.banco.toLowerCase().replace(/(^|[\s.])(\p{L})/gu, (m, a, c) => a + c.toUpperCase()).replace(/ (De|Del|La|Y) /g, m => m.toLowerCase()), `${(b.tna * 30 / 365).toLocaleString(LOCALE, {maximumFractionDigits:2})}% en 30 días · ${arsFmt(1e6)} → ${arsFmt(1e6 * (1 + b.tna / 100 * 30 / 365))}`, `${b.tna.toLocaleString(LOCALE, {maximumFractionDigits:2})}%`)).join("")}</div>`);
       if (lastInf != null) { const best = T.plazos[0].tna * 30 / 365; c.insertAdjacentHTML("beforeend", `<p class="hint">Para comparar: la inflación de ${esc(monthShort(infKeys[infKeys.length - 1]))} fue ${String(lastInf).replace(".", ",")}%. La mejor tasa de la lista rinde ${best.toLocaleString(LOCALE, {maximumFractionDigits:2})}% en 30 días, ${best >= lastInf ? "por encima" : "por debajo"} de esa inflación.</p>`); }
       host.append(c);
     }
-    if (T.fci.length) {
+    if (T.fci.length && view === "tasas") {
       const c = card("Fondos de dinero en pesos", "Rendimiento del último día, anualizado. Cambia todos los días y no está garantizado.");
       c.insertAdjacentHTML("beforeend", `<div>${T.fci.map(f => kv(f.fondo, `Patrimonio ${compact(f.patrimonio)}`, `${f.tna.toLocaleString(LOCALE, {maximumFractionDigits:1})}%`)).join("")}</div>`); host.append(c);
     }
@@ -3783,6 +3871,233 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
     const palette = ["var(--c1)", "var(--c2)", "var(--c3)", "var(--c4)", "var(--c5)", "var(--c6)", "var(--c7)", "var(--c8)"];
     hbars(host, "Cómo está repartida tu cartera", "Por tipo de inversión", Object.entries(kinds).sort((a, b) => b[1] - a[1]).map(([k, v], i) => [k, v, palette[i % palette.length]]), total);
   }
+  /* --- dólar: conversor y brecha --- */
+  const DOLAR_NAMES = {bolsa:"Dólar MEP", contadoconliqui:"Dólar CCL", blue:"Dólar blue", oficial:"Dólar oficial", tarjeta:"Dólar tarjeta", mayorista:"Dólar mayorista", cripto:"Dólar cripto"};
+  function converterCards(host, T) {
+    const byCasa = Object.fromEntries(T.dolares.map(d => [d.casa, d])), cv = ui.conv;
+    const c = card("Conversor", "Pesos a dólares y al revés, con la cotización de cada tipo de dólar"); host.append(c);
+    const wrap = document.createElement("div"); wrap.style.cssText = "display:flex;flex-direction:column;gap:10px";
+    wrap.innerHTML = `<div class="conv"><div class="field"><label for="cv-amt">Monto</label><input class="input num" id="cv-amt" inputmode="decimal" autocomplete="off"></div>
+      <div class="field"><label for="cv-from">Tengo</label><select class="input" id="cv-from"><option value="USD">Dólares</option><option value="ARS">Pesos</option></select></div></div>
+      <div class="field"><label for="cv-casa">Tipo de dólar</label><select class="input" id="cv-casa"></select></div>
+      <p class="bigres num" id="cv-out">—</p><p class="hint" id="cv-hint"></p>`;
+    c.append(wrap);
+    const sel = wrap.querySelector("#cv-casa");
+    sel.innerHTML = Object.keys(DOLAR_NAMES).filter(k => byCasa[k]).map(k => `<option value="${k}">${DOLAR_NAMES[k]}</option>`).join("");
+    if (!byCasa[cv.casa]) cv.casa = sel.options[0]?.value || "bolsa";
+    sel.value = cv.casa; wrap.querySelector("#cv-from").value = cv.from; wrap.querySelector("#cv-amt").value = amountToInput(cv.amount);
+    const upd = () => {
+      const a = parseAmount(wrap.querySelector("#cv-amt").value), d = byCasa[sel.value], from = wrap.querySelector("#cv-from").value;
+      if (a > 0) cv.amount = a; cv.casa = sel.value; cv.from = from; saveUI();
+      const out = wrap.querySelector("#cv-out"), hint = wrap.querySelector("#cv-hint");
+      if (!(a > 0) || !d) { out.textContent = "—"; hint.textContent = ""; return; }
+      // comprar dólares cuesta el precio de "venta"; venderlos paga el de "compra"
+      if (from === "ARS") { out.textContent = usd(a / d.venta); hint.textContent = `Comprando a ${arsFmt(d.venta)} por dólar.`; }
+      else { const p = d.compra || d.venta; out.textContent = arsFmt(a * p); hint.textContent = `Vendiendo a ${arsFmt(p)} por dólar.`; }
+    };
+    wrap.querySelectorAll("input,select").forEach(e => e.addEventListener(e.tagName === "SELECT" ? "change" : "input", upd)); upd();
+    const base = byCasa.oficial?.venta;
+    if (base) {
+      const c2 = card("Brecha con el dólar oficial", "Cuánto más caro es cada dólar que el oficial"); host.append(c2);
+      c2.insertAdjacentHTML("beforeend", `<div>${Object.keys(DOLAR_NAMES).filter(k => byCasa[k] && k !== "oficial").map(k => `<div class="kv"><span class="k"><span>${DOLAR_NAMES[k]}</span><span>${arsFmt(byCasa[k].venta)}</span></span><span class="v">${pctTxt((byCasa[k].venta / base - 1) * 100)}</span></div>`).join("")}</div>`);
+    }
+  }
+
+  /* --- calculadora de inversión --- */
+  function renderCalc(host) {
+    const c = card("Calculadora de inversión", "Prueba escenarios: cuánto tendrías si inviertes un monto y sumas un aporte cada mes. Es una simulación, no una promesa de rendimiento."); host.append(c);
+    const k = ui.calc, f = document.createElement("div"); f.style.cssText = "display:flex;flex-direction:column;gap:10px";
+    f.innerHTML = `<div class="two"><div class="field"><label for="ca-init">Monto inicial</label><input class="input num" id="ca-init" inputmode="decimal" autocomplete="off"></div>
+      <div class="field"><label for="ca-month">Aporte por mes</label><input class="input num" id="ca-month" inputmode="decimal" autocomplete="off"></div></div>
+      <div class="two"><div class="field"><label for="ca-rate">Rendimiento anual (%)</label><input class="input num" id="ca-rate" inputmode="decimal" autocomplete="off"></div>
+      <div class="field"><label for="ca-years">Años</label><input class="input num" id="ca-years" inputmode="numeric" autocomplete="off"></div></div>
+      <div class="field"><label for="ca-infl">Inflación anual estimada (%, opcional)</label><input class="input num" id="ca-infl" inputmode="decimal" autocomplete="off" placeholder="0"></div>
+      <button class="ghost" type="button" id="ca-pf" style="text-align:center">Usar la tasa de plazo fijo de hoy</button>`;
+    c.append(f);
+    const out = document.createElement("div"); out.style.cssText = "display:flex;flex-direction:column;gap:12px"; c.append(out);
+    const set = (id, v) => { f.querySelector(id).value = v === 0 || v == null ? "" : amountToInput(v); };
+    set("#ca-init", k.init); set("#ca-month", k.month); set("#ca-rate", k.rate); set("#ca-years", k.years); set("#ca-infl", k.infl);
+    const num = id => { const raw = f.querySelector(id).value.trim(); return raw === "" ? 0 : parseAmount(raw); };
+    const upd = () => {
+      const init = num("#ca-init"), month = num("#ca-month"), rate = num("#ca-rate"), years = Math.round(num("#ca-years")), infl = num("#ca-infl");
+      out.textContent = "";
+      if (![init, month, rate, infl].every(Number.isFinite) || !(years >= 1 && years <= 40) || rate < 0 || rate > 1000 || init < 0 || month < 0 || (init + month) <= 0) {
+        out.innerHTML = `<p class="hint">Completa los montos, un rendimiento entre 0 y 1000% y entre 1 y 40 años.</p>`; return;
+      }
+      Object.assign(k, {init, month, rate, years, infl}); saveUI();
+      const rm = (1 + rate / 100) ** (1 / 12) - 1; let bal = init; const labels = [], put = [], tot = [];
+      for (let m = 1; m <= years * 12; m++) { bal = bal * (1 + rm) + month; if (m % 12 === 0) { const y = m / 12; labels.push(String(y)); put.push(init + month * m); tot.push(bal); } }
+      const put$ = init + month * years * 12, gain = bal - put$;
+      out.innerHTML = `<div class="kpi" style="background:var(--bg)"><span class="k">En ${plural(years, "año", "años")} tendrías</span><span class="bigres num">${money(bal)}</span>
+        <span class="s">Pusiste ${money(put$)} y los intereses suman ${money(gain)}.</span>${infl > 0 ? `<span class="s">Con una inflación de ${infl.toLocaleString(LOCALE, {maximumFractionDigits:1})}% anual, equivale a <b>${money(bal / (1 + infl / 100) ** years)}</b> de hoy.</span>` : ""}</div>`;
+      const lg = document.createElement("div"); lg.className = "chart-legend"; lg.innerHTML = `<span><i class="box" style="background:var(--c9)"></i>Lo que pones</span><span><i class="box" style="background:var(--accent)"></i>Lo que tendrías</span>`; out.append(lg);
+      barChart(chartHost(out), labels.map(y => y), [{name:"Lo que pones", color:"var(--c9)", values:put}, {name:"Lo que tendrías", color:"var(--accent)", values:tot}], {titles:labels.map(y => `Año ${y}`), maxLabels:8});
+      out.insertAdjacentHTML("beforeend", `<p class="disc" style="padding:0">El rendimiento se toma como tasa efectiva anual y los aportes se suman a fin de cada mes. Los rendimientos reales cambian y pueden ser negativos.</p>`);
+    };
+    f.querySelectorAll("input").forEach(e => e.addEventListener("input", upd));
+    f.querySelector("#ca-pf").onclick = async () => {
+      if (!MK.tasas) await fetchTasas(true);
+      const t = (MK.tasas?.plazos || []).map(p => p.tna).sort((a, b) => a - b);
+      if (!t.length) return toast("No se pudo cargar la tasa de plazo fijo");
+      const tea = ((1 + t[Math.floor(t.length / 2)] / 100 / 12) ** 12 - 1) * 100;
+      f.querySelector("#ca-rate").value = amountToInput(Math.round(tea * 10) / 10); upd(); toast("Tasa de plazo fijo de hoy aplicada");
+    };
+    upd();
+    host.insertAdjacentHTML("beforeend", `<p class="disc">Simulación con fines informativos. No es una recomendación de inversión.</p>`);
+  }
+
+  /* --- alertas de precio --- */
+  const alCur = a => a.kind === "fx" ? (MK.tasas?.dolares?.find(d => d.casa === a.casa)?.venta ?? null) : (mkQuote(a.sym)?.p ?? null);
+  const alTitle = a => a.kind === "fx" ? DOLAR_NAMES[a.casa] || a.casa : (a.label ? `${a.sym} · ${a.label}` : a.sym);
+  const alPrice = (a, v) => a.ccy === "USD" ? usd(v) : arsFmt(v);
+  function renderAlertas(host) {
+    ensureMarkets(); ensureTasas();
+    const head = card("Alertas de precio", "Te avisamos con una notificación cuando un instrumento o el dólar llegue al precio que elijas."); host.append(head);
+    const add = document.createElement("button"); add.type = "button"; add.className = "primary"; add.textContent = "Nueva alerta"; add.onclick = () => openAlert(null); head.append(add);
+    if (!settings.notif.on) head.insertAdjacentHTML("beforeend", `<p class="hint">Para recibir los avisos, activa las notificaciones en Ajustes → Notificaciones.</p>`);
+    if (!alerts.length) { host.insertAdjacentHTML("beforeend", `<div class="empty"><h2>Sin alertas</h2><p>Por ejemplo: avísame si GGAL llega a $6.500 o si el dólar MEP baja de $1.500.</p></div>`); return; }
+    const c = card("Tus alertas"); host.append(c);
+    const rows = document.createElement("div"); rows.className = "rows rows-in";
+    alerts.slice().sort((a, b) => (!!a.fired - !!b.fired) || alTitle(a).localeCompare(alTitle(b))).forEach(a => {
+      const b = document.createElement("button"), cur = alCur(a); b.type = "button"; b.className = "row" + (a.fired ? " off" : "");
+      b.innerHTML = `<span class="badge" style="background:${a.fired ? "var(--c9)" : a.dir === "above" ? "var(--c3)" : "var(--c2)"}">${a.dir === "above" ? "↑" : "↓"}</span><span class="txt"><span class="t1"></span><span class="t2"></span></span><span class="amt num"></span>`;
+      b.querySelector(".t1").textContent = alTitle(a);
+      b.querySelector(".t2").textContent = `${a.dir === "above" ? "Sube hasta" : "Baja hasta"} ${alPrice(a, a.value)}`;
+      const amt = b.querySelector(".amt");
+      if (a.fired) amt.innerHTML = `<span class="pct">Saltó</span><small>${esc(fmtShort(a.fired.slice(0, 10)))}</small>`;
+      else if (cur) { const d = (a.value / cur - 1) * 100; amt.innerHTML = `<span>${esc(alPrice(a, cur))}</span><small>${pctTxt(d)} para llegar</small>`; }
+      else amt.textContent = "—";
+      b.onclick = () => openAlert(a); rows.append(b);
+    });
+    c.append(rows);
+    host.insertAdjacentHTML("beforeend", `<p class="disc">Las alertas se revisan cada 15 minutos con precios de data912.com y dolarapi.com, que pueden tener demora. Es información, no una recomendación.</p>`);
+  }
+  let alEdit = null, alKind = "px", alDir = "above";
+  function alNow() {
+    const kind = alKind, sym = $("#al-sym").value.trim().toUpperCase(), q = kind === "px" && sym ? mkQuote(sym) : null;
+    const probe = kind === "fx" ? {kind:"fx", casa:$("#al-casa").value} : {kind:"px", sym};
+    const cur = alCur(probe), ccy = q?.ccy === "USD" ? "USD" : "ARS";
+    $("#al-sym-cur").textContent = ccy === "USD" ? "US$" : symbol();
+    $("#al-now").hidden = !cur; $("#al-now").innerHTML = cur ? `Hoy cotiza a <b>${alPrice({ccy}, cur)}</b>${q?.name ? ` · ${esc(q.name)}` : ""}.` : "";
+    $("#al-value").placeholder = cur ? amountToInput(Math.round(cur * 100) / 100) : "0";
+  }
+  function drawAlert() {
+    setSeg($("#al-kind"), alKind); setSeg($("#al-dir"), alDir);
+    $("#al-sym-field").hidden = alKind !== "px"; $("#al-casa-field").hidden = alKind !== "fx"; alNow();
+  }
+  function openAlert(a, pre = {}) {
+    alEdit = a || null; alKind = a ? a.kind : (pre.kind || "px"); alDir = a ? a.dir : "above";
+    $("#al-title").textContent = a ? "Editar alerta" : "Nueva alerta";
+    $("#al-sym").value = a?.sym || pre.sym || ""; $("#al-casa").value = a?.casa || "bolsa";
+    $("#al-value").value = a ? amountToInput(a.value) : "";
+    $("#al-syms").innerHTML = MK.idx ? Object.values(MK.idx).slice(0, 1500).map(q => `<option value="${esc(q.sym)}">${esc(q.name)}</option>`).join("") : "";
+    $("#al-err").hidden = true; $("#al-delete").hidden = !a;
+    if (a) armDelete($("#al-delete"), "Eliminar alerta", () => { alerts = alerts.filter(x => x.id !== a.id); save(); syncAlerts(true); closeSheet($("#al-sheet")); renderAll(); toast("Alerta eliminada"); });
+    if (MK.idx == null) ensureMarkets(); if (!MK.tasas) ensureTasas();
+    drawAlert(); openSheet($("#al-sheet"));
+  }
+  $$("#al-kind button").forEach(b => b.onclick = () => { alKind = b.dataset.t; drawAlert(); });
+  $$("#al-dir button").forEach(b => b.onclick = () => { alDir = b.dataset.t; drawAlert(); });
+  $("#al-sym").addEventListener("input", alNow); $("#al-casa").addEventListener("change", alNow);
+  $("#al-form").addEventListener("submit", ev => {
+    ev.preventDefault();
+    const err = $("#al-err"), value = parseAmount($("#al-value").value), sym = $("#al-sym").value.trim().toUpperCase().replace(/[^A-Z0-9.]/g, "");
+    const data = alKind === "fx" ? {kind:"fx", sym:"", casa:$("#al-casa").value, ccy:"ARS", label:DOLAR_NAMES[$("#al-casa").value]} : {kind:"px", sym, casa:"", ccy:mkQuote(sym)?.ccy === "USD" ? "USD" : "ARS", label:mkQuote(sym)?.name || ""};
+    if (data.kind === "px" && !sym) return showErr(err, "Escribe el símbolo, por ejemplo GGAL o AAPL.");
+    if (data.kind === "px" && MK.idx && !MK.idx[sym]) return showErr(err, `No encontré "${sym}" en el mercado. Revisa el símbolo.`);
+    if (!(value > 0)) return showErr(err, "Escribe el precio al que quieres que te avisemos.");
+    const cur = alCur(data);
+    if (cur && (alDir === "above" ? cur >= value : cur <= value)) return showErr(err, `Hoy ya cotiza a ${alPrice(data, cur)}. Elige un precio ${alDir === "above" ? "más alto" : "más bajo"} que el actual.`);
+    const next = {...data, dir:alDir, value};
+    if (alEdit && alEdit.kind === next.kind && alEdit.sym === next.sym && alEdit.casa === next.casa && alEdit.dir === next.dir && alEdit.value === next.value) Object.assign(alEdit, next);
+    else { if (alEdit) alerts = alerts.filter(x => x.id !== alEdit.id); alerts.push({id:uid(), ...next, fired:""}); }
+    save(); closeSheet($("#al-sheet")); ui.dineroMode = "mkt"; ui.mkView = "alertas"; saveUI(); syncAlerts(true); renderAll();
+    toast(settings.notif.on ? "Alerta guardada" : "Alerta guardada. Activa las notificaciones en Ajustes para recibirla.");
+  });
+  async function syncAlerts(force) {
+    if (!ibReady() || !navigator.onLine || !unlocked) return;
+    const body = alerts.map(a => ({id:a.id, kind:a.kind, sym:a.sym, casa:a.casa, dir:a.dir, value:a.value, ccy:a.ccy, label:a.label})), h = hashStr(JSON.stringify(body));
+    try {
+      if (force || h !== settings.alertsHash) { await ibFetch("/alertas", {method:"PUT", body:JSON.stringify({items:body})}); settings.alertsHash = h; save(true); }
+      if (alerts.some(a => !a.fired)) {
+        const {fired = {}} = await ibFetch("/alertas"); const hit = alerts.filter(a => fired[a.id] && !a.fired);
+        if (hit.length) { hit.forEach(a => a.fired = fired[a.id]); save(true); renderAll(); toast(`Se disparó tu alerta de ${alTitle(hit[0])}`); }
+      }
+    } catch {}
+  }
+
+  /* --- cartera objetivo --- */
+  const TG_BUCKETS = [["pesos", "Pesos"], ["usd", "Dólares"], ["rv", "Acciones y CEDEARs"], ["bonos", "Bonos y letras"], ["cripto", "Cripto"], ["otros", "Otros (fondos, etc.)"]];
+  function bucketTotals() {
+    const t = {pesos:0, usd:0, rv:0, bonos:0, cripto:0, otros:0}, fx = fxRate() || 0;
+    accounts.forEach(a => { if (isUsdAcc(a)) t.usd += accBalance(a) * fx; else t.pesos += accBalance(a); });
+    assets.forEach(a => { const v = assetValue(a);
+      if (a.kind === "plazo_fijo") t.pesos += v; else if (["accion", "cedear", "acciones"].includes(a.kind)) t.rv += v; else if (a.kind === "bono") t.bonos += v; else if (a.kind === "cripto") t.cripto += v; else t.otros += v; });
+    return t;
+  }
+  function targetCard(host) {
+    if (!accounts.length && !assets.length) return;
+    const t = bucketTotals(), total = Object.values(t).reduce((a, b) => a + b, 0), tg = settings.target;
+    const c = card("Tu cartera objetivo", tg ? "Lo que tienes hoy frente a cómo quieres repartir tu dinero" : "Define cómo quieres repartir tu dinero (por ejemplo, 40% pesos, 40% dólares y 20% acciones) y mira cuánto te desvías."); host.append(c);
+    if (tg && total > 0) {
+      const box = document.createElement("div"); box.style.cssText = "display:flex;flex-direction:column;gap:14px";
+      TG_BUCKETS.filter(([k]) => t[k] > 0 || tg[k] > 0).forEach(([k, name]) => {
+        const real = t[k] / total * 100, want = tg[k] || 0, diff = want / 100 * total - t[k];
+        const row = document.createElement("div"); row.style.cssText = "display:flex;flex-direction:column;gap:6px";
+        row.innerHTML = `<div class="hb-top"><span>${esc(name)}</span><span><b>${real.toFixed(0)}%</b> de ${want}%</span></div>
+          <div class="tgbar"><i style="width:${Math.min(100, real)}%;background:var(--accent)"></i><b style="left:calc(${Math.min(100, want)}% - 1px)"></b></div>
+          <span class="hint">${Math.abs(diff) < total * .005 ? "En el objetivo" : diff > 0 ? `Te faltan ${money(diff)} para el objetivo` : `Te sobran ${money(-diff)} respecto del objetivo`}</span>`;
+        box.append(row);
+      });
+      c.append(box);
+      c.insertAdjacentHTML("beforeend", `<p class="disc" style="padding:0">La raya negra marca tu objetivo. Es solo una comparación con tu propio plan, no una recomendación. Los dólares se pasan a pesos con la cotización que elegiste en Ajustes.</p>`);
+    }
+    const b = document.createElement("button"); b.type = "button"; b.className = "ghost"; b.style.textAlign = "center"; b.textContent = tg ? "Cambiar objetivo" : "Definir mi objetivo"; b.onclick = openTarget; c.append(b);
+  }
+  function openTarget() {
+    const tg = settings.target || {}, box = $("#tg-fields"); box.innerHTML = "";
+    TG_BUCKETS.forEach(([k, name]) => { const l = document.createElement("div"); l.className = "field"; l.innerHTML = `<label for="tg-${k}"></label><input class="input num" id="tg-${k}" inputmode="decimal" autocomplete="off" placeholder="0">`;
+      l.querySelector("label").textContent = name + " (%)"; l.querySelector("input").value = tg[k] ? String(tg[k]).replace(".", ",") : ""; l.querySelector("input").addEventListener("input", sumTarget); box.append(l); });
+    $("#tg-err").hidden = true; $("#tg-clear").hidden = !settings.target;
+    if (settings.target) armDelete($("#tg-clear"), "Quitar objetivo", () => { settings.target = null; save(); closeSheet($("#tg-sheet")); renderAll(); toast("Objetivo quitado"); });
+    sumTarget(); openSheet($("#tg-sheet"));
+  }
+  const readTarget = () => Object.fromEntries(TG_BUCKETS.map(([k]) => [k, Number(String($("#tg-" + k).value).replace(",", ".")) || 0]));
+  function sumTarget() { const s = Object.values(readTarget()).reduce((a, b) => a + b, 0); $("#tg-sum").innerHTML = `Suma: <b>${s.toLocaleString(LOCALE, {maximumFractionDigits:1})}%</b> ${Math.abs(s - 100) < .05 ? "✓" : `(faltan ${(100 - s).toLocaleString(LOCALE, {maximumFractionDigits:1})}%)`}`; }
+  $("#tg-form").addEventListener("submit", ev => {
+    ev.preventDefault(); const v = readTarget(), s = Object.values(v).reduce((a, b) => a + b, 0);
+    if (Object.values(v).some(x => x < 0 || x > 100)) return showErr($("#tg-err"), "Cada porcentaje tiene que estar entre 0 y 100.");
+    if (Math.abs(s - 100) > .05) return showErr($("#tg-err"), "Los porcentajes tienen que sumar 100.");
+    settings.target = v; save(); closeSheet($("#tg-sheet")); renderAll(); toast("Objetivo guardado");
+  });
+
+  /* --- vencimientos de tus inversiones (plazos fijos y las fechas que cargues de bonos y letras) --- */
+  function maturitiesCard(host) {
+    const today = todayStr();
+    const items = assets.map(a => ({a, date:a.kind === "plazo_fijo" ? pfEnd(a) : MKT_KINDS.includes(a.kind) && isDate(a.maturity) ? a.maturity : ""})).filter(x => x.date).sort((x, y) => x.date.localeCompare(y.date));
+    if (!items.length) return;
+    const c = card("Vencimientos de tus inversiones", "Cuándo vence cada una. Te avisamos antes con las notificaciones de pagos."); host.append(c);
+    const list = document.createElement("div"); list.className = "up-list";
+    items.forEach(({a, date}) => {
+      const d = parseD(date), past = date < today, b = document.createElement("button"); b.type = "button"; b.className = "up"; if (past) b.style.opacity = ".6";
+      const amount = a.kind === "plazo_fijo" ? pfFinal(a) : assetValue(a);
+      b.innerHTML = `<span class="when"><b class="num">${d.getDate()}</b><span>${esc(d.toLocaleDateString(LOCALE, {month:"short"}).replace(".", ""))}</span></span><span class="txt"><span class="t1"></span><span class="t2"></span></span><span class="amt num">${amount ? money(amount) : "—"}</span>`;
+      b.querySelector(".t1").textContent = a.name;
+      b.querySelector(".t2").textContent = `${past ? "Venció el " + fmtShort(date) : cap(relDay(date))} · ${a.kind === "plazo_fijo" ? "plazo fijo, cobras esto al vencer" : ASSET_KINDS[a.kind] + ", valor de hoy"}`;
+      b.onclick = () => openAsset(a); list.append(b);
+    });
+    c.append(list);
+    c.insertAdjacentHTML("beforeend", `<p class="disc" style="padding:0">Para bonos y letras, carga la fecha en cada inversión. Los pagos exactos de cupones y amortizaciones los informa tu broker o el prospecto del bono.</p>`);
+  }
+
+  /* --- resumen semanal: la app le pasa tus posiciones al buzón, que calcula el viernes --- */
+  async function syncPortfolio(force) {
+    const n = settings.notif;
+    const positions = assets.filter(a => MKT_KINDS.includes(a.kind) && a.ticker && a.qty > 0).map(a => { const q = mkQuote(a.ticker); return {sym:a.ticker, qty:a.qty, per:q?.per || (a.kind === "bono" ? 100 : 1), ccy:q?.ccy || "ARS"}; });
+    const body = {on:!!n.weekly, positions}, h = hashStr(JSON.stringify(body));
+    if (!force && h === n.pfHash) return;
+    try { await ibFetch("/cartera", {method:"PUT", body:JSON.stringify(body)}); n.pfHash = h; save(true); } catch {}
+  }
   $$("#dinero-mode button").forEach(b => b.onclick = () => { ui.dineroMode = b.dataset.m; saveUI(); renderAhorro(); scrollTo(0, 0); });
   $$("#mk-view button").forEach(b => b.onclick = () => { ui.mkView = b.dataset.v; saveUI(); renderMercados(); });
   $$("#mk-set button").forEach(b => b.onclick = () => { ui.mkSet = b.dataset.s; MK.limit = 60; saveUI(); renderMercados(); });
@@ -3989,7 +4304,7 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
   function backupData(photos) {
     const {fx, crypto:cr, notif, cloud, lock, inbox, ...rest} = settings;
     return {app:"gastos", version:5, settings:{...rest, inbox:{url:inbox?.url || "", token:"", at:0}},
-      categories:cats, recurring:recs, cards, favs, goals, debts, accounts, transfers, assets, expenses:txs, ...(photos ? {photos} : {})};
+      categories:cats, recurring:recs, cards, favs, goals, debts, accounts, transfers, assets, alerts, expenses:txs, ...(photos ? {photos} : {})};
   }
   $("#backup").onclick = async () => {
     const photos = {};
@@ -4023,9 +4338,11 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
       mergeById(accounts, d.accounts, a => a.name && {id:String(a.id), name:String(a.name).slice(0, 30), kind:ACC_KINDS[a.kind] ? a.kind : "banco", initial:Number(a.initial) || 0, color:COLORS.includes(a.color) ? a.color : "c1"});
       mergeById(transfers, d.transfers, x => Number(x.amount) > 0 && x.from && x.to && {id:String(x.id), from:String(x.from), to:String(x.to), amount:Number(x.amount),
         toAmount:Number(x.toAmount) > 0 ? Number(x.toAmount) : Number(x.amount), date:isDate(x.date) ? x.date : todayStr(), note:String(x.note || "").slice(0, 60)});
+      mergeById(alerts, d.alerts, a => Number(a.value) > 0 && (a.kind === "fx" || a.sym) && {id:String(a.id), kind:a.kind === "fx" ? "fx" : "px", sym:String(a.sym || "").toUpperCase().replace(/[^A-Z0-9.]/g, "").slice(0, 14),
+        casa:String(a.casa || "").slice(0, 20), dir:a.dir === "below" ? "below" : "above", value:Number(a.value), ccy:a.ccy === "USD" ? "USD" : "ARS", label:String(a.label || "").slice(0, 40), fired:isDate(String(a.fired || "").slice(0, 10)) ? String(a.fired) : ""});
       mergeById(assets, d.assets, a => ASSET_KINDS[a.kind] && {id:String(a.id), kind:a.kind, name:String(a.name || ASSET_KINDS[a.kind]).slice(0, 40), amount:Number(a.amount) || 0, tna:Number(a.tna) || 0,
         days:Number(a.days) || 0, start:isDate(a.start) ? a.start : todayStr(), coin:COINS[a.coin] ? a.coin : "bitcoin", qty:Number(a.qty) || 0, value:Number(a.value) || 0,
-        ticker:String(a.ticker || "").toUpperCase().replace(/[^A-Z0-9.]/g, "").slice(0, 14), cost:Number(a.cost) || 0, bought:isDate(a.bought) ? a.bought : "",
+        ticker:String(a.ticker || "").toUpperCase().replace(/[^A-Z0-9.]/g, "").slice(0, 14), cost:Number(a.cost) || 0, bought:isDate(a.bought) ? a.bought : "", maturity:isDate(a.maturity) ? a.maturity : "",
         hist:(Array.isArray(a.hist) ? a.hist : []).filter(h => isDate(h.date) && Number(h.value) > 0).map(h => ({date:h.date, value:Number(h.value)}))});
       const have = new Set(txs.map(e => e.id));
       const fresh = d.expenses.map(normTx).filter(e => e && !have.has(e.id)).map(e => {
@@ -4061,7 +4378,10 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
     if (!action && !go) return;
     history.replaceState(null, "", location.pathname);
     if (go) { // opened from a notification
-      const open = () => go === "resumen" ? openRecap(addMonthsYm(ym(new Date()), -1)) : ["home", "dash", "pagos", "ahorro", "mas"].includes(go) && setTab(go);
+      const open = () => go === "resumen" ? openRecap(addMonthsYm(ym(new Date()), -1))
+        : go === "alertas" ? (ui.dineroMode = "mkt", ui.mkView = "alertas", saveUI(), setTab("ahorro"))
+        : go === "inversiones" ? (ui.dineroMode = "mine", ui.ahorroView = "inversiones", saveUI(), setTab("ahorro"))
+        : ["home", "dash", "pagos", "ahorro", "mas"].includes(go) && setTab(go);
       if (unlocked) open(); else afterUnlock = open;
       return;
     }
@@ -4290,6 +4610,7 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
   async function syncAgenda(force) {
     const n = settings.notif;
     if (!n.on || !ibReady() || !navigator.onLine || !unlocked) return;
+    await syncPortfolio(force);
     const payload = {items:buildAgenda(), prefs:{applepay:!!n.applepay}};
     const h = hashStr(JSON.stringify(payload));
     if (!force && h === n.hash && Date.now() - n.at < 6 * 3600e3) return;
@@ -4299,6 +4620,7 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
   function runSync() {
     clearTimeout(syncTimer); syncTimer = null;
     cloudSave().catch(() => { const s = $("#cl-status"); if (s) s.textContent = "No se pudo guardar la copia en la nube. Se reintenta solo."; });
+    syncAlerts();
     syncAgenda();
   }
 
@@ -4337,7 +4659,8 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
     $("#nt-enable").textContent = n.on ? "Desactivar notificaciones" : "Activar notificaciones";
     $("#nt-enable").className = n.on ? "ghost" : "primary";
     $("#nt-opts").hidden = !n.on;
-    for (const [id, k] of [["#nt-pay", "pay"], ["#nt-daily", "daily"], ["#nt-recap", "recap"], ["#nt-budget", "budget"], ["#nt-ap", "applepay"]]) $(id).setAttribute("aria-checked", !!n[k]);
+    for (const [id, k] of [["#nt-pay", "pay"], ["#nt-daily", "daily"], ["#nt-recap", "recap"], ["#nt-budget", "budget"], ["#nt-ap", "applepay"], ["#nt-weekly", "weekly"]]) $(id).setAttribute("aria-checked", !!n[k]);
+    $("#nt-weekly-test").hidden = !n.weekly;
     const days = Number(settings.remindDays) || 0;
     $("#nt-pay-sub").textContent = `Fijos, tarjetas y plazos fijos · ${days ? `${plural(days, "día", "días")} antes` : "el mismo día"} (cámbialo en Recordatorios)`;
     $("#nt-hour-field").hidden = !n.daily;
@@ -4349,8 +4672,12 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
       : c.at ? `Última copia: ${new Date(c.at).toLocaleString(LOCALE, {day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"})}` : c.on ? "Todavía no se guardó ninguna copia." : "Desactivada.";
   }
   $("#nt-enable").onclick = () => settings.notif.on ? disablePush() : enablePush();
-  for (const [id, k] of [["#nt-pay", "pay"], ["#nt-daily", "daily"], ["#nt-recap", "recap"], ["#nt-budget", "budget"], ["#nt-ap", "applepay"]])
+  for (const [id, k] of [["#nt-pay", "pay"], ["#nt-daily", "daily"], ["#nt-recap", "recap"], ["#nt-budget", "budget"], ["#nt-ap", "applepay"], ["#nt-weekly", "weekly"]])
     $(id).onclick = () => { settings.notif[k] = !settings.notif[k]; save(true); renderSyncSettings(); syncAgenda(true); };
+  $("#nt-weekly-test").onclick = async () => {
+    try { await syncPortfolio(true); const r = await ibFetch("/cartera/prueba", {method:"POST"}); toast(r.enviado ? "Enviado. Debería llegarte en unos segundos." : r.motivo === "sin cartera o desactivado" ? "Todavía no tienes CEDEARs, acciones o bonos cargados en Inversiones." : "No se pudo armar el resumen ahora. Inténtalo de nuevo."); }
+    catch { toast("No se pudo enviar. ¿Actualizaste el código del buzón en Cloudflare?"); }
+  };
   $("#nt-hour").onchange = e => { settings.notif.hour = Number(e.target.value); save(true); syncAgenda(true); toast("Hora guardada"); };
   $("#nt-test").onclick = async () => {
     try { const r = await ibFetch("/push/prueba", {method:"POST"}); toast(r.enviadas ? "Enviada. Debería llegarte en unos segundos." : "El buzón no tiene este iPhone registrado. Desactiva y vuelve a activar."); }
