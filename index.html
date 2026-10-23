@@ -405,9 +405,9 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
 .viewer button{color:#fff;font-weight:600;padding:10px 16px;border:1px solid rgba(255,255,255,.4);border-radius:12px}
 </style>
 <style id="hub-style">
-/* ===== Tema de Mi semana (solo se activa si está prendido "Usar el mismo tema") ===== */
-#hub-bar{display:flex;justify-content:center;gap:2px;width:max-content;max-width:calc(100% - 24px);margin:6px auto 12px;padding:3px;border-radius:999px;border:2px solid var(--hb-ink,#1b2620);background:var(--hb-bg,transparent);position:relative;z-index:50}
-#hub-bar button{border:0;border-radius:999px;background:transparent;color:var(--hb-ink,inherit);font:700 13px/1 'DM Sans',system-ui,sans-serif;padding:8px 13px;cursor:pointer}
+/* hub:style */
+#hub-bar{display:flex;justify-content:center;flex-wrap:wrap;gap:2px;width:max-content;max-width:calc(100% - 24px);margin:8px auto 12px;padding:3px;border-radius:999px;border:2px solid var(--hb-ink,#1b2620);background:var(--hb-bg,transparent);position:relative;z-index:50}
+#hub-bar button{border:0;border-radius:999px;background:transparent;color:var(--hb-ink,inherit);font:700 13px/1 'DM Sans',system-ui,sans-serif;padding:8px 12px;cursor:pointer}
 #hub-bar button.on{background:var(--hb-ink,#1b2620);color:var(--hb-bg,#fff)}
 html.hub-skin:root{--bg:var(--hb-bg);--surface:var(--hb-surface);--ink:var(--hb-ink);--muted:var(--hb-muted);--line:var(--hb-line);--accent:var(--hb-hero);--accent-ink:#f7f0dc;--accent-soft:color-mix(in srgb,var(--hb-hero) 16%,var(--hb-surface));--f-display:'Unbounded',system-ui,sans-serif;--f-body:'DM Sans',system-ui,sans-serif}
 html.hub-skin.hub-dark:root{--accent:color-mix(in srgb,var(--hb-hero) 55%,#f4ecda);--accent-ink:#1b1814}
@@ -4773,12 +4773,15 @@ html.hub-skin .fab{border:2px solid #1b2620}
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 })();
 </script>
+
+<!-- hub:start -->
 <script>
-/* ===== Puente con Mi semana (agregado para unir tus 3 apps) =====
-   Tema común, barra para pasar de una app a otra, atajos Cmd+1/2/3 y acciones que manda Mi semana.
+/* ===== Puente con Mi semana (agregado para unir tus apps) =====
+   Tema común, barra para pasar de una app a otra, atajos Cmd+1 a 5 y acciones que manda Mi semana.
    No cambia cómo guarda sus datos esta app. */
 (function(){
   var APP='gastos';
+  var LIST=[['semana','Mi semana'],['estudio','Estudio'],['gastos','Gastos'],['ingles','Inglés'],['ajedrez','Ajedrez']];
   var SK={papel:{bg:'#efe5cf',dk:'#1b1814',hero:'#1f5a45',a:['#f19ac2','#f5e36a','#b7a4dd','#6fb1e0']},
     menta:{bg:'#e2eee5',dk:'#111a16',hero:'#1f4d4a',a:['#9fd8bd','#dbe98a','#a9d6d3','#b9d7f0']},
     atardecer:{bg:'#f5e2d2',dk:'#1c1416',hero:'#5a2840',a:['#ffb08a','#ffd46e','#f3a6bb','#c8b5f0']},
@@ -4796,7 +4799,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
     var t=th(),on=t.unify!==false&&(inHub||!!hubUrl());
     if(!on){if(R.classList.contains('hub-skin')){R.classList.remove('hub-skin','hub-dark');location.reload();}return;}
     if(!fontsIn){fontsIn=true;var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap';document.head.appendChild(l);}
-    var s=SK[skinNow(t)],dark=t.mode==='dark'||(t.mode!=='light'&&mq.matches);
+    var s=SK[skinNow(t)],dark=APP==='ajedrez'||t.mode==='dark'||(t.mode!=='light'&&mq.matches);
     var v=dark?{bg:s.dk,surface:'#26221c',surface2:'#2e2a23',ink:'#f4ecda',muted:'#b9ae98',line:'rgba(244,236,218,.14)',line2:'rgba(244,236,218,.42)'}
              :{bg:s.bg,surface:'#fbf6ea',surface2:'#f3ecd9',ink:'#1b2620',muted:'#55645a',line:'rgba(27,38,32,.14)',line2:'#1b2620'};
     var st=R.style;for(var k in v)st.setProperty('--hb-'+k,v[k]);
@@ -4819,15 +4822,17 @@ html.hub-skin .fab{border:2px solid #1b2620}
   function bar(){
     if(inHub||!hubUrl()||document.getElementById('hub-bar'))return;
     var b=document.createElement('nav');b.id='hub-bar';b.setAttribute('aria-label','Tus apps');
-    [['semana','Mi semana'],['estudio','Estudio'],['gastos','Gastos']].forEach(function(x){var a=document.createElement('button');a.type='button';a.textContent=x[1];if(x[0]===APP)a.className='on';a.onclick=function(){go(x[0]);};b.appendChild(a);});
+    LIST.forEach(function(x){var a=document.createElement('button');a.type='button';a.textContent=x[1];if(x[0]===APP)a.className='on';a.onclick=function(){go(x[0]);};b.appendChild(a);});
     document.body.insertBefore(b,document.body.firstChild);
   }
   if(document.body)bar();else addEventListener('DOMContentLoaded',bar);
-  addEventListener('keydown',function(e){if((e.metaKey||e.ctrlKey)&&!e.altKey&&!e.shiftKey&&/^[123]$/.test(e.key)){e.preventDefault();go(['semana','estudio','gastos'][+e.key-1]);}});
+  addEventListener('keydown',function(e){if((e.metaKey||e.ctrlKey)&&!e.altKey&&!e.shiftKey&&/^[1-5]$/.test(e.key)){e.preventDefault();go(LIST[+e.key-1][0]);}});
   addEventListener('message',function(e){if(e.origin!==location.origin||!e.data||e.data.hub!=='do')return;try{if(window.__hubAct)window.__hubAct(e.data);}catch(err){}});
   if(inHub)addEventListener('load',function(){parent.postMessage({hub:'ready',app:APP},location.origin);});
 })();
 </script>
+
+<!-- hub:end -->
 
 </body>
 </html>

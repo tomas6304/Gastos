@@ -1,5 +1,5 @@
 // Lets Gastos open without internet and shows its notifications. Bump VERSION when you upload a new index.html.
-const VERSION = "gastos-v12";
+const VERSION = "gastos-v13";
 const CORE = ["./", "index.html", "manifest.webmanifest", "apple-touch-icon.png", "icon-192.png", "icon-512.png"];
 const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];
 
