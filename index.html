@@ -404,6 +404,20 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
 .viewer img{max-width:100%;max-height:80vh;border-radius:12px}
 .viewer button{color:#fff;font-weight:600;padding:10px 16px;border:1px solid rgba(255,255,255,.4);border-radius:12px}
 </style>
+<style id="hub-style">
+/* ===== Tema de Mi semana (solo se activa si está prendido "Usar el mismo tema") ===== */
+#hub-bar{display:flex;justify-content:center;gap:2px;width:max-content;max-width:calc(100% - 24px);margin:6px auto 12px;padding:3px;border-radius:999px;border:2px solid var(--hb-ink,#1b2620);background:var(--hb-bg,transparent);position:relative;z-index:50}
+#hub-bar button{border:0;border-radius:999px;background:transparent;color:var(--hb-ink,inherit);font:700 13px/1 'DM Sans',system-ui,sans-serif;padding:8px 13px;cursor:pointer}
+#hub-bar button.on{background:var(--hb-ink,#1b2620);color:var(--hb-bg,#fff)}
+html.hub-skin:root{--bg:var(--hb-bg);--surface:var(--hb-surface);--ink:var(--hb-ink);--muted:var(--hb-muted);--line:var(--hb-line);--accent:var(--hb-hero);--accent-ink:#f7f0dc;--accent-soft:color-mix(in srgb,var(--hb-hero) 16%,var(--hb-surface));--f-display:'Unbounded',system-ui,sans-serif;--f-body:'DM Sans',system-ui,sans-serif}
+html.hub-skin.hub-dark:root{--accent:color-mix(in srgb,var(--hb-hero) 55%,#f4ecda);--accent-ink:#1b1814}
+html.hub-skin body{background:var(--hb-bg)}
+html.hub-skin :is(.card,.sheet,.up,.goal,.kpi){border:2px solid var(--hb-line2)!important;box-shadow:none!important}
+html.hub-skin .tabbar{background:#1b2620!important;border-top:0!important}
+html.hub-skin .tabbar .tabbtn{color:#c9c2ae!important}
+html.hub-skin .tabbar .tabbtn[aria-selected="true"]{color:#f5e36a!important}
+html.hub-skin .fab{border:2px solid #1b2620}
+</style>
 </head>
 <body>
 
@@ -4372,11 +4386,11 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
   }
 
   /* ---------- Siri / Atajos: ?accion=gasto&monto=2500&cat=comida&nota=Café ---------- */
-  function handleUrlAction() {
-    const p = new URLSearchParams(location.search);
+  function handleUrlAction(q) {
+    const p = q || new URLSearchParams(location.search);
     const action = (p.get("accion") || "").toLowerCase(), go = (p.get("ir") || "").toLowerCase();
     if (!action && !go) return;
-    history.replaceState(null, "", location.pathname);
+    if (!q) history.replaceState(null, "", location.pathname);
     if (go) { // opened from a notification
       const open = () => go === "resumen" ? openRecap(addMonthsYm(ym(new Date()), -1))
         : go === "alertas" ? (ui.dineroMode = "mkt", ui.mkView = "alertas", saveUI(), setTab("ahorro"))
@@ -4387,7 +4401,7 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
     }
     const standalone = navigator.standalone === true || matchMedia("(display-mode: standalone)").matches;
     const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    if (isIOS && !standalone) $("#safari-banner").hidden = false;
+    if (isIOS && !standalone && !q) $("#safari-banner").hidden = false;
     const type = action === "ingreso" ? "ingreso" : "gasto";
     const want = fold(p.get("cat") || "").replace(/[^a-z0-9]+/g, "");
     const cat = want ? catsOf(type).find(c => fold(c.id).replace(/[^a-z0-9]+/g, "") === want || fold(c.name).replace(/[^a-z0-9]+/g, "") === want) : null;
@@ -4739,6 +4753,12 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
     if (assets.some(a => MKT_KINDS.includes(a.kind)) && Date.now() - MK.at > 5 * 60e3) ensureMarkets();
   }
 
+  /* ---------- Mi semana: acciones que llegan desde la app de agenda ---------- */
+  window.__hubAct = d => {
+    if (d.q) handleUrlAction(new URLSearchParams(d.q));
+    else if (d.go) handleUrlAction(new URLSearchParams("ir=" + d.go));
+  };
+
   /* ---------- start ---------- */
   load();
   $$("#period button").forEach(x => x.setAttribute("aria-pressed", Number(x.dataset.p) === ui.period));
@@ -4753,5 +4773,61 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 })();
 </script>
+<script>
+/* ===== Puente con Mi semana (agregado para unir tus 3 apps) =====
+   Tema común, barra para pasar de una app a otra, atajos Cmd+1/2/3 y acciones que manda Mi semana.
+   No cambia cómo guarda sus datos esta app. */
+(function(){
+  var APP='gastos';
+  var SK={papel:{bg:'#efe5cf',dk:'#1b1814',hero:'#1f5a45',a:['#f19ac2','#f5e36a','#b7a4dd','#6fb1e0']},
+    menta:{bg:'#e2eee5',dk:'#111a16',hero:'#1f4d4a',a:['#9fd8bd','#dbe98a','#a9d6d3','#b9d7f0']},
+    atardecer:{bg:'#f5e2d2',dk:'#1c1416',hero:'#5a2840',a:['#ffb08a','#ffd46e','#f3a6bb','#c8b5f0']},
+    oceano:{bg:'#dde8f2',dk:'#10151d',hero:'#1c3557',a:['#9cc6ef','#f1e59a','#b5b9f1','#8fd0d8']},
+    mono:{bg:'#ebe9e4',dk:'#151515',hero:'#1b1b1b',a:['#e4e1da','#f2e36a','#d9d6cf','#cfcbc3']}};
+  var R=document.documentElement,inHub=false;
+  try{inHub=window.top!==window&&window.parent.location.origin===location.origin;}catch(e){}
+  if(inHub)R.classList.add('in-hub');
+  function th(){try{return JSON.parse(localStorage.getItem('mi-semana-theme'))||{};}catch(e){return {};}}
+  function hubUrl(){try{return localStorage.getItem('hub-url')||'';}catch(e){return '';}}
+  var mq=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):{matches:false};
+  function skinNow(t){if(!t.auto)return SK[t.skin]?t.skin:'papel';var h=new Date().getHours();return h>=6&&h<12?'menta':h>=12&&h<19?'papel':'oceano';}
+  var forcing=false,fontsIn=false;
+  function apply(){
+    var t=th(),on=t.unify!==false&&(inHub||!!hubUrl());
+    if(!on){if(R.classList.contains('hub-skin')){R.classList.remove('hub-skin','hub-dark');location.reload();}return;}
+    if(!fontsIn){fontsIn=true;var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap';document.head.appendChild(l);}
+    var s=SK[skinNow(t)],dark=t.mode==='dark'||(t.mode!=='light'&&mq.matches);
+    var v=dark?{bg:s.dk,surface:'#26221c',surface2:'#2e2a23',ink:'#f4ecda',muted:'#b9ae98',line:'rgba(244,236,218,.14)',line2:'rgba(244,236,218,.42)'}
+             :{bg:s.bg,surface:'#fbf6ea',surface2:'#f3ecd9',ink:'#1b2620',muted:'#55645a',line:'rgba(27,38,32,.14)',line2:'#1b2620'};
+    var st=R.style;for(var k in v)st.setProperty('--hb-'+k,v[k]);
+    st.setProperty('--hb-hero',s.hero);for(var i=0;i<4;i++)st.setProperty('--hb-a'+(i+1),s.a[i]);
+    R.classList.add('hub-skin');R.classList.toggle('hub-dark',dark);
+    forcing=true;R.setAttribute('data-theme',dark?'dark':'light');forcing=false;
+    var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',v.bg);
+  }
+  try{new MutationObserver(function(){if(forcing||!R.classList.contains('hub-skin'))return;var w=R.classList.contains('hub-dark')?'dark':'light';if(R.getAttribute('data-theme')!==w){forcing=true;R.setAttribute('data-theme',w);forcing=false;}}).observe(R,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+  apply();
+  if(mq.addEventListener)mq.addEventListener('change',apply);
+  addEventListener('storage',function(e){if(e.key==='mi-semana-theme'||e.key==='hub-url')apply();});
+  setInterval(apply,60000);
+  function go(k){
+    if(k===APP)return;
+    if(inHub){parent.postMessage({hub:'open',app:k},location.origin);return;}
+    var hu=hubUrl();if(hu)location.href=k==='semana'?hu:hu+'#app='+k;
+  }
+  /* Barra para cambiar de app cuando esta app está abierta sola (adentro de Mi semana ya está arriba) */
+  function bar(){
+    if(inHub||!hubUrl()||document.getElementById('hub-bar'))return;
+    var b=document.createElement('nav');b.id='hub-bar';b.setAttribute('aria-label','Tus apps');
+    [['semana','Mi semana'],['estudio','Estudio'],['gastos','Gastos']].forEach(function(x){var a=document.createElement('button');a.type='button';a.textContent=x[1];if(x[0]===APP)a.className='on';a.onclick=function(){go(x[0]);};b.appendChild(a);});
+    document.body.insertBefore(b,document.body.firstChild);
+  }
+  if(document.body)bar();else addEventListener('DOMContentLoaded',bar);
+  addEventListener('keydown',function(e){if((e.metaKey||e.ctrlKey)&&!e.altKey&&!e.shiftKey&&/^[123]$/.test(e.key)){e.preventDefault();go(['semana','estudio','gastos'][+e.key-1]);}});
+  addEventListener('message',function(e){if(e.origin!==location.origin||!e.data||e.data.hub!=='do')return;try{if(window.__hubAct)window.__hubAct(e.data);}catch(err){}});
+  if(inHub)addEventListener('load',function(){parent.postMessage({hub:'ready',app:APP},location.origin);});
+})();
+</script>
+
 </body>
 </html>
