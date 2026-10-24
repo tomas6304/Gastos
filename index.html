@@ -271,7 +271,7 @@ details ol{padding-left:20px;margin:8px 0 0}
 .kpi .v{font-family:var(--f-display);font-weight:700;font-size:clamp(1.05rem,5.2vw,1.4rem);line-height:1.15;overflow-wrap:break-word}
 .kpi.wide .v{font-size:2.2rem}
 .kpi .s{font-size:.8rem;color:var(--muted);line-height:1.35}
-.delta{display:inline-flex;align-items:center;gap:4px;font-weight:600;font-size:.82rem;padding:2px 8px;border-radius:99px;background:var(--bg);color:var(--ink)}
+.delta{display:inline-flex;width:max-content;max-width:100%;margin-right:4px;vertical-align:middle;white-space:nowrap;align-items:center;gap:4px;font-weight:600;font-size:.82rem;padding:2px 8px;border-radius:99px;background:var(--bg);color:var(--ink)}
 .delta.up{color:var(--danger);background:var(--danger-soft)}
 .delta.down{color:var(--accent);background:var(--accent-soft)}
 .chart{position:relative;width:100%;min-width:0;touch-action:pan-y}
@@ -404,7 +404,20 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
 .viewer img{max-width:100%;max-height:80vh;border-radius:12px}
 .viewer button{color:#fff;font-weight:600;padding:10px 16px;border:1px solid rgba(255,255,255,.4);border-radius:12px}
 </style>
-
+<style id="hub-style">
+/* ===== Tema de Mi semana (solo se activa si está prendido "Usar el mismo tema") ===== */
+#hub-bar{display:flex;justify-content:center;gap:2px;width:max-content;max-width:calc(100% - 24px);margin:6px auto 12px;padding:3px;border-radius:999px;border:2px solid var(--hb-ink,#1b2620);background:var(--hb-bg,transparent);position:relative;z-index:50}
+#hub-bar button{border:0;border-radius:999px;background:transparent;color:var(--hb-ink,inherit);font:700 13px/1 'DM Sans',system-ui,sans-serif;padding:8px 13px;cursor:pointer}
+#hub-bar button.on{background:var(--hb-ink,#1b2620);color:var(--hb-bg,#fff)}
+html.hub-skin:root{--bg:var(--hb-bg);--surface:var(--hb-surface);--ink:var(--hb-ink);--muted:var(--hb-muted);--line:var(--hb-line);--accent:var(--hb-hero);--accent-ink:#f7f0dc;--accent-soft:color-mix(in srgb,var(--hb-hero) 16%,var(--hb-surface));--f-display:'Unbounded',system-ui,sans-serif;--f-body:'DM Sans',system-ui,sans-serif}
+html.hub-skin.hub-dark:root{--accent:color-mix(in srgb,var(--hb-hero) 55%,#f4ecda);--accent-ink:#1b1814}
+html.hub-skin body{background:var(--hb-bg)}
+html.hub-skin :is(.card,.sheet,.up,.goal,.kpi){border:2px solid var(--hb-line2)!important;box-shadow:none!important}
+html.hub-skin .tabbar{background:#1b2620!important;border-top:0!important}
+html.hub-skin .tabbar .tabbtn{color:#c9c2ae!important}
+html.hub-skin .tabbar .tabbtn[aria-selected="true"]{color:#f5e36a!important}
+html.hub-skin .fab{border:2px solid #1b2620}
+</style>
 </head>
 <body>
 
@@ -717,7 +730,7 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
       <p class="hint">Tus datos se guardan solo en este iPhone. Guarda una copia de vez en cuando en Archivos o iCloud Drive para no perderlos.</p>
     </div>
   </div>
-  <p class="foot">Gastos · versión 11</p>
+  <p class="foot">Gastos · versión 13</p>
 </div>
 </main>
 
@@ -1252,7 +1265,7 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
     catch { toast("No se pudo guardar. Libera espacio en el iPhone e inténtalo de nuevo."); }
     if (!quiet) { clearTimeout(syncTimer); syncTimer = setTimeout(() => runSync(), 5000); }
   }
-  function saveUI() { try { localStorage.setItem("gastos.ui", JSON.stringify({tab:ui.tab, period:ui.period, pagosView:ui.pagosView, ahorroView:ui.ahorroView, lastCat:ui.lastCat, dismissed:ui.dismissed, lastAcc:ui.lastAcc, dineroMode:ui.dineroMode, mkView:ui.mkView, mkSet:ui.mkSet, mkSort:ui.mkSort, mkPeriod:ui.mkPeriod, mkCmp:ui.mkCmp, mkCmpP:ui.mkCmpP, mkCmpB:ui.mkCmpB, calc:ui.calc, conv:ui.conv})); } catch {} }
+  function saveUI() { try { localStorage.setItem("gastos.ui", JSON.stringify({tab:ui.tab, period:ui.period, pagosView:ui.pagosView, ahorroView:ui.ahorroView, lastCat:ui.lastCat, dismissed:ui.dismissed, lastAcc:ui.lastAcc, dineroMode:ui.dineroMode, mkView:ui.mkView, mkSet:ui.mkSet, mkSort:ui.mkSort, mkPeriod:ui.mkPeriod, mkCmp:ui.mkCmp, mkCmpP:ui.mkCmpP, mkCmpB:ui.mkCmpB, calc:ui.calc, conv:ui.conv, mmReal:ui.mmReal})); } catch {} }
   try { navigator.storage?.persist?.(); } catch {}
 
   /* ---------- photos (IndexedDB) ---------- */
@@ -1418,7 +1431,7 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
     }
     // budget pace
     if (budget && day >= 5 && day < dim) {
-      const spent = sum(gMonth), proj = spent / day * dim;
+      const spent = sum(gMonth), proj = monthForecast().total;
       if (spent <= budget && proj > budget * 1.03) out.push({key:`pace-${key}`, level:"warn", icon:"↑", score:proj - budget,
         text:`A este ritmo terminarías el mes en ${money(proj)}, ${money(proj - budget)} por encima del presupuesto`,
         sub:`Para llegar, gasta como máximo ${money((budget - spent) / (dim - day + 1))} por día.`});
@@ -1971,6 +1984,67 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
   const addMonths = (d, n) => { const r = new Date(d.getFullYear(), d.getMonth() + n, 1); r.setDate(Math.min(d.getDate(), daysIn(r.getFullYear(), r.getMonth()))); return r; };
   const daysBetween = (a, b) => Math.round((parseD(b) - parseD(a)) / 864e5) + 1;
 
+  // How the month should end: what's spent + what's already scheduled + the usual pace of everyday spending
+  function monthForecast() {
+    const now = new Date(), today = todayStr(), key = ym(now), day = now.getDate(), dim = daysIn(now.getFullYear(), now.getMonth());
+    const end = `${key}-${pad(dim)}`;
+    const mine = txs.filter(t => t.type === "gasto" && t.date.startsWith(key));
+    const spent = sum(mine.filter(t => t.date <= today));
+    const everyday = sum(mine.filter(t => t.date <= today && !t.recId && !t.inst));
+    const pace = day > 0 ? everyday / day * (dim - day) : 0;
+    const booked = sum(mine.filter(t => t.date > today));
+    const fixed = recs.filter(r => r.active && r.type === "gasto").reduce((s, r) => {
+      const from = genFrom(r) > today ? genFrom(r) : addDays(today, 1);
+      return s + occurrences(r, from, end).length * r.amount;
+    }, 0);
+    return {now, key, day, dim, spent, everyday, pace, booked, fixed, total:spent + pace + booked + fixed};
+  }
+  function forecastCard(host) {
+    const {key, day, dim, spent, everyday, pace, booked, fixed, total} = monthForecast(), budget = Number(settings.budget) || 0;
+    if (!(total > 0)) return;
+    const pk = addMonthsYm(key, -1), last = sum(txs.filter(t => t.type === "gasto" && t.date.startsWith(pk)));
+    const c = card("Cómo terminarías el mes", day < 4 ? "Todavía es pronto: el cálculo mejora con los días" : `Faltan ${plural(dim - day, "día", "días")}`); host.append(c);
+    const top = Math.max(total, budget, 1);
+    const marks = [`<i style="display:block;height:100%;width:${(spent / total * 100).toFixed(1)}%;background:var(--accent)"></i>`];
+    c.insertAdjacentHTML("beforeend", `<div class="kpi" style="box-shadow:none;border:0;padding:0"><span class="v num ${budget && total > budget ? "neg" : ""}">${kmoney(total)}</span>
+      <span class="s">${budget ? (total > budget ? `${money(total - budget)} por encima de tu presupuesto de ${money(budget)}` : `${money(budget - total)} por debajo de tu presupuesto de ${money(budget)}`)
+        : last > 0 ? `${total > last ? "Más" : "Menos"} que el mes pasado (${money(last)})` : "Anota tu presupuesto en Ajustes para compararlo"}</span></div>
+      <div style="position:relative;height:8px;border-radius:4px;background:var(--line);margin:14px 0 8px"><div style="height:100%;border-radius:4px;overflow:hidden;width:${(total / top * 100).toFixed(1)}%;background:color-mix(in srgb,var(--accent) 35%,var(--line))">${marks.join("")}</div>${budget ? `<b style="position:absolute;top:-3px;bottom:-3px;width:2px;left:${(budget / top * 100).toFixed(1)}%;background:var(--warn)"></b>` : ""}</div>`);
+    const rows = [["Ya gastado", `Hasta hoy`, spent], ["Fijos que faltan", `${plural(recs.filter(r => r.active && r.type === "gasto").length, "pago fijo", "pagos fijos")} pendientes de este mes`, fixed],
+      ["Cuotas y pagos agendados", "Con fecha posterior a hoy", booked], ["Gastos del día a día", `Al ritmo de ${money(everyday / Math.max(day, 1))} por día`, pace]];
+    rows.filter(r => r[2] > 0).forEach(([a, b, v]) => c.insertAdjacentHTML("beforeend", `<div class="kv"><span class="k"><span>${a}</span><span>${b}</span></span><span class="v">${money(v)}</span></div>`));
+  }
+  // This month so far against the same stretch of last month, with and without inflation
+  function monthVsMonthCard(host) {
+    const now = new Date(), today = todayStr(), key = ym(now), day = now.getDate(), pk = addMonthsYm(key, -1);
+    const pdim = daysIn(Number(pk.slice(0, 4)), Number(pk.slice(5)) - 1), pTo = `${pk}-${pad(Math.min(day, pdim))}`;
+    const inf = inflFactors(), canReal = settings.currency === "ARS" && !!inf.last;
+    const real = canReal && ui.mmReal !== false;
+    const cur = txs.filter(t => t.type === "gasto" && t.date.startsWith(key) && t.date <= today);
+    const prev = txs.filter(t => t.type === "gasto" && t.date.startsWith(pk) && t.date <= pTo).map(t => real ? {...t, amount:t.amount * inf.f(t.date) / inf.f(today)} : t);
+    if (!cur.length && !prev.length) return;
+    const c = card("Este mes contra el anterior", `Del 1 al ${day} de cada mes${real ? ", con los precios de hoy" : ""}`); host.append(c);
+    if (canReal) {
+      const seg = document.createElement("div"); seg.className = "seg"; seg.style.marginBottom = "12px";
+      seg.innerHTML = `<button type="button" aria-pressed="${!real}">Pesos de cada mes</button><button type="button" aria-pressed="${real}">Sin inflación</button>`;
+      [false, true].forEach((v, i) => seg.children[i].onclick = () => { ui.mmReal = v; saveUI(); renderDash(); });
+      c.append(seg);
+    }
+    const by = {}, pby = {};
+    cur.forEach(t => by[t.cat] = (by[t.cat] || 0) + t.amount);
+    prev.forEach(t => pby[t.cat] = (pby[t.cat] || 0) + t.amount);
+    const ids = [...new Set([...Object.keys(by), ...Object.keys(pby)])].sort((a, b) => Math.abs((by[b] || 0) - (pby[b] || 0)) - Math.abs((by[a] || 0) - (pby[a] || 0)));
+    const n0 = v => Math.round(v).toLocaleString(LOCALE), tc = sum(cur), tp = sum(prev), diff = tc - tp;
+    c.insertAdjacentHTML("beforeend", `<p class="sub" style="margin:0 0 8px">${tp > 0 ? `En total gastaste <b>${money(Math.abs(diff))} ${diff > 0 ? "más" : "menos"}</b> (${fmtPct(diff / tp)})` : "Sin gastos en el mes anterior para comparar"}</p>`);
+    const wrap = document.createElement("div"); wrap.style.overflowX = "auto";
+    wrap.innerHTML = `<table class="ctable"><thead><tr><th>Categoría</th><th>Este mes</th><th>Antes</th><th>Cambio</th></tr></thead><tbody>${ids.slice(0, 8).map(id => {
+      const v = by[id] || 0, p = pby[id] || 0, d = v - p, cat = catById(id), cls = Math.abs(d) < 1 ? "flat" : d > 0 ? "up" : "down";
+      return `<tr><td><span><i class="dot" style="background:${cvar(cat)}"></i>${esc(cat.name)}</span></td><td>${n0(v)}</td><td>${n0(p)}</td>
+        <td class="dl ${cls}">${p > 0 ? fmtPct(d / p) : v > 0 ? "nuevo" : "="}</td></tr>`;
+    }).join("")}</tbody></table>`;
+    c.append(wrap);
+    if (ids.length > 8) c.insertAdjacentHTML("beforeend", `<p class="sub" style="margin-top:8px">Se muestran las 8 categorías con más diferencia.</p>`);
+  }
   function renderDash() {
     const host = $("#dash"); host.textContent = ""; hideTip();
     const period = ui.period, now = new Date(), today = todayStr();
@@ -2006,7 +2080,7 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
     const kp = document.createElement("div"); kp.className = "kpis";
     let third;
     if (period === 1) {
-      const proj = tg / now.getDate() * dim;
+      const proj = monthForecast().total;
       third = `<div class="kpi"><span class="k">Proyección del mes</span><span class="v num">${kmoney(proj)}</span>
         <span class="s">${budget ? (proj > budget ? `Superaría tu presupuesto por ${money(proj - budget)}` : "Dentro del presupuesto") : "Si sigues a este ritmo"}</span></div>`;
     } else {
@@ -2028,6 +2102,9 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
 
     const allIns = insights();
     if (allIns.length) { const ci = card("Avisos", "Lo que vemos en tus gastos de este mes"); ci.append(insightList(allIns)); host.append(ci); }
+
+    forecastCard(host);
+    monthVsMonthCard(host);
 
     if (period === 1) {
       const c = card("Gasto por día", "Toca una barra para ver el detalle"); host.append(c);
@@ -4304,7 +4381,8 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
   // Everything worth keeping, without secrets or values that change on their own (dólar, cripto)
   function backupData(photos) {
     const {fx, crypto:cr, notif, cloud, lock, inbox, ...rest} = settings;
-    return {app:"gastos", version:5, settings:{...rest, inbox:{url:inbox?.url || "", token:"", at:0}},
+    const notifPrefs = Object.fromEntries(["pay", "daily", "hour", "recap", "budget", "applepay", "weekly"].map(k => [k, notif?.[k]]));
+    return {app:"gastos", version:5, settings:{...rest, inbox:{url:inbox?.url || "", token:"", at:0}, notifPrefs},
       categories:cats, recurring:recs, cards, favs, goals, debts, accounts, transfers, assets, alerts, expenses:txs, ...(photos ? {photos} : {})};
   }
   $("#backup").onclick = async () => {
@@ -4326,10 +4404,11 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
   async function restoreData(d) {
     {
       if (!d || !Array.isArray(d.expenses)) throw new Error("bad");
+      const isNew = !txs.length && !recs.length;   // a new install also gets the old settings; an app in use keeps its own
       const mergeById = (target, list, clean) => { let n = 0; (Array.isArray(list) ? list : []).forEach(x => { const c = x && x.id && clean(x); if (c && !target.some(y => y.id === c.id)) { target.push(c); n++; } }); return n; };
       mergeById(cats, d.categories, c => c.name && {id:String(c.id), name:String(c.name).slice(0, 24), color:COLORS.includes(c.color) ? c.color : "c9", type:c.type === "ingreso" ? "ingreso" : "gasto", budget:Number(c.budget) || 0, fixed:!!c.fixed});
       mergeById(recs, d.recurring, r => Number(r.amount) > 0 && isDate(r.start) && {id:String(r.id), type:r.type === "ingreso" ? "ingreso" : "gasto", amount:Number(r.amount), cat:String(r.cat),
-        note:String(r.note || "Fijo").slice(0, 60), method:String(r.method || ""), card:String(r.card || ""), freq:FREQ[r.freq] ? r.freq : "mensual", start:r.start, lastGen:isDate(r.lastGen) ? r.lastGen : null, active:r.active !== false});
+        note:String(r.note || "Fijo").slice(0, 60), method:String(r.method || ""), card:String(r.card || ""), acc:String(r.acc || ""), freq:FREQ[r.freq] ? r.freq : "mensual", start:r.start, lastGen:isDate(r.lastGen) ? r.lastGen : null, active:r.active !== false});
       mergeById(cards, d.cards, c => c.name && {id:String(c.id), name:String(c.name).slice(0, 30), closeDay:Math.min(31, Math.max(1, Number(c.closeDay) || 1)), dueDay:Math.min(31, Math.max(1, Number(c.dueDay) || 1)), color:COLORS.includes(c.color) ? c.color : "c1"});
       mergeById(favs, d.favs, x => Number(x.amount) > 0 && {id:String(x.id), name:String(x.name || "Rápido").slice(0, 24), amount:Number(x.amount), type:x.type === "ingreso" ? "ingreso" : "gasto", cat:String(x.cat), method:String(x.method || ""), card:String(x.card || "")});
       mergeById(goals, d.goals, x => Number(x.target) > 0 && {id:String(x.id), name:String(x.name || "Meta").slice(0, 40), target:Number(x.target), deadline:isDate(x.deadline) ? x.deadline : "", color:COLORS.includes(x.color) ? x.color : "c3",
@@ -4349,6 +4428,8 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
       const fresh = d.expenses.map(normTx).filter(e => e && !have.has(e.id)).map(e => {
         const t = {id:e.id, type:e.type, amount:e.amount, cat:String(e.cat), note:String(e.note || "").slice(0, 60), date:e.date, method:String(e.method || ""), card:String(e.card || ""), acc:String(e.acc || ""), created:Number(e.created) || Date.now()};
         if (e.recId) t.recId = String(e.recId);
+        if (e.src === "applepay") { t.src = "applepay"; if (e.inboxId) t.inboxId = String(e.inboxId); }
+        if (e.merch) t.merch = String(e.merch).slice(0, 60);
         if (e.inst && e.inst.g) t.inst = {g:String(e.inst.g), n:Number(e.inst.n) || 1, of:Number(e.inst.of) || 1, total:Number(e.inst.total) || e.amount};
         if (Number(e.usd) > 0) { t.usd = Number(e.usd); t.rate = Number(e.rate) || 0; }
         if (e.photo) t.photo = String(e.photo);
@@ -4363,6 +4444,21 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
       }
       if (d.settings) {
         if (!settings.budget) settings.budget = Number(d.settings.budget) || 0;
+        if (isNew) {
+          const o = d.settings, n = Number, ok = (v, lo, hi) => Number.isFinite(n(v)) && n(v) >= lo && n(v) <= hi;
+          if (ok(o.remindDays, 0, 30)) settings.remindDays = n(o.remindDays);
+          if (["mep", "blue", "tarjeta", "oficial"].includes(o.fxSource)) settings.fxSource = o.fxSource;
+          if (n(o.fxManual) > 0) settings.fxManual = n(o.fxManual);
+          settings.showUsd = !!o.showUsd; settings.inflAdjust = !!o.inflAdjust;
+          if (o.target && typeof o.target === "object") settings.target = o.target;
+          if (o.payMap && typeof o.payMap === "object") for (const [k, v] of Object.entries(o.payMap)) if (typeof v === "string" && !(k in settings.payMap)) settings.payMap[k] = v;
+          if (Array.isArray(o.paySeen)) o.paySeen.forEach(x => { x = String(x).slice(0, 40); if (x && !settings.paySeen.includes(x)) settings.paySeen.push(x); });
+          const np = o.notifPrefs;
+          if (np && typeof np === "object") {
+            for (const k of ["pay", "daily", "recap", "budget", "applepay", "weekly"]) if (typeof np[k] === "boolean") settings.notif[k] = np[k];
+            if (ok(np.hour, 0, 23)) settings.notif.hour = n(np.hour);
+          }
+        }
         if (d.settings.currency) settings.currency = d.settings.currency;
         if (Array.isArray(d.settings.mkt?.favs)) d.settings.mkt.favs.forEach(s => { s = String(s).toUpperCase().replace(/[^A-Z0-9.]/g, "").slice(0, 14); if (s && !settings.mkt.favs.includes(s)) settings.mkt.favs.push(s); });
         if (d.settings.infl && typeof d.settings.infl === "object") for (const [k, v] of Object.entries(d.settings.infl)) if (/^\d{4}-\d{2}$/.test(k) && Number.isFinite(Number(v)) && !Number.isFinite(settings.infl[k])) settings.infl[k] = Number(v);
@@ -4465,6 +4561,21 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
   }
   // "$ 4.200,00", "ARS 4,200.00", "4200" → 4200
   const parseMonto = s => parseAmount(String(s || "").replace(/[^\d.,-]/g, ""));
+  // "CARREFOUR 0123 SA" and "Carrefour" count as the same shop
+  const merchKey = s => fold(s).replace(/[^a-z ]+/g, " ").replace(/\b(sa|srl|sas|arg|argentina)\b/g, " ").replace(/\s+/g, " ").trim();
+  function learnedCat(merchant) {
+    const k = merchKey(merchant);
+    if (!k) return null;
+    const tally = {};
+    txs.forEach(t => {
+      if (t.type !== "gasto" || t.recId || t.inst || !cats.some(c => c.id === t.cat)) return;
+      if (t.merch !== k && merchKey(t.note) !== k) return;
+      const e = tally[t.cat] || (tally[t.cat] = {n:0, last:""});
+      e.n++; if (t.date > e.last) e.last = t.date;
+    });
+    const best = Object.keys(tally).sort((a, b) => tally[b].n - tally[a].n || tally[b].last.localeCompare(tally[a].last))[0];
+    return best ? catById(best) : null;
+  }
   function txFromInbox(it) {
     const amount = parseMonto(it.monto);
     if (!(amount > 0)) return null;
@@ -4472,14 +4583,12 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
     const when = new Date(it.fecha), date = isNaN(when) ? todayStr() : ymd(when);
     const want = fold(it.cat).replace(/[^a-z0-9]+/g, "");
     let cat = want ? catsOf("gasto").find(c => fold(c.name).replace(/[^a-z0-9]+/g, "") === want || fold(c.id) === want) : null;
-    if (!cat && merchant) { // same shop as before → same category
-      const prev = txs.filter(t => t.type === "gasto" && fold(t.note) === fold(merchant)).sort((a, b) => b.date.localeCompare(a.date))[0];
-      if (prev) cat = catById(prev.cat);
-    }
+    // a generic "Otros" from the shortcut doesn't beat what you chose for this shop before
+    if ((!cat || cat.id === "otros") && merchant) cat = learnedCat(merchant) || cat;
     const cardName = String(it.tarjeta || "").trim();
     if (cardName && !settings.paySeen.includes(cardName)) settings.paySeen.push(cardName);
     const map = settings.payMap[cardName] || "";
-    const t = {id:uid(), type:"gasto", amount, cat:(cat || fallbackCat("gasto")).id, note, date, created:Date.now(), src:"applepay", inboxId:String(it.id)};
+    const t = {id:uid(), type:"gasto", amount, cat:(cat || fallbackCat("gasto")).id, note, date, created:Date.now(), src:"applepay", inboxId:String(it.id), merch:merchKey(merchant)};
     if (map.startsWith("card:") && cardById(map.slice(5))) Object.assign(t, {method:"credito", card:map.slice(5), acc:""});
     else if (map.startsWith("acc:") && accById(map.slice(4))) Object.assign(t, {method:"debito", card:"", acc:map.slice(4)});
     else Object.assign(t, {method:"debito", card:"", acc:defaultAcc("debito", "local")});
@@ -4507,7 +4616,8 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
         const one = added[0];
         toast(added.length === 1 ? `Apple Pay: anotado ${one.note || "un pago"} por ${money(one.amount)}` : `Se anotaron ${added.length} pagos de Apple Pay`,
           added.length === 1 ? {label:"Ver", run:() => openTx(one)} : null);
-      } else if (manual) toast(bad.length ? "Llegó un pago sin importe válido. Revisa el atajo." : "Conectado. No hay pagos nuevos.");
+      } else if (bad.length) toast("Llegó un pago de Apple Pay sin importe válido y no se pudo anotar. Revisa el atajo.");
+      else if (manual) toast("Conectado. No hay pagos nuevos.");
       if (status) status.textContent = `Conectado. Última revisión: ${new Date().toLocaleTimeString(LOCALE, {hour:"2-digit", minute:"2-digit"})}`;
       if (ui.tab === "mas") renderInboxSettings();
     } catch (e) {
@@ -4740,6 +4850,12 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
     if (assets.some(a => MKT_KINDS.includes(a.kind)) && Date.now() - MK.at > 5 * 60e3) ensureMarkets();
   }
 
+  /* ---------- Mi semana: acciones que llegan desde la app de agenda ---------- */
+  window.__hubAct = d => {
+    if (d.q) handleUrlAction(new URLSearchParams(d.q));
+    else if (d.go) handleUrlAction(new URLSearchParams("ir=" + d.go));
+  };
+
   /* ---------- start ---------- */
   load();
   $$("#period button").forEach(x => x.setAttribute("aria-pressed", Number(x.dataset.p) === ui.period));
@@ -4754,8 +4870,61 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 })();
 </script>
-
-
+<script>
+/* ===== Puente con Mi semana (agregado para unir tus 3 apps) =====
+   Tema común, barra para pasar de una app a otra, atajos Cmd+1/2/3 y acciones que manda Mi semana.
+   No cambia cómo guarda sus datos esta app. */
+(function(){
+  var APP='gastos';
+  var SK={papel:{bg:'#efe5cf',dk:'#1b1814',hero:'#1f5a45',a:['#f19ac2','#f5e36a','#b7a4dd','#6fb1e0']},
+    menta:{bg:'#e2eee5',dk:'#111a16',hero:'#1f4d4a',a:['#9fd8bd','#dbe98a','#a9d6d3','#b9d7f0']},
+    atardecer:{bg:'#f5e2d2',dk:'#1c1416',hero:'#5a2840',a:['#ffb08a','#ffd46e','#f3a6bb','#c8b5f0']},
+    oceano:{bg:'#dde8f2',dk:'#10151d',hero:'#1c3557',a:['#9cc6ef','#f1e59a','#b5b9f1','#8fd0d8']},
+    mono:{bg:'#ebe9e4',dk:'#151515',hero:'#1b1b1b',a:['#e4e1da','#f2e36a','#d9d6cf','#cfcbc3']}};
+  var R=document.documentElement,inHub=false;
+  try{inHub=window.top!==window&&window.parent.location.origin===location.origin;}catch(e){}
+  if(inHub)R.classList.add('in-hub');
+  function th(){try{return JSON.parse(localStorage.getItem('mi-semana-theme'))||{};}catch(e){return {};}}
+  function hubUrl(){try{return localStorage.getItem('hub-url')||'';}catch(e){return '';}}
+  var mq=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):{matches:false};
+  function skinNow(t){if(!t.auto)return SK[t.skin]?t.skin:'papel';var h=new Date().getHours();return h>=6&&h<12?'menta':h>=12&&h<19?'papel':'oceano';}
+  var forcing=false,fontsIn=false;
+  function apply(){
+    var t=th(),on=t.unify!==false&&(inHub||!!hubUrl());
+    if(!on){if(R.classList.contains('hub-skin')){R.classList.remove('hub-skin','hub-dark');location.reload();}return;}
+    if(!fontsIn){fontsIn=true;var l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap';document.head.appendChild(l);}
+    var s=SK[skinNow(t)],dark=t.mode==='dark'||(t.mode!=='light'&&mq.matches);
+    var v=dark?{bg:s.dk,surface:'#26221c',surface2:'#2e2a23',ink:'#f4ecda',muted:'#b9ae98',line:'rgba(244,236,218,.14)',line2:'rgba(244,236,218,.42)'}
+             :{bg:s.bg,surface:'#fbf6ea',surface2:'#f3ecd9',ink:'#1b2620',muted:'#55645a',line:'rgba(27,38,32,.14)',line2:'#1b2620'};
+    var st=R.style;for(var k in v)st.setProperty('--hb-'+k,v[k]);
+    st.setProperty('--hb-hero',s.hero);for(var i=0;i<4;i++)st.setProperty('--hb-a'+(i+1),s.a[i]);
+    R.classList.add('hub-skin');R.classList.toggle('hub-dark',dark);
+    forcing=true;R.setAttribute('data-theme',dark?'dark':'light');forcing=false;
+    var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',v.bg);
+  }
+  try{new MutationObserver(function(){if(forcing||!R.classList.contains('hub-skin'))return;var w=R.classList.contains('hub-dark')?'dark':'light';if(R.getAttribute('data-theme')!==w){forcing=true;R.setAttribute('data-theme',w);forcing=false;}}).observe(R,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+  apply();
+  if(mq.addEventListener)mq.addEventListener('change',apply);
+  addEventListener('storage',function(e){if(e.key==='mi-semana-theme'||e.key==='hub-url')apply();});
+  setInterval(apply,60000);
+  function go(k){
+    if(k===APP)return;
+    if(inHub){parent.postMessage({hub:'open',app:k},location.origin);return;}
+    var hu=hubUrl();if(hu)location.href=k==='semana'?hu:hu+'#app='+k;
+  }
+  /* Barra para cambiar de app cuando esta app está abierta sola (adentro de Mi semana ya está arriba) */
+  function bar(){
+    if(inHub||!hubUrl()||document.getElementById('hub-bar'))return;
+    var b=document.createElement('nav');b.id='hub-bar';b.setAttribute('aria-label','Tus apps');
+    [['semana','Mi semana'],['estudio','Estudio'],['gastos','Gastos']].forEach(function(x){var a=document.createElement('button');a.type='button';a.textContent=x[1];if(x[0]===APP)a.className='on';a.onclick=function(){go(x[0]);};b.appendChild(a);});
+    document.body.insertBefore(b,document.body.firstChild);
+  }
+  if(document.body)bar();else addEventListener('DOMContentLoaded',bar);
+  addEventListener('keydown',function(e){if((e.metaKey||e.ctrlKey)&&!e.altKey&&!e.shiftKey&&/^[123]$/.test(e.key)){e.preventDefault();go(['semana','estudio','gastos'][+e.key-1]);}});
+  addEventListener('message',function(e){if(e.origin!==location.origin||!e.data||e.data.hub!=='do')return;try{if(window.__hubAct)window.__hubAct(e.data);}catch(err){}});
+  if(inHub)addEventListener('load',function(){parent.postMessage({hub:'ready',app:APP},location.origin);});
+})();
+</script>
 
 </body>
 </html>
