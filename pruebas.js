@@ -32,6 +32,23 @@
     eq(G.monthDay("2026-11-15", 2, 15), "2027-01-15");
   });
 
+  test("cajas de importe: los puntos aparecen solos mientras escribes", () => {
+    const f = G.formatMoneyInput;
+    eq([f("2634"), f("1234567"), f("999"), f("0"), f("007"), f("")], ["2.634", "1.234.567", "999", "0", "7", ""]);
+    eq([f("2.6345"), f("1.23"), f("12.345.6")], ["26.345", "123", "123.456"], "al seguir escribiendo o borrar se reacomoda");
+    eq([f(","), f("0,5"), f("12,345"), f("1234,5"), f("1.234,56")], ["0,", "0,5", "12,34", "1.234,5", "1.234,56"], "centavos: dos como máximo");
+    eq([f("1234.56", {paste:true}), f("1.234,56", {paste:true}), f("1.234", {paste:true}), f("12.", {dotIsDecimal:true}), f("1.234.", {dotIsDecimal:true})], ["1.234,56", "1.234,56", "1.234", "12,", "1.234"]);
+    eq([f("-5000"), f("abc")], ["-5.000", ""]);
+  });
+  test("amountToInput y parseAmount son inversos (también con negativos y decimales largos)", () => {
+    eq(G.amountToInput(2634), "2.634"); eq(G.amountToInput(1234.5), "1.234,5"); eq(G.amountToInput(0.00123), "0,00123"); eq(G.amountToInput(0), "");
+    for (const v of [2634, 1234567.89, 15000.5, 999, -5000, -2634.5, 0.5]) eq(G.parseAmount(G.amountToInput(v)), v, String(v));
+    eq(G.parseAmount("-2.634"), -2634);
+  });
+  test("moneyExact: siempre muestra los centavos", () => {
+    truthy(/60/.test(G.moneyExact(123456.6)) && /00/.test(G.moneyExact(15000)) && /05/.test(G.moneyExact(12345.05)), "decimales presentes: " + G.moneyExact(123456.6));
+  });
+
   /* ----- cuotas y fijos ----- */
   test("splitInstallments: las cuotas suman exacto", () => {
     eq(G.splitInstallments(100, 3), [33.33, 33.33, 33.34]); eq(G.splitInstallments(10, 1), [10]); eq(G.splitInstallments(0.05, 3), [0.02, 0.02, 0.01]);
@@ -200,11 +217,56 @@
     eq([solo("2026-10-13"), solo("2026-10-17"), solo("2026-10-12"), solo("2026-10-18")], ["posible", "posible", "", ""], "la ventana es de dos días");
   });
 
+  /* ----- Excel (.xlsx) ----- */
+  // a tiny zip builder for the tests: each file either stored as is, or deflated like Excel does
+  async function makeZip(files, deflate) {
+    const enc = new TextEncoder(), parts = [], central = []; let off = 0;
+    const u16 = n => [n & 255, n >> 8 & 255], u32 = n => [n & 255, n >> 8 & 255, n >> 16 & 255, n >>> 24];
+    for (const [name, text] of Object.entries(files)) {
+      const raw = enc.encode(text), nameB = enc.encode(name);
+      const data = deflate ? new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream("deflate-raw"))).arrayBuffer()) : raw, method = deflate ? 8 : 0;
+      const local = new Uint8Array([0x50, 0x4b, 3, 4, 20, 0, 0, 0, method, 0, 0, 0, 0, 0, ...u32(0), ...u32(data.length), ...u32(raw.length), ...u16(nameB.length), 0, 0, ...nameB, ...data]);
+      central.push(new Uint8Array([0x50, 0x4b, 1, 2, 20, 0, 20, 0, 0, 0, method, 0, 0, 0, 0, 0, ...u32(0), ...u32(data.length), ...u32(raw.length), ...u16(nameB.length), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...u32(off), ...nameB]));
+      parts.push(local); off += local.length;
+    }
+    const cdSize = central.reduce((a, c) => a + c.length, 0);
+    const end = new Uint8Array([0x50, 0x4b, 5, 6, 0, 0, 0, 0, ...u16(central.length), ...u16(central.length), ...u32(cdSize), ...u32(off), 0, 0]);
+    const all = [...parts, ...central, end], out = new Uint8Array(all.reduce((a, p) => a + p.length, 0)); let o = 0;
+    for (const p of all) { out.set(p, o); o += p.length; }
+    return out.buffer;
+  }
+  const XLSX_FILES = {
+    "xl/workbook.xml": '<workbook xmlns="x" xmlns:r="r"><sheets><sheet name="Vacía" sheetId="1" r:id="rId1"/><sheet name="Movimientos" sheetId="2" r:id="rId2"/></sheets></workbook>',
+    "xl/_rels/workbook.xml.rels": '<Relationships><Relationship Id="rId1" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Target="worksheets/sheet2.xml"/></Relationships>',
+    "xl/sharedStrings.xml": '<sst><si><t>Fecha</t></si><si><t>Descripción</t></si><si><t>Importe</t></si><si><r><t>COMPRA </t></r><r><t>CARREFOUR</t></r><rPh><t>x</t></rPh></si><si><t>Sueldo</t></si></sst>',
+    "xl/styles.xml": '<styleSheet><numFmts count="1"><numFmt numFmtId="164" formatCode="dd/mm/yyyy"/></numFmts><cellXfs count="3"><xf numFmtId="0"/><xf numFmtId="14"/><xf numFmtId="164"/></cellXfs></styleSheet>',
+    "xl/worksheets/sheet1.xml": '<worksheet><sheetData></sheetData></worksheet>',
+    "xl/worksheets/sheet2.xml": '<worksheet><sheetData><row r="2"><c r="B2" t="s"><v>0</v></c><c r="C2" t="s"><v>1</v></c><c r="D2" t="s"><v>2</v></c></row>'
+      + '<row r="3"><c r="B3" s="1"><v>46310</v></c><c r="C3" t="s"><v>3</v></c><c r="D3"><v>-12500.5</v></c></row>'
+      + '<row r="4"><c r="B4" s="2"><v>46311</v></c><c r="C4" t="s"><v>4</v></c><c r="D4"><v>900000</v></c></row>'
+      + '<row r="5"><c r="B5" t="inlineStr"><is><t>17/10/2026</t></is></c><c r="C5" t="str"><v>Farmacity</v></c><c r="D5"><v>-123.456</v></c></row></sheetData></worksheet>',
+  };
+  const XLSX_ROWS = [["", "Fecha", "Descripción", "Importe"], ["", "2026-10-15", "COMPRA CARREFOUR", "-12500.5"], ["", "2026-10-16", "Sueldo", "900000"], ["", "17/10/2026", "Farmacity", "-123.46"]];
+  for (const deflate of [false, true]) {
+    test(`readXlsx: hojas, textos, fechas y números (${deflate ? "comprimido como Excel" : "sin comprimir"})`, async () => {
+      if (deflate && typeof CompressionStream === "undefined") return;
+      eq(await G.readXlsx(await makeZip(XLSX_FILES, deflate)), XLSX_ROWS);
+    });
+  }
+  test("xlsx → movimientos: de punta a punta", async () => {
+    const rows = await G.readXlsx(await makeZip(XLSX_FILES, false)), g = G.guessBankColumns(rows);
+    eq([g.header, g.date, g.desc, g.amount], [0, 1, 2, 3]);
+    eq(G.extractBankItems(rows, g, false).map(i => [i.date, i.type, i.amount, i.desc]), [["2026-10-15", "gasto", 12500.5, "COMPRA CARREFOUR"], ["2026-10-16", "ingreso", 900000, "Sueldo"], ["2026-10-17", "gasto", 123.46, "Farmacity"]]);
+  });
+  test("parseHtmlTable: el «Excel» que en realidad es una tabla HTML", () => {
+    eq(G.parseHtmlTable("<html><table><tr><th>Fecha</th><th>Detalle</th></tr><tr><td>15/10/2026</td><td> Super\n  mercado </td></tr><tr><td></td><td></td></tr></table></html>"), [["Fecha", "Detalle"], ["15/10/2026", "Super mercado"]]);
+  });
+
   /* ----- ejecución ----- */
-  function run() {
+  async function run() {
     for (const [name, fn] of tests) {
       current = name;
-      try { fn(); results.push({name, ok:true}); } catch (e) { G.setToday(null); results.push({name, ok:false, error:e.message}); }
+      try { await fn(); results.push({name, ok:true}); } catch (e) { G.setToday(null); results.push({name, ok:false, error:e.message}); }
     }
     const bad = results.filter(r => !r.ok);
     window.__resultados = {total:results.length, ok:results.length - bad.length, fallos:bad};

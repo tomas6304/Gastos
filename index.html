@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-eR+OFJaPMv9npeX8I0ip50HQjIjv/ONKsd3ILCqi2ps=' 'sha256-IN3Cb0/Eyu8KwrJfndZe1pB20iCL2RAlzL67N6wCAt8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https:; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-tQ/92QLdfR5O+FaoJm7nro2Q6qITvtjtYPQqi4wxzy4=' 'sha256-IN3Cb0/Eyu8KwrJfndZe1pB20iCL2RAlzL67N6wCAt8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https:; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
 <title>Gastos</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -783,13 +783,13 @@ html.hub-skin .fab{border:2px solid #1b2620}
       <button class="ghost" type="button" id="backup">Guardar copia de seguridad</button>
       <button class="ghost" type="button" id="restore">Restaurar una copia</button>
       <button class="ghost" type="button" id="export">Exportar a Excel (CSV)</button>
-      <button class="ghost" type="button" id="bank-import">Importar movimientos del banco (CSV)</button>
+      <button class="ghost" type="button" id="bank-import">Importar movimientos del banco (Excel o CSV)</button>
       <button class="ghost" type="button" id="intro-again">Ver la bienvenida otra vez</button>
       <p class="hint" id="data-stats"></p>
       <p class="hint">Tus datos se guardan solo en este iPhone. Guarda una copia de vez en cuando en Archivos o iCloud Drive para no perderlos.</p>
     </div>
   </div>
-  <p class="foot">Gastos · versión 16</p>
+  <p class="foot">Gastos · versión 18</p>
 </div>
 </main>
 
@@ -1057,7 +1057,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
   <div class="sheet" id="bank-form" role="dialog" aria-modal="true" aria-labelledby="bank-title">
     <div class="grip"></div>
     <div class="sheet-head"><h2 id="bank-title">Importar del banco</h2><button type="button" class="link" data-close>Cancelar</button></div>
-    <p class="hint">Descarga el resumen de tu banco o billetera en CSV y elígelo aquí. Revisa las columnas, marca lo que quieres traer y listo. Lo que ya tienes anotado viene sin marcar.</p>
+    <p class="hint">Descarga el resumen de tu banco o billetera en Excel (.xlsx) o CSV y elígelo aquí. Revisa las columnas, marca lo que quieres traer y listo. Lo que ya tienes anotado viene sin marcar.</p>
     <div class="two"><div class="field"><label for="bk-date">Fecha</label><select class="input" id="bk-date"></select></div>
       <div class="field"><label for="bk-desc">Descripción</label><select class="input" id="bk-desc"></select></div></div>
     <div class="two"><div class="field"><label for="bk-amount">Importe (con signo)</label><select class="input" id="bk-amount"></select></div>
@@ -1198,7 +1198,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
 <div class="viewer" id="viewer" hidden><img id="viewer-img" alt="Foto del ticket"><button type="button" id="viewer-close">Cerrar</button></div>
 
 <input type="file" id="restore-file" accept="application/json,.json" hidden>
-<input type="file" id="bank-file" accept=".csv,.txt,text/csv,text/plain" hidden>
+<input type="file" id="bank-file" accept=".csv,.txt,.xlsx,.xls,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden>
 <input type="file" id="photo-file" accept="image/*" hidden>
 <div class="tip" id="tip" hidden></div>
 <div class="toast" id="toast" hidden role="status"></div>
@@ -1278,6 +1278,11 @@ html.hub-skin .fab{border:2px solid #1b2620}
     try { return new Intl.NumberFormat(LOCALE, {style:"currency", currency:settings.currency, maximumFractionDigits:settings.currency === "CLP" || Math.abs(v) >= 10000 ? 0 : 2}).format(v); }
     catch { return (Math.round(v * 100) / 100).toFixed(2); }
   };
+  // Same as money() but never drops the cents (used where every peso counts, like the money you have available)
+  const moneyExact = v => {
+    try { return new Intl.NumberFormat(LOCALE, {style:"currency", currency:settings.currency, minimumFractionDigits:settings.currency === "CLP" ? 0 : 2, maximumFractionDigits:settings.currency === "CLP" ? 0 : 2}).format(v); }
+    catch { return (Math.round(v * 100) / 100).toFixed(2); }
+  };
   const usd = v => { try { return new Intl.NumberFormat(LOCALE, {style:"currency", currency:"USD", currencyDisplay:"narrowSymbol", maximumFractionDigits:Math.abs(v) >= 1000 ? 0 : 2}).format(v).replace(/^\$/, "US$"); } catch { return "US$" + v.toFixed(2); } };
   const signed = v => (v >= 0 ? "+" : "−") + money(Math.abs(v));
   const kmoney = v => { if (Math.abs(v) < 1e6) return money(v); try { return new Intl.NumberFormat(LOCALE, {style:"currency", currency:settings.currency, notation:"compact", maximumFractionDigits:1}).format(v); } catch { return money(v); } };
@@ -1290,11 +1295,23 @@ html.hub-skin .fab{border:2px solid #1b2620}
     const lc = s.lastIndexOf(","), ld = s.lastIndexOf(".");
     if (lc > -1 && ld > -1) s = lc > ld ? s.replace(/\./g, "").replace(",", ".") : s.replace(/,/g, "");
     else if (lc > -1) s = s.split(",").length > 2 ? s.replace(/,/g, "") : s.replace(",", ".");
-    else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, "");
+    else if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, "");
     const n = Number(s);
     return Number.isFinite(n) ? round2(n) : NaN;
   };
-  const amountToInput = v => v ? String(v).replace(".", ",") : "";
+  // 1234567.5 → "1.234.567,5": thousands dots on the whole part, every decimal kept
+  const addDots = s => { const [i, ...d] = String(s).split(","); return i.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + (d.length ? "," + d.join(",") : ""); };
+  const amountToInput = v => v ? addDots(String(v).replace(".", ",")) : "";
+  // What an amount box shows while you type: dots every three digits, "," for cents (two at most)
+  function formatMoneyInput(raw, {paste = false, dotIsDecimal = false} = {}) {
+    let s = String(raw ?? ""), neg = /^\s*-/.test(s);
+    s = s.replace(/[^\d.,]/g, "");
+    if (!s.includes(",") && ((paste && /^\d+\.\d{1,2}$/.test(s)) || (dotIsDecimal && /^\d+\.\d{0,2}$/.test(s) && s.endsWith(".")))) s = s.replace(".", ",");
+    const ci = s.indexOf(","); let whole = ci >= 0 ? s.slice(0, ci) : s, cents = ci >= 0 ? s.slice(ci + 1).replace(/[.,]/g, "").slice(0, 2) : null;
+    whole = whole.replace(/[.,]/g, "").replace(/^0+(?=\d)/, "");
+    const out = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return (neg ? "-" : "") + (cents == null ? out : `${out || "0"},${cents}`);
+  }
   const fmtShort = s => parseD(s).toLocaleDateString(LOCALE, {day:"numeric", month:"short"}).replace(".", "");
   const fmtLong = s => parseD(s).toLocaleDateString(LOCALE, {weekday:"long", day:"numeric", month:"long"});
   const monthName = d => d.toLocaleDateString(LOCALE, {month:"long", year:"numeric"}).replace(" de ", " ");
@@ -1896,7 +1913,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
     const tg = sum(g), ti = sum(inc), rate = fxRate();
     $("#total").textContent = money(tg);
     const usdBit = (settings.showUsd && usesUsd() && rate ? `<span>≈ <b>${usd(tg / rate)}</b></span>` : "")
-      + (isCurrent && accounts.some(a => !isUsdAcc(a)) ? `<span>Disponible <b>${money(accounts.filter(a => !isUsdAcc(a)).reduce((s, a) => s + accBalance(a), 0))}</b></span>` : "");
+      + (isCurrent && accounts.some(a => !isUsdAcc(a)) ? `<span>Disponible <b>${moneyExact(accounts.filter(a => !isUsdAcc(a)).reduce((s, a) => s + accBalance(a), 0))}</b></span>` : "");
     $("#inc-row").innerHTML = (ti > 0
       ? `<span>Ingresos <b class="pos">+${money(ti)}</b></span><span>Balance <b class="${ti - tg >= 0 ? "pos" : "neg"}">${signed(ti - tg)}</b></span>`
       : `<button class="link" type="button" id="add-income">+ Anotar un ingreso</button>`) + usdBit;
@@ -4084,7 +4101,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
     const byCasa = Object.fromEntries(T.dolares.map(d => [d.casa, d])), cv = ui.conv;
     const c = card("Conversor", "Pesos a dólares y al revés, con la cotización de cada tipo de dólar"); host.append(c);
     const wrap = document.createElement("div"); wrap.style.cssText = "display:flex;flex-direction:column;gap:10px";
-    wrap.innerHTML = `<div class="conv"><div class="field"><label for="cv-amt">Monto</label><input class="input num" id="cv-amt" inputmode="decimal" autocomplete="off"></div>
+    wrap.innerHTML = `<div class="conv"><div class="field"><label for="cv-amt">Monto</label><input class="input num" id="cv-amt" data-money inputmode="decimal" autocomplete="off"></div>
       <div class="field"><label for="cv-from">Tengo</label><select class="input" id="cv-from"><option value="USD">Dólares</option><option value="ARS">Pesos</option></select></div></div>
       <div class="field"><label for="cv-casa">Tipo de dólar</label><select class="input" id="cv-casa"></select></div>
       <p class="bigres num" id="cv-out">—</p><p class="hint" id="cv-hint"></p>`;
@@ -4114,9 +4131,9 @@ html.hub-skin .fab{border:2px solid #1b2620}
   function renderCuotas(host) {
     const c = card("¿Cuotas o contado?", "Compara lo que pagarías de contado con lo que te cuestan las cuotas, en pesos de hoy y teniendo en cuenta la inflación."); host.append(c);
     const k = ui.cuo, f = document.createElement("div"); f.style.cssText = "display:flex;flex-direction:column;gap:10px";
-    f.innerHTML = `<div class="two"><div class="field"><label for="cu-cash">Precio de contado</label><input class="input num" id="cu-cash" inputmode="decimal" autocomplete="off"></div>
+    f.innerHTML = `<div class="two"><div class="field"><label for="cu-cash">Precio de contado</label><input class="input num" id="cu-cash" data-money inputmode="decimal" autocomplete="off"></div>
       <div class="field"><label for="cu-n">Cantidad de cuotas</label><input class="input num" id="cu-n" inputmode="numeric" autocomplete="off"></div></div>
-      <div class="two"><div class="field"><label for="cu-fee">Valor de cada cuota</label><input class="input num" id="cu-fee" inputmode="decimal" autocomplete="off"></div>
+      <div class="two"><div class="field"><label for="cu-fee">Valor de cada cuota</label><input class="input num" id="cu-fee" data-money inputmode="decimal" autocomplete="off"></div>
       <div class="field"><label for="cu-first">Primera cuota</label><select class="input" id="cu-first"><option value="1">A los 30 días</option><option value="0">Hoy</option></select></div></div>
       <div class="two"><div class="field"><label for="cu-infl">Inflación mensual (%)</label><input class="input num" id="cu-infl" inputmode="decimal" autocomplete="off"></div>
       <div class="field"><label for="cu-yield">Lo que rinde tu plata por mes (%)</label><input class="input num" id="cu-yield" inputmode="decimal" autocomplete="off" placeholder="0"></div></div>
@@ -4169,8 +4186,8 @@ html.hub-skin .fab{border:2px solid #1b2620}
   function renderCalc(host) {
     const c = card("Calculadora de inversión", "Prueba escenarios: cuánto tendrías si inviertes un monto y sumas un aporte cada mes. Es una simulación, no una promesa de rendimiento."); host.append(c);
     const k = ui.calc, f = document.createElement("div"); f.style.cssText = "display:flex;flex-direction:column;gap:10px";
-    f.innerHTML = `<div class="two"><div class="field"><label for="ca-init">Monto inicial</label><input class="input num" id="ca-init" inputmode="decimal" autocomplete="off"></div>
-      <div class="field"><label for="ca-month">Aporte por mes</label><input class="input num" id="ca-month" inputmode="decimal" autocomplete="off"></div></div>
+    f.innerHTML = `<div class="two"><div class="field"><label for="ca-init">Monto inicial</label><input class="input num" id="ca-init" data-money inputmode="decimal" autocomplete="off"></div>
+      <div class="field"><label for="ca-month">Aporte por mes</label><input class="input num" id="ca-month" data-money inputmode="decimal" autocomplete="off"></div></div>
       <div class="two"><div class="field"><label for="ca-rate">Rendimiento anual (%)</label><input class="input num" id="ca-rate" inputmode="decimal" autocomplete="off"></div>
       <div class="field"><label for="ca-years">Años</label><input class="input num" id="ca-years" inputmode="numeric" autocomplete="off"></div></div>
       <div class="field"><label for="ca-infl">Inflación anual estimada (%, opcional)</label><input class="input num" id="ca-infl" inputmode="decimal" autocomplete="off" placeholder="0"></div>
@@ -4660,6 +4677,76 @@ html.hub-skin .fab{border:2px solid #1b2620}
     });
     return items;
   }
+  // Excel (.xlsx) is a zip of XML files. No library needed: the browser already knows how to inflate.
+  async function unzip(buf) {
+    const u8 = new Uint8Array(buf), dv = new DataView(buf);
+    let e = u8.length - 22;
+    while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+    if (e < 0) throw new Error("zip");
+    const n = dv.getUint16(e + 10, true); let p = dv.getUint32(e + 16, true);
+    const files = {};
+    for (let i = 0; i < n; i++) {
+      if (dv.getUint32(p, true) !== 0x02014b50) throw new Error("zip");
+      const nlen = dv.getUint16(p + 28, true), xlen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true);
+      files[new TextDecoder().decode(u8.subarray(p + 46, p + 46 + nlen))] = {method:dv.getUint16(p + 10, true), size:dv.getUint32(p + 20, true), off:dv.getUint32(p + 42, true)};
+      p += 46 + nlen + xlen + clen;
+    }
+    const read = async name => {
+      const f = files[name]; if (!f) return null;
+      const start = f.off + 30 + dv.getUint16(f.off + 26, true) + dv.getUint16(f.off + 28, true), raw = u8.subarray(start, start + f.size);
+      if (f.method === 0) return new TextDecoder().decode(raw);
+      if (f.method !== 8) throw new Error("zip");
+      if (typeof DecompressionStream === "undefined") throw new Error("sin-inflate");
+      return new TextDecoder().decode(await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer());
+    };
+    return {files, read};
+  }
+  const xmlDoc = s => new DOMParser().parseFromString(s, "application/xml");
+  const xmlText = el => [...el.getElementsByTagName("t")].filter(t => t.parentNode.nodeName !== "rPh").map(t => t.textContent).join("");
+  async function readXlsx(buf) {
+    const z = await unzip(buf), get = async n => { const t = await z.read(n); return t == null ? null : xmlDoc(t); };
+    const wb = await get("xl/workbook.xml"); if (!wb) throw new Error("xlsx");
+    const rels = {}; [...((await get("xl/_rels/workbook.xml.rels"))?.getElementsByTagName("Relationship") || [])].forEach(r => { rels[r.getAttribute("Id")] = r.getAttribute("Target"); });
+    const sst = await get("xl/sharedStrings.xml"), shared = sst ? [...sst.getElementsByTagName("si")].map(xmlText) : [];
+    // which cell styles are dates
+    const dateXf = [], st = await get("xl/styles.xml");
+    if (st) {
+      const custom = {}; [...st.getElementsByTagName("numFmt")].forEach(f => { custom[f.getAttribute("numFmtId")] = f.getAttribute("formatCode") || ""; });
+      const builtin = id => (id >= 14 && id <= 22) || (id >= 27 && id <= 36) || (id >= 45 && id <= 47) || (id >= 50 && id <= 58);
+      const xfs = st.getElementsByTagName("cellXfs")[0];
+      [...(xfs ? xfs.getElementsByTagName("xf") : [])].forEach((xf, i) => {
+        const id = Number(xf.getAttribute("numFmtId")); dateXf[i] = custom[id] != null ? /[dy]/i.test(custom[id].replace(/"[^"]*"|\[[^\]]*\]|\\./g, "")) : builtin(id);
+      });
+    }
+    const colIndex = ref => { let c = 0; for (const ch of ref.replace(/\d/g, "")) c = c * 26 + ch.charCodeAt(0) - 64; return c - 1; };
+    const iso = serial => { const d = new Date(Date.UTC(1899, 11, 30) + Math.floor(serial) * 864e5); return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`; };
+    for (const sh of [...wb.getElementsByTagName("sheet")]) {
+      const target = rels[sh.getAttribute("r:id")]; if (!target) continue;
+      const doc = await get(/^\//.test(target) ? target.slice(1) : "xl/" + target); if (!doc) continue;
+      const rows = [];
+      [...doc.getElementsByTagName("row")].forEach((rw, ri) => {
+        const r = Number(rw.getAttribute("r")) ? Number(rw.getAttribute("r")) - 1 : ri, out = rows[r] || (rows[r] = []);
+        [...rw.getElementsByTagName("c")].forEach((c, ci) => {
+          const col = c.getAttribute("r") ? colIndex(c.getAttribute("r")) : ci, t = c.getAttribute("t"), v = c.getElementsByTagName("v")[0]?.textContent ?? "";
+          let val;
+          if (t === "s") val = shared[Number(v)] ?? "";
+          else if (t === "inlineStr") val = xmlText(c);
+          else if (t === "str" || t === "b" || t === "e") val = t === "e" ? "" : v;
+          else if (v === "" || !Number.isFinite(Number(v))) val = v;
+          else val = dateXf[Number(c.getAttribute("s"))] && Number(v) > 20000 ? iso(Number(v)) : String(Math.round(Number(v) * 100) / 100);
+          out[col] = String(val).trim();
+        });
+      });
+      const clean = rows.filter(r => r && r.some(x => x)).map(r => Array.from(r, x => x ?? ""));
+      if (clean.length >= 2) return clean;
+    }
+    return [];
+  }
+  // Many banks save an "Excel" that is really an HTML table
+  function parseHtmlTable(text) {
+    const doc = new DOMParser().parseFromString(text, "text/html");
+    return [...doc.querySelectorAll("tr")].map(tr => [...tr.children].filter(c => /^t[dh]$/i.test(c.tagName)).map(c => c.textContent.replace(/\s+/g, " ").trim())).filter(r => r.some(x => x));
+  }
   async function readTextFile(file) {
     const buf = await file.arrayBuffer();
     try { return new TextDecoder("utf-8", {fatal:true}).decode(buf); } catch { return new TextDecoder("windows-1252").decode(buf); }
@@ -4667,9 +4754,8 @@ html.hub-skin .fab{border:2px solid #1b2620}
 
   let bank = null;   // {rows, map, invert, items, pick:{bankId:{on, cat}}}
   const bkOpt = (rows, header) => `<option value="">—</option>` + (rows[0] || []).map((_, c) => `<option value="${c}">${esc(header >= 0 && rows[header]?.[c] ? rows[header][c] : "Columna " + (c + 1))}</option>`).join("");
-  function startBankImport(text, name) {
-    const rows = parseCSV(text);
-    if (rows.length < 2) return toast("El archivo está vacío o no es un CSV.");
+  function startBankImport(rows, name) {
+    if (rows.length < 2) return toast("No se encontraron movimientos en el archivo.");
     const g = guessBankColumns(rows);
     const width = Math.max(...rows.slice(0, 30).map(r => r.length));
     bank = {rows, name, invert:false, pick:{}, width, map:{header:g.header ?? -1, date:g.date ?? null, desc:g.desc ?? null, amount:g.amount ?? null, debit:g.debit ?? null, credit:g.credit ?? null}};
@@ -4725,12 +4811,33 @@ html.hub-skin .fab{border:2px solid #1b2620}
     drawBank();
   }));
   $("#bk-invert").onclick = () => { bank.invert = !bank.invert; drawBank(); };
+  // amount boxes: put the dots in as you type, keeping the cursor next to the same digit
+  document.addEventListener("input", ev => {
+    const el = ev.target;
+    if (!(el instanceof HTMLInputElement) || !el.matches(".amount-input, [data-money]")) return;
+    const before = el.value, caret = el.selectionStart ?? before.length;
+    const keep = before.slice(0, caret).replace(/[^\d,]/g, "").length;
+    const next = formatMoneyInput(before, {paste:ev.inputType === "insertFromPaste", dotIsDecimal:ev.inputType === "insertText" && ev.data === "."});
+    if (next === before) return;
+    el.value = next;
+    let n = 0, pos = 0;
+    for (; pos < next.length && n < keep; pos++) if (/[\d,]/.test(next[pos])) n++;
+    try { el.setSelectionRange(pos, pos); } catch {}
+  });
   $("#bank-import").onclick = () => $("#bank-file").click();
   $("#intro-again").onclick = () => { if (window.mostrarBienvenida) window.mostrarBienvenida(); else toast("No se encontró la bienvenida (falta onboarding.js)."); };
   $("#bank-file").onchange = async ev => {
     const f = ev.target.files[0]; ev.target.value = "";
     if (!f) return;
-    try { startBankImport(await readTextFile(f), f.name); } catch { toast("No se pudo leer el archivo."); }
+    try {
+      const head = new Uint8Array(await f.slice(0, 4).arrayBuffer());
+      if (head[0] === 0x50 && head[1] === 0x4b) startBankImport(await readXlsx(await f.arrayBuffer()), f.name);   // .xlsx
+      else if (head[0] === 0xd0 && head[1] === 0xcf) toast("Ese es un Excel viejo (.xls). Ábrelo y guárdalo como .xlsx o CSV.");
+      else {
+        const text = await readTextFile(f);
+        startBankImport(/^\s*</.test(text) && /<table/i.test(text) ? parseHtmlTable(text) : parseCSV(text), f.name);
+      }
+    } catch (e) { toast(e && e.message === "sin-inflate" ? "Este iPhone no puede abrir .xlsx. Guárdalo como CSV desde Excel." : "No se pudo leer el archivo. Prueba guardándolo como CSV."); }
   };
   $("#bank-go").onclick = () => {
     const acc = $("#bk-account").value, added = [];
@@ -5298,7 +5405,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
 
   // Self-tests: open the app with ?pruebas=1 to run pruebas.js against the real calculations (nothing is saved)
   if (/[?&]pruebas=1/.test(location.search)) {
-    window.__gastos = {parseAmount, parseBankAmount, parseBankDate, parseCSV, guessBankColumns, extractBankItems, markBankDuplicates, parseSearch, matchSearch,
+    window.__gastos = {parseAmount, parseBankAmount, parseBankDate, parseCSV, guessBankColumns, extractBankItems, markBankDuplicates, parseSearch, matchSearch, readXlsx, parseHtmlTable, formatMoneyInput, amountToInput, moneyExact,
       splitInstallments, occurrences, nextDue, monthDay, cardCycles, inflFactors, fxRate, accBalance, pfFinal, pfEnd, merchKey, learnedCat, txFromInbox, monthForecast,
       setToday:d => { TODAY = d; },
       snapshot:() => ({txs, recs, cards, accounts, transfers, settings:JSON.parse(JSON.stringify(settings))}),
