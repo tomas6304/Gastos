@@ -8,8 +8,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Gastos">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#f3f5f1" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0d1412" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4f6f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#070b09" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -403,6 +403,51 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
 .viewer{position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));gap:12px}
 .viewer img{max-width:100%;max-height:80vh;border-radius:12px}
 .viewer button{color:#fff;font-weight:600;padding:10px 16px;border:1px solid rgba(255,255,255,.4);border-radius:12px}
+
+/* Look v2: near-black fintech feel (big numbers, hairline cards, glass tab bar, vivid green) */
+:root{--r:20px;--hair:inset 0 0 0 1px var(--line)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#070b09; --surface:#0f1612; --line:#1b2620; --muted:#8a9b93; --accent:#34e3a3; --accent-soft:#0f2b20; --shadow:0 12px 36px rgba(0,0,0,.6)}}
+:root[data-theme="dark"]{--bg:#070b09; --surface:#0f1612; --line:#1b2620; --muted:#8a9b93; --accent:#34e3a3; --accent-soft:#0f2b20; --shadow:0 12px 36px rgba(0,0,0,.6)}
+:root{--bg:#f4f6f3}
+::selection{background:var(--accent-soft)}
+.card,.kpi,.goal,.rows,.empty,.qchip{border-radius:var(--r);box-shadow:var(--hair)}
+.card{padding:18px}
+.card h2{font-size:1.1rem;letter-spacing:-.01em}
+.kpi{padding:16px}
+.kpi .k,.eyebrow{letter-spacing:.1em}
+.kpi.wide .v{font-size:2.6rem;letter-spacing:-.03em}
+.total{font-size:clamp(3rem,15vw,4.2rem);letter-spacing:-.035em}
+.top h1,.page-head h1{letter-spacing:-.02em}
+.bar{height:12px;background:color-mix(in srgb,var(--line) 85%,transparent)}
+.bar>i{background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 70%,#fff),var(--accent))}
+.bar.warn>i{background:var(--warn)} .bar.over>i{background:var(--danger)}
+.pill,.delta{letter-spacing:.01em}
+.row{padding:13px 16px}
+.row:active,.up:active{background:var(--accent-soft)}
+.badge{box-shadow:0 0 0 1px rgba(255,255,255,.06) inset}
+.primary{border-radius:16px;padding:16px;box-shadow:0 8px 22px color-mix(in srgb,var(--accent) 28%,transparent);letter-spacing:.01em}
+.primary:disabled{box-shadow:none}
+.fab{padding:16px 28px;box-shadow:0 10px 30px color-mix(in srgb,var(--accent) 38%,transparent),0 2px 6px rgba(0,0,0,.35)}
+.tabbar{background:color-mix(in srgb,var(--bg) 72%,transparent);-webkit-backdrop-filter:saturate(180%) blur(22px);backdrop-filter:saturate(180%) blur(22px);border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
+.tabbtn{gap:4px;transition:color .2s ease}
+.tabbtn svg{transition:transform .25s cubic-bezier(.3,1.5,.5,1)}
+.tabbtn[aria-selected="true"] svg{transform:translateY(-1px) scale(1.12)}
+.tabbtn[aria-selected="true"]::before{content:"";position:absolute;top:-6px;left:50%;width:22px;height:3px;margin-left:-11px;border-radius:0 0 3px 3px;background:var(--accent);box-shadow:0 2px 12px var(--accent)}
+.sheet{border-radius:28px 28px 0 0;box-shadow:0 -1px 0 var(--line),0 -20px 60px rgba(0,0,0,.35)}
+.scrim{background:rgba(2,6,4,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.input{border-radius:14px;background:color-mix(in srgb,var(--bg) 60%,var(--surface));transition:border-color .15s ease,box-shadow .15s ease}
+.input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.seg{background:color-mix(in srgb,var(--line) 70%,transparent);border-radius:14px}
+.seg button[aria-pressed="true"]{background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.25),var(--hair)}
+.keypad button{box-shadow:var(--hair)}
+.toast{border-radius:16px}
+/* tabs ease in when you switch to them */
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.tab.enter>*{animation:rise .38s cubic-bezier(.2,.8,.2,1) both}
+.tab.enter>*:nth-child(2){animation-delay:.04s}.tab.enter>*:nth-child(3){animation-delay:.08s}.tab.enter>*:nth-child(4){animation-delay:.12s}
+.tab.enter>*:nth-child(5){animation-delay:.16s}.tab.enter>*:nth-child(n+6){animation-delay:.2s}
+@media (prefers-reduced-motion:reduce){.tab.enter>*{animation:none}.tabbtn svg{transition:none}}
 </style>
 <style id="hub-style">
 /* ===== Tema de Mi semana (solo se activa si está prendido "Usar el mismo tema") ===== */
@@ -531,6 +576,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
       <button type="button" data-v="alertas" aria-pressed="false">Alertas</button>
       <button type="button" data-v="dolar" aria-pressed="false">Dólar</button>
       <button type="button" data-v="tasas" aria-pressed="false">Tasas</button>
+      <button type="button" data-v="cuotas" aria-pressed="false">Cuotas</button>
       <button type="button" data-v="calc" aria-pressed="false">Calculadora</button>
       <button type="button" data-v="guia" aria-pressed="false">Guía</button>
     </div>
@@ -730,7 +776,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
       <p class="hint">Tus datos se guardan solo en este iPhone. Guarda una copia de vez en cuando en Archivos o iCloud Drive para no perderlos.</p>
     </div>
   </div>
-  <p class="foot">Gastos · versión 13</p>
+  <p class="foot">Gastos · versión 14</p>
 </div>
 </main>
 
@@ -1162,7 +1208,8 @@ html.hub-skin .fab{border:2px solid #1b2620}
     cloud:{on:false, at:0, hash:""}, mkt:{px:{}, favs:[]}};
   let ui = {tab:"home", period:1, pagosView:"fijos", ahorroView:"cuentas", typeFilter:"todo", catFilter:"", lastCat:{gasto:"comida", ingreso:"sueldo"}, dismissed:{}, lastAcc:"",
     dineroMode:"mine", mkView:"cot", mkSet:"accion", mkSort:"vol", mkPeriod:"6M", mkCmp:["GGAL", "AAPL"], mkCmpP:"6M", mkCmpB:["mep", "infl"],
-    calc:{init:1000000, month:100000, rate:30, years:5, infl:0}, conv:{amount:100, from:"USD", casa:"bolsa"}};
+    calc:{init:1000000, month:100000, rate:30, years:5, infl:0}, conv:{amount:100, from:"USD", casa:"bolsa"},
+    cuo:{cash:0, n:12, fee:0, first:1, infl:null, yield:0}};
   const COINS = {bitcoin:"BTC", ethereum:"ETH", tether:"USDT", "usd-coin":"USDC", solana:"SOL"};
   const ASSET_KINDS = {plazo_fijo:"Plazo fijo", fci:"Fondo común", cripto:"Cripto", cedear:"CEDEAR", accion:"Acción", bono:"Bono", acciones:"Acciones", otro:"Inversión"};
   const MKT_KINDS = ["cedear", "accion", "bono"];   // valued with live market prices
@@ -1265,7 +1312,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
     catch { toast("No se pudo guardar. Libera espacio en el iPhone e inténtalo de nuevo."); }
     if (!quiet) { clearTimeout(syncTimer); syncTimer = setTimeout(() => runSync(), 5000); }
   }
-  function saveUI() { try { localStorage.setItem("gastos.ui", JSON.stringify({tab:ui.tab, period:ui.period, pagosView:ui.pagosView, ahorroView:ui.ahorroView, lastCat:ui.lastCat, dismissed:ui.dismissed, lastAcc:ui.lastAcc, dineroMode:ui.dineroMode, mkView:ui.mkView, mkSet:ui.mkSet, mkSort:ui.mkSort, mkPeriod:ui.mkPeriod, mkCmp:ui.mkCmp, mkCmpP:ui.mkCmpP, mkCmpB:ui.mkCmpB, calc:ui.calc, conv:ui.conv, mmReal:ui.mmReal})); } catch {} }
+  function saveUI() { try { localStorage.setItem("gastos.ui", JSON.stringify({tab:ui.tab, period:ui.period, pagosView:ui.pagosView, ahorroView:ui.ahorroView, lastCat:ui.lastCat, dismissed:ui.dismissed, lastAcc:ui.lastAcc, dineroMode:ui.dineroMode, mkView:ui.mkView, mkSet:ui.mkSet, mkSort:ui.mkSort, mkPeriod:ui.mkPeriod, mkCmp:ui.mkCmp, mkCmpP:ui.mkCmpP, mkCmpB:ui.mkCmpB, calc:ui.calc, conv:ui.conv, cuo:ui.cuo, mmReal:ui.mmReal})); } catch {} }
   try { navigator.storage?.persist?.(); } catch {}
 
   /* ---------- photos (IndexedDB) ---------- */
@@ -3476,6 +3523,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
     if (ui.mkView === "comparar") return renderComparar(host);
     if (ui.mkView === "alertas") return renderAlertas(host);
     if (ui.mkView === "calc") return renderCalc(host);
+    if (ui.mkView === "cuotas") return renderCuotas(host);
     if (ui.mkView === "tasas" || ui.mkView === "dolar") { ensureTasas(); return renderTasas(host); }
     if (ui.mkView === "guia") return renderGuia(host);
     ensureMarkets();
@@ -3979,6 +4027,61 @@ html.hub-skin .fab{border:2px solid #1b2620}
       const c2 = card("Brecha con el dólar oficial", "Cuánto más caro es cada dólar que el oficial"); host.append(c2);
       c2.insertAdjacentHTML("beforeend", `<div>${Object.keys(DOLAR_NAMES).filter(k => byCasa[k] && k !== "oficial").map(k => `<div class="kv"><span class="k"><span>${DOLAR_NAMES[k]}</span><span>${arsFmt(byCasa[k].venta)}</span></span><span class="v">${pctTxt((byCasa[k].venta / base - 1) * 100)}</span></div>`).join("")}</div>`);
     }
+  }
+
+  /* --- ¿cuotas o contado? --- */
+  function renderCuotas(host) {
+    const c = card("¿Cuotas o contado?", "Compara lo que pagarías de contado con lo que te cuestan las cuotas, en pesos de hoy y teniendo en cuenta la inflación."); host.append(c);
+    const k = ui.cuo, f = document.createElement("div"); f.style.cssText = "display:flex;flex-direction:column;gap:10px";
+    f.innerHTML = `<div class="two"><div class="field"><label for="cu-cash">Precio de contado</label><input class="input num" id="cu-cash" inputmode="decimal" autocomplete="off"></div>
+      <div class="field"><label for="cu-n">Cantidad de cuotas</label><input class="input num" id="cu-n" inputmode="numeric" autocomplete="off"></div></div>
+      <div class="two"><div class="field"><label for="cu-fee">Valor de cada cuota</label><input class="input num" id="cu-fee" inputmode="decimal" autocomplete="off"></div>
+      <div class="field"><label for="cu-first">Primera cuota</label><select class="input" id="cu-first"><option value="1">A los 30 días</option><option value="0">Hoy</option></select></div></div>
+      <div class="two"><div class="field"><label for="cu-infl">Inflación mensual (%)</label><input class="input num" id="cu-infl" inputmode="decimal" autocomplete="off"></div>
+      <div class="field"><label for="cu-yield">Lo que rinde tu plata por mes (%)</label><input class="input num" id="cu-yield" inputmode="decimal" autocomplete="off" placeholder="0"></div></div>
+      <p class="hint" id="cu-hint"></p>`;
+    c.append(f);
+    const out = document.createElement("div"); out.style.cssText = "display:flex;flex-direction:column;gap:12px"; c.append(out);
+    const recent = Object.keys(settings.infl || {}).filter(m => Number.isFinite(settings.infl[m])).sort().slice(-3).map(m => settings.infl[m]);
+    const guess = recent.length ? Math.round(recent.reduce((a, b) => a + b, 0) / recent.length * 10) / 10 : 0;
+    if (k.infl == null) k.infl = guess;
+    const set = (id, v) => { f.querySelector(id).value = v ? amountToInput(v) : ""; };
+    set("#cu-cash", k.cash); set("#cu-n", k.n); set("#cu-fee", k.fee); set("#cu-infl", k.infl); set("#cu-yield", k.yield);
+    f.querySelector("#cu-first").value = String(k.first);
+    f.querySelector("#cu-hint").textContent = recent.length ? `La inflación mensual sugerida (${guess.toLocaleString(LOCALE)}%) es el promedio de los últimos ${recent.length} meses que cargaste en Ajustes.` : "Carga la inflación en Ajustes para sugerirte un valor.";
+    const num = id => { const raw = f.querySelector(id).value.trim(); return raw === "" ? 0 : parseAmount(raw); };
+    // what a stream of payments is worth today if money loses (or earns) `r` per month
+    const pv = (fee, n, first, r) => { let s = 0; for (let i = 0; i < n; i++) s += fee / (1 + r) ** (i + first); return s; };
+    const upd = () => {
+      const cash = num("#cu-cash"), n = Math.round(num("#cu-n")), fee = num("#cu-fee"), first = Number(f.querySelector("#cu-first").value), infl = num("#cu-infl"), yld = num("#cu-yield");
+      out.textContent = "";
+      if (![cash, fee, infl, yld].every(Number.isFinite) || !(cash > 0 && fee > 0) || !(n >= 2 && n <= 72) || infl < 0 || infl > 100 || yld < 0 || yld > 100) {
+        out.innerHTML = `<p class="hint">Completa el precio de contado, entre 2 y 72 cuotas, su valor y la inflación mensual.</p>`; return;
+      }
+      Object.assign(k, {cash, n, fee, first, infl, yield:yld}); saveUI();
+      const total = fee * n, real = pv(fee, n, first, infl / 100), diff = cash - real;
+      // the monthly rate hidden in the installments: the r where their value today equals the cash price
+      let lo = -0.5, hi = 1, rate = null;
+      if (pv(fee, n, first, hi) < cash && pv(fee, n, first, lo) > cash) { for (let i = 0; i < 80; i++) { const mid = (lo + hi) / 2; if (pv(fee, n, first, mid) > cash) lo = mid; else hi = mid; } rate = (lo + hi) / 2; }
+      const win = diff > cash * .005, lose = diff < -cash * .005;
+      const line = (cls, big, sub) => `<div class="kpi" style="background:var(--bg)"><span class="k">${cls}</span><span class="bigres num">${big}</span><span class="s">${sub}</span></div>`;
+      let html = line("Con inflación, las cuotas equivalen a", money(real), win ? `Es <b>${money(diff)}</b> menos que el precio de contado: la inflación juega a favor de las cuotas.`
+        : lose ? `Es <b>${money(-diff)}</b> más que el precio de contado: pagar de contado sale más barato.` : "Prácticamente lo mismo que el precio de contado.");
+      if (yld > 0) {
+        const real2 = pv(fee, n, first, yld / 100), d2 = cash - real2;
+        html += line(`Si tu plata rinde ${yld.toLocaleString(LOCALE)}% por mes`, money(real2), Math.abs(d2) < cash * .005 ? "Prácticamente lo mismo que de contado."
+          : d2 > 0 ? `Las cuotas salen <b>${money(d2)}</b> menos que el contado: te conviene dejar la plata invertida.` : `Las cuotas salen <b>${money(-d2)}</b> más que el contado.`);
+      }
+      html += `<div><div class="kv"><span class="k"><span>Total en cuotas</span><span>${n} × ${money(fee)}</span></span><span class="v">${money(total)}</span></div>
+        <div class="kv"><span class="k"><span>Recargo sobre el contado</span><span>Sin descontar inflación</span></span><span class="v">${fmtPct(total / cash - 1)}</span></div>
+        ${rate != null ? `<div class="kv"><span class="k"><span>Tasa que te cobran</span><span>Mensual implícita en las cuotas</span></span><span class="v">${(rate * 100).toLocaleString(LOCALE, {maximumFractionDigits:2})}%</span></div>` : ""}</div>`;
+      if (rate != null) html += `<p class="hint">${rate * 100 < infl ? "Las cuotas cuestan menos que la inflación mensual que pusiste." : "Las cuotas cuestan más que la inflación mensual que pusiste."} Compara también con lo que podrías ganar de otra forma.</p>`;
+      out.innerHTML = html;
+      out.insertAdjacentHTML("beforeend", `<p class="disc" style="padding:0">Cálculo con la inflación que estimas, que puede cambiar. Compara solo el costo: no tiene en cuenta descuentos por pago en efectivo, cuotas con reintegro ni tu situación personal. Es información, no una recomendación.</p>`);
+    };
+    f.querySelectorAll("input").forEach(e => e.addEventListener("input", upd));
+    f.querySelector("#cu-first").addEventListener("change", upd);
+    upd();
   }
 
   /* --- calculadora de inversión --- */
@@ -4529,6 +4632,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
   function setTab(t) {
     ui.tab = t; saveUI();
     for (const id of ["home", "dash", "pagos", "ahorro", "mas"]) $("#tab-" + id).hidden = id !== t;
+    const shown = $("#tab-" + t); shown.classList.remove("enter"); void shown.offsetWidth; shown.classList.add("enter");
     $$(".tabbtn").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t));
     hideTip(); scrollTo(0, 0);
     renderAll();
