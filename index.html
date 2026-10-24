@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-PadAGA/W0d+2RsIu0didCgjhpIUZxsa6cw9XATWyduc=' 'sha256-IN3Cb0/Eyu8KwrJfndZe1pB20iCL2RAlzL67N6wCAt8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https:; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-eR+OFJaPMv9npeX8I0ip50HQjIjv/ONKsd3ILCqi2ps=' 'sha256-IN3Cb0/Eyu8KwrJfndZe1pB20iCL2RAlzL67N6wCAt8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https:; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
 <title>Gastos</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -445,6 +445,16 @@ a.ghost{display:block;text-decoration:none;text-align:center;box-sizing:border-b
 .toast{border-radius:16px}
 /* tabs ease in when you switch to them */
 @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.bk-list{display:flex;flex-direction:column;border-radius:14px;box-shadow:var(--hair);max-height:42vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.bk-row{padding:10px 12px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.bk-row:first-child{border-top:0}.bk-row.off{opacity:.5}
+.bk-top{display:flex;align-items:center;gap:10px;min-width:0}
+.bk-top input{width:20px;height:20px;accent-color:var(--accent);flex:none}
+.bk-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.bk-d{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.bk-s{color:var(--muted);font-size:.76rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk-amt{font-family:var(--f-mono);font-size:.9rem;white-space:nowrap}
+.bk-cat{padding:7px 10px;font-size:14px;margin-left:30px;width:calc(100% - 30px)}
 .tab.enter>*{animation:rise .38s cubic-bezier(.2,.8,.2,1) both}
 .tab.enter>*:nth-child(2){animation-delay:.04s}.tab.enter>*:nth-child(3){animation-delay:.08s}.tab.enter>*:nth-child(4){animation-delay:.12s}
 .tab.enter>*:nth-child(5){animation-delay:.16s}.tab.enter>*:nth-child(n+6){animation-delay:.2s}
@@ -503,7 +513,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
   <section class="filters" aria-label="Buscar y filtrar">
     <div class="search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
-      <input id="q" type="search" placeholder="Buscar en todos los meses" autocomplete="off" aria-label="Buscar movimientos">
+      <input id="q" type="search" placeholder="Buscar: café, >5000, octubre, fijo…" autocomplete="off" aria-label="Buscar movimientos">
     </div>
     <div class="filter-row">
       <div class="seg" id="type-filter" role="group" aria-label="Tipo">
@@ -773,11 +783,13 @@ html.hub-skin .fab{border:2px solid #1b2620}
       <button class="ghost" type="button" id="backup">Guardar copia de seguridad</button>
       <button class="ghost" type="button" id="restore">Restaurar una copia</button>
       <button class="ghost" type="button" id="export">Exportar a Excel (CSV)</button>
+      <button class="ghost" type="button" id="bank-import">Importar movimientos del banco (CSV)</button>
+      <button class="ghost" type="button" id="intro-again">Ver la bienvenida otra vez</button>
       <p class="hint" id="data-stats"></p>
       <p class="hint">Tus datos se guardan solo en este iPhone. Guarda una copia de vez en cuando en Archivos o iCloud Drive para no perderlos.</p>
     </div>
   </div>
-  <p class="foot">Gastos · versión 14</p>
+  <p class="foot">Gastos · versión 16</p>
 </div>
 </main>
 
@@ -1040,6 +1052,28 @@ html.hub-skin .fab{border:2px solid #1b2620}
   </form>
 </div>
 
+<!-- importar del banco -->
+<div class="scrim" id="bank-sheet" hidden>
+  <div class="sheet" id="bank-form" role="dialog" aria-modal="true" aria-labelledby="bank-title">
+    <div class="grip"></div>
+    <div class="sheet-head"><h2 id="bank-title">Importar del banco</h2><button type="button" class="link" data-close>Cancelar</button></div>
+    <p class="hint">Descarga el resumen de tu banco o billetera en CSV y elígelo aquí. Revisa las columnas, marca lo que quieres traer y listo. Lo que ya tienes anotado viene sin marcar.</p>
+    <div class="two"><div class="field"><label for="bk-date">Fecha</label><select class="input" id="bk-date"></select></div>
+      <div class="field"><label for="bk-desc">Descripción</label><select class="input" id="bk-desc"></select></div></div>
+    <div class="two"><div class="field"><label for="bk-amount">Importe (con signo)</label><select class="input" id="bk-amount"></select></div>
+      <div class="field"><label for="bk-account">Cuenta</label><select class="input" id="bk-account"></select></div></div>
+    <div class="two"><div class="field"><label for="bk-debit">O débito</label><select class="input" id="bk-debit"></select></div>
+      <div class="field"><label for="bk-credit">y crédito</label><select class="input" id="bk-credit"></select></div></div>
+    <div class="switch-row"><span>Invertir gastos e ingresos<small>Úsalo si tus gastos aparecen como ingresos</small></span>
+      <button type="button" class="switch" id="bk-invert" role="switch" aria-checked="false" aria-label="Invertir gastos e ingresos"></button></div>
+    <div class="bk-list" id="bank-list"></div>
+    <p class="calc" id="bank-sum"></p>
+    <p class="err" id="bank-err" hidden></p>
+    <button class="primary" type="button" id="bank-go">Importar lo marcado</button>
+  </div>
+</div>
+
+
 <!-- cartera objetivo -->
 <div class="scrim" id="tg-sheet" hidden>
   <form class="sheet" id="tg-form" role="dialog" aria-modal="true" aria-labelledby="tg-title" novalidate>
@@ -1164,10 +1198,12 @@ html.hub-skin .fab{border:2px solid #1b2620}
 <div class="viewer" id="viewer" hidden><img id="viewer-img" alt="Foto del ticket"><button type="button" id="viewer-close">Cerrar</button></div>
 
 <input type="file" id="restore-file" accept="application/json,.json" hidden>
+<input type="file" id="bank-file" accept=".csv,.txt,text/csv,text/plain" hidden>
 <input type="file" id="photo-file" accept="image/*" hidden>
 <div class="tip" id="tip" hidden></div>
 <div class="toast" id="toast" hidden role="status"></div>
 
+<script src="onboarding.js" defer></script>
 <script>
 (() => {
   "use strict";
@@ -1224,7 +1260,8 @@ html.hub-skin .fab{border:2px solid #1b2620}
   const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const ym = d => ymd(d).slice(0, 7);
   const parseD = s => new Date(s + "T12:00:00");
-  const todayStr = () => ymd(new Date());
+  let TODAY = null;   // only the self-tests change this, to pin "today"
+  const todayStr = () => TODAY || ymd(new Date());
   const addDays = (s, n) => { const d = parseD(s); d.setDate(d.getDate() + n); return ymd(d); };
   const daysIn = (y, m) => new Date(y, m + 1, 0).getDate();
   const dayOf = (y, m, day) => ymd(new Date(y, m, Math.min(day, daysIn(y, m)), 12));
@@ -1232,6 +1269,8 @@ html.hub-skin .fab{border:2px solid #1b2620}
   const addMonthsYm = (key, n) => { const [y, m] = key.split("-").map(Number); return ym(new Date(y, m - 1 + n, 1, 12)); };
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const round2 = v => Math.round(v * 100) / 100;
+  // n installments that add up to the total exactly: the last one absorbs the cents left over
+  const splitInstallments = (total, n) => { const each = round2(total / n); return Array.from({length:n}, (_, k) => k === n - 1 ? round2(total - each * (n - 1)) : each); };
   const sum = arr => arr.reduce((s, e) => s + Number(e.amount || 0), 0);
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const fold = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -1973,13 +2012,54 @@ html.hub-skin .fab{border:2px solid #1b2620}
     ui.catFilter = sel.value;
   }
 
+  /* ---------- search: words, >5000, 1000-2000, octubre, 2026-10, fijo, cuota, applepay, foto ---------- */
+  const MONTH_WORDS = {enero:1, febrero:2, marzo:3, abril:4, mayo:5, junio:6, julio:7, agosto:8, septiembre:9, setiembre:9, octubre:10, noviembre:11, diciembre:12, ene:1, feb:2, abr:4, ago:8, sept:9, oct:10, nov:11, dic:12};
+  const SEARCH_FLAGS = {fijo:"fijo", fijos:"fijo", cuota:"cuota", cuotas:"cuota", applepay:"applepay", apple:"applepay", banco:"banco", foto:"foto", fotos:"foto",
+    usd:"usd", dolares:"usd", gasto:"gasto", gastos:"gasto", ingreso:"ingreso", ingresos:"ingreso"};
+  function parseSearch(raw) {
+    const q = {words:[], min:null, max:null, months:[], years:[], prefixes:[], flags:[]};
+    fold(raw).replace(/([<>]=?)\s+/g, "$1").split(/\s+/).filter(Boolean).forEach(tok => {
+      let m;
+      if ((m = tok.match(/^(>=|<=|>|<)(\d[\d.,]*)$/))) {
+        const v = parseAmount(m[2]); if (!Number.isFinite(v)) return q.words.push(tok);
+        if (m[1][0] === ">") q.min = Math.max(q.min ?? -Infinity, m[1] === ">" ? v + 0.005 : v); else q.max = Math.min(q.max ?? Infinity, m[1] === "<" ? v - 0.005 : v);
+      } else if ((m = tok.match(/^(\d[\d.,]*)-(\d[\d.,]*)$/)) && !/^\d{4}-\d{2}$/.test(tok)) {
+        const a = parseAmount(m[1]), b = parseAmount(m[2]);
+        if (Number.isFinite(a) && Number.isFinite(b)) { q.min = Math.max(q.min ?? -Infinity, Math.min(a, b)); q.max = Math.min(q.max ?? Infinity, Math.max(a, b)); } else q.words.push(tok);
+      } else if (/^\d{4}-\d{2}(-\d{2})?$/.test(tok)) q.prefixes.push(tok);
+      else if (/^(19|20)\d\d$/.test(tok)) q.years.push(tok);
+      else if (MONTH_WORDS[tok]) q.months.push(MONTH_WORDS[tok]);
+      else if (SEARCH_FLAGS[tok]) q.flags.push(SEARCH_FLAGS[tok]);
+      else q.words.push(tok);
+    });
+    return q;
+  }
+  function matchSearch(t, q) {
+    if (q.min != null && !(t.amount >= q.min)) return false;
+    if (q.max != null && !(t.amount <= q.max)) return false;
+    if (q.months.length && !q.months.includes(Number(t.date.slice(5, 7)))) return false;
+    if (q.years.length && !q.years.includes(t.date.slice(0, 4))) return false;
+    if (q.prefixes.length && !q.prefixes.some(p => t.date.startsWith(p))) return false;
+    for (const f of q.flags) {
+      if (f === "fijo" && !t.recId) return false;
+      if (f === "cuota" && !t.inst) return false;
+      if (f === "applepay" && t.src !== "applepay") return false;
+      if (f === "banco" && t.src !== "banco") return false;
+      if (f === "foto" && !t.photo) return false;
+      if (f === "usd" && !t.usd) return false;
+      if ((f === "gasto" || f === "ingreso") && t.type !== f) return false;
+    }
+    if (!q.words.length) return true;
+    const hay = [t.note, catById(t.cat, t.type).name, methodName(t.method), cardById(t.card)?.name, accById(t.acc)?.name].map(fold).join(" | ");
+    const amt = String(t.amount);
+    return q.words.every(w => hay.includes(w) || (/^\d/.test(w) && (amt.includes(w.replace(",", ".")) || String(Math.round(t.amount)).includes(w.replace(/[.,]/g, "")))));
+  }
   function renderList(month) {
     const q = fold($("#q").value.trim());
     let items = q ? txs.slice() : month.slice();
     if (ui.typeFilter !== "todo") items = items.filter(t => t.type === ui.typeFilter);
     if (ui.catFilter) items = items.filter(t => t.cat === ui.catFilter);
-    if (q) items = items.filter(t => fold(t.note).includes(q) || fold(catById(t.cat, t.type).name).includes(q)
-      || fold(methodName(t.method)).includes(q) || fold(cardById(t.card)?.name).includes(q) || String(t.amount).includes(q));
+    if (q) { const sq = parseSearch(q); items = items.filter(t => matchSearch(t, sq)); }
     items.sort((a, b) => b.date.localeCompare(a.date) || (b.created || 0) - (a.created || 0));
 
     const filtering = q || ui.typeFilter !== "todo" || ui.catFilter;
@@ -2903,9 +2983,9 @@ html.hub-skin .fab{border:2px solid #1b2620}
     let msg;
     if (txEdit) { Object.assign(txEdit, base); extra(txEdit); msg = "Cambios guardados"; }
     else if (inst > 1) {
-      const g = uid(), off = Number($("#tx-first").value) || 0, day = parseD(date).getDate(), each = round2(amount / inst);
+      const g = uid(), off = Number($("#tx-first").value) || 0, day = parseD(date).getDate(), parts = splitInstallments(amount, inst), each = parts[0];
       for (let k = 0; k < inst; k++) {
-        const t = {id:uid(), ...base, amount:k === inst - 1 ? round2(amount - each * (inst - 1)) : each, date:monthDay(date, k + off, day),
+        const t = {id:uid(), ...base, amount:parts[k], date:monthDay(date, k + off, day),
           inst:{g, n:k + 1, of:inst, total:amount}, created:Date.now()};
         if (k === 0) extra(t);
         txs.push(t);
@@ -4487,6 +4567,185 @@ html.hub-skin .fab{border:2px solid #1b2620}
     } catch { toast("No se pudo activar Face ID. Puedes seguir usando el código."); }
   };
 
+  /* ---------- import from the bank (CSV) ---------- */
+  function parseCSV(text) {
+    text = String(text).replace(/^﻿/, "");
+    const sample = text.split(/\r?\n/).filter(l => l.trim()).slice(0, 10);
+    const count = (l, ch) => { let n = 0, q = false; for (const c of l) { if (c === '"') q = !q; else if (!q && c === ch) n++; } return n; };
+    const best = [";", ",", "\t", "|"].map(d => [d, sample.reduce((a, l) => a + count(l, d), 0)]).sort((a, b) => b[1] - a[1])[0];
+    const D = best[1] > 0 ? best[0] : ",";
+    const rows = []; let row = [], cur = "", inq = false;
+    const endRow = () => { row.push(cur); cur = ""; if (row.some(x => x.trim())) rows.push(row); row = []; };
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inq) { if (c === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else inq = false; } else cur += c; }
+      else if (c === '"') inq = true;
+      else if (c === D) { row.push(cur); cur = ""; }
+      else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; endRow(); }
+      else cur += c;
+    }
+    if (cur || row.length) endRow();
+    return rows.map(r => r.map(x => x.trim()));
+  }
+  function parseBankDate(raw) {
+    const s = String(raw ?? "").trim(); let m, y, mo, d;
+    if ((m = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})(?!\d)/))) { y = +m[1]; mo = +m[2]; d = +m[3]; }
+    else if ((m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4}|\d{2})(?!\d)/))) { d = +m[1]; mo = +m[2]; y = +m[3]; if (y < 100) y += 2000; }
+    else return null;
+    if (mo < 1 || mo > 12 || d < 1 || d > daysIn(y, mo - 1)) return null;
+    return `${y}-${pad(mo)}-${pad(d)}`;
+  }
+  // "-1.234,56", "(1.234,56)", "1.234,56-", "$ 1,234.56" → signed number
+  function parseBankAmount(raw) {
+    let s = String(raw ?? "").trim().replace(/−/g, "-"), neg = false;
+    if (!s) return NaN;
+    if (/^\(.*\)$/.test(s)) { neg = true; s = s.slice(1, -1); }
+    if (/-$/.test(s)) { neg = true; s = s.slice(0, -1); }
+    const v = parseAmount(s.replace(/[^\d.,-]/g, ""));
+    return Number.isFinite(v) ? (neg ? -Math.abs(v) : v) : NaN;
+  }
+  function guessBankColumns(rows) {
+    const roles = [["date", /fecha/], ["amount", /^(importe|monto|valor|total|pesos)/], ["debit", /debito|\bdebe\b|egreso|retiro|salida/], ["credit", /credito|\bhaber\b|ingreso|deposito|entrada|acredit/],
+      ["desc", /descrip|concepto|detalle|movimiento|referencia|leyenda|comercio|motivo|operacion/]];
+    let best = null;
+    for (let i = 0; i < Math.min(rows.length, 20); i++) {
+      const found = {}; let score = 0;
+      rows[i].forEach((label, c) => {
+        const l = fold(label); if (!l || /saldo/.test(l)) return;
+        for (const [k, re] of roles) if (found[k] == null && re.test(l)) { found[k] = c; score++; break; }
+      });
+      if (found.date != null && (found.amount != null || found.debit != null || found.credit != null) && (!best || score > best.score)) best = {...found, header:i, score};
+    }
+    if (best) return best;
+    // no recognizable header: look at the data
+    const body = rows.slice(0, 30), width = Math.max(...body.map(r => r.length));
+    const share = f => Array.from({length:width}, (_, c) => body.filter(r => f(r[c])).length / body.length);
+    const dates = share(v => !!parseBankDate(v)), nums = share(v => Number.isFinite(parseBankAmount(v)) && /\d/.test(v || "") && !parseBankDate(v));
+    const date = dates.indexOf(Math.max(...dates)); if (!(dates[date] > .6)) return {header:-1};
+    const numCols = nums.map((v, c) => [v, c]).filter(x => x[0] > .6 && x[1] !== date).map(x => x[1]);
+    const textCols = Array.from({length:width}, (_, c) => c).filter(c => c !== date && !numCols.includes(c));
+    const desc = textCols.sort((a, b) => body.reduce((s, r) => s + (r[b] || "").length, 0) - body.reduce((s, r) => s + (r[a] || "").length, 0))[0];
+    return {header:-1, date, desc: desc ?? null, amount: numCols[0] ?? null};
+  }
+  function extractBankItems(rows, m, invert) {
+    const out = [], seen = {};
+    rows.slice(m.header + 1).forEach(r => {
+      const date = parseBankDate(r[m.date]); if (!date) return;
+      let amount, type;
+      if (m.debit != null || m.credit != null) {
+        const d = m.debit != null ? Math.abs(parseBankAmount(r[m.debit]) || 0) : 0, c = m.credit != null ? Math.abs(parseBankAmount(r[m.credit]) || 0) : 0;
+        if (d === c) return;
+        amount = round2(Math.abs(c - d)); type = c > d ? "ingreso" : "gasto";
+        if (invert) type = type === "gasto" ? "ingreso" : "gasto";
+      } else if (m.amount != null) {
+        const v = parseBankAmount(r[m.amount]); if (!Number.isFinite(v) || v === 0) return;
+        amount = Math.abs(v); type = (invert ? v > 0 : v < 0) ? "gasto" : "ingreso";
+      } else return;
+      const desc = String(m.desc != null ? r[m.desc] || "" : "").replace(/\s+/g, " ").trim().slice(0, 60) || "Movimiento del banco";
+      const base = `${date}|${Math.round(amount * 100)}|${type[0]}|${merchKey(desc)}`;
+      seen[base] = (seen[base] || 0) + 1;
+      out.push({date, desc, amount, type, bankId:`${base}#${seen[base]}`});
+    });
+    return out;
+  }
+  // a payment you already have (same amount within two days, or the same bank line imported before) is not imported twice
+  function markBankDuplicates(items, existing) {
+    const ids = new Set(existing.map(t => t.bankId).filter(Boolean)), used = new Set();
+    const gap = (a, b) => Math.abs(Math.round((parseD(a) - parseD(b)) / 864e5));
+    items.forEach(it => {
+      it.dup = ""; it.match = null;
+      if (ids.has(it.bankId)) { it.dup = "ya"; return; }
+      const hit = existing.find(t => !used.has(t.id) && t.type === it.type && Math.abs(t.amount - it.amount) < .01 && gap(t.date, it.date) <= 2);
+      if (hit) { used.add(hit.id); it.dup = "posible"; it.match = hit; }
+    });
+    return items;
+  }
+  async function readTextFile(file) {
+    const buf = await file.arrayBuffer();
+    try { return new TextDecoder("utf-8", {fatal:true}).decode(buf); } catch { return new TextDecoder("windows-1252").decode(buf); }
+  }
+
+  let bank = null;   // {rows, map, invert, items, pick:{bankId:{on, cat}}}
+  const bkOpt = (rows, header) => `<option value="">—</option>` + (rows[0] || []).map((_, c) => `<option value="${c}">${esc(header >= 0 && rows[header]?.[c] ? rows[header][c] : "Columna " + (c + 1))}</option>`).join("");
+  function startBankImport(text, name) {
+    const rows = parseCSV(text);
+    if (rows.length < 2) return toast("El archivo está vacío o no es un CSV.");
+    const g = guessBankColumns(rows);
+    const width = Math.max(...rows.slice(0, 30).map(r => r.length));
+    bank = {rows, name, invert:false, pick:{}, width, map:{header:g.header ?? -1, date:g.date ?? null, desc:g.desc ?? null, amount:g.amount ?? null, debit:g.debit ?? null, credit:g.credit ?? null}};
+    const head = rows[Math.max(bank.map.header, 0)] || [];
+    for (const id of ["bk-date", "bk-desc", "bk-amount", "bk-debit", "bk-credit"]) $("#" + id).innerHTML = bkOpt(rows.map(r => r.length < width ? [...r, ...Array(width - r.length).fill("")] : r), bank.map.header);
+    $("#bk-account").innerHTML = ""; accOptions($("#bk-account"), "", {none:"Sin cuenta (no cambia ningún saldo)"});
+    drawBank(); openSheet($("#bank-sheet"));
+  }
+  function drawBank() {
+    const m = bank.map, set = (id, v) => { $("#" + id).value = v == null ? "" : String(v); };
+    set("bk-date", m.date); set("bk-desc", m.desc); set("bk-amount", m.amount); set("bk-debit", m.debit); set("bk-credit", m.credit);
+    $("#bk-invert").setAttribute("aria-checked", bank.invert);
+    const err = $("#bank-err"); err.hidden = true;
+    const ok = m.date != null && (m.amount != null || m.debit != null || m.credit != null);
+    bank.items = ok ? markBankDuplicates(extractBankItems(bank.rows, m, bank.invert), txs).sort((a, b) => b.date.localeCompare(a.date)) : [];
+    bank.items.forEach(it => {
+      const p = bank.pick[it.bankId] || (bank.pick[it.bankId] = {});
+      if (p.on == null) p.on = !it.dup;
+      if (it.dup === "ya") p.on = false;
+      if (!p.cat) p.cat = (it.type === "gasto" ? learnedCat(it.desc) : null)?.id || fallbackCat(it.type).id;
+    });
+    const list = $("#bank-list"); list.textContent = "";
+    if (!ok) { list.innerHTML = `<p class="hint" style="padding:12px 14px">Elige la columna de la fecha y la del importe (o las de débito y crédito).</p>`; }
+    else if (!bank.items.length) list.innerHTML = `<p class="hint" style="padding:12px 14px">No se encontró ningún movimiento con esas columnas.</p>`;
+    bank.items.slice(0, 400).forEach(it => {
+      const p = bank.pick[it.bankId], row = document.createElement("div"); row.className = "bk-row" + (it.dup === "ya" ? " off" : "");
+      const cats2 = catsOf(it.type);
+      row.innerHTML = `<label class="bk-top"><input type="checkbox" ${p.on ? "checked" : ""} ${it.dup === "ya" ? "disabled" : ""} aria-label="Importar">
+        <span class="bk-main"><span class="bk-d"></span><small class="bk-s"></small></span><span class="bk-amt num ${it.type === "ingreso" ? "pos" : ""}"></span></label>
+        <select class="input bk-cat" aria-label="Categoría">${cats2.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("")}</select>`;
+      row.querySelector(".bk-d").textContent = it.desc;
+      row.querySelector(".bk-s").textContent = `${fmtShort(it.date)}${it.dup === "ya" ? " · ya importado" : it.dup === "posible" ? ` · parece repetido: ${it.match.note || catById(it.match.cat, it.match.type).name}` : ""}`;
+      row.querySelector(".bk-amt").textContent = (it.type === "ingreso" ? "+" : "−") + money(it.amount);
+      const sel = row.querySelector("select"); sel.value = cats2.some(c => c.id === p.cat) ? p.cat : cats2[0]?.id || "";
+      row.querySelector("input").onchange = e => { p.on = e.target.checked; bankSum(); };
+      sel.onchange = () => { p.cat = sel.value; };
+      list.append(row);
+    });
+    bankSum();
+  }
+  function bankSum() {
+    const on = bank.items.filter(it => bank.pick[it.bankId].on), g = on.filter(i => i.type === "gasto"), inc = on.filter(i => i.type === "ingreso");
+    const dups = bank.items.filter(i => i.dup === "posible").length;
+    $("#bank-sum").innerHTML = bank.items.length
+      ? `Se importarán <b>${plural(on.length, "movimiento", "movimientos")}</b>${g.length ? ` · gastos ${money(sum(g))}` : ""}${inc.length ? ` · ingresos ${money(sum(inc))}` : ""}.${dups ? ` ${plural(dups, "parece repetido y viene sin marcar", "parecen repetidos y vienen sin marcar")}.` : ""}${bank.items.length > 400 ? " Solo se muestran los 400 más recientes." : ""}` : "";
+    $("#bank-go").disabled = !on.length;
+  }
+  ["bk-date", "bk-desc", "bk-amount", "bk-debit", "bk-credit"].forEach(id => $("#" + id).addEventListener("change", e => {
+    const k = {"bk-date":"date", "bk-desc":"desc", "bk-amount":"amount", "bk-debit":"debit", "bk-credit":"credit"}[id];
+    bank.map[k] = e.target.value === "" ? null : Number(e.target.value);
+    if (k === "amount" && bank.map.amount != null) { bank.map.debit = null; bank.map.credit = null; }
+    if ((k === "debit" || k === "credit") && e.target.value !== "") bank.map.amount = null;
+    drawBank();
+  }));
+  $("#bk-invert").onclick = () => { bank.invert = !bank.invert; drawBank(); };
+  $("#bank-import").onclick = () => $("#bank-file").click();
+  $("#intro-again").onclick = () => { if (window.mostrarBienvenida) window.mostrarBienvenida(); else toast("No se encontró la bienvenida (falta onboarding.js)."); };
+  $("#bank-file").onchange = async ev => {
+    const f = ev.target.files[0]; ev.target.value = "";
+    if (!f) return;
+    try { startBankImport(await readTextFile(f), f.name); } catch { toast("No se pudo leer el archivo."); }
+  };
+  $("#bank-go").onclick = () => {
+    const acc = $("#bk-account").value, added = [];
+    bank.items.filter(it => bank.pick[it.bankId].on && it.dup !== "ya").slice(0, 2000).forEach(it => {
+      const t = {id:uid(), type:it.type, amount:it.amount, cat:bank.pick[it.bankId].cat, note:it.desc, date:it.date, method:it.type === "gasto" ? "debito" : "", card:"", acc,
+        created:Date.now(), src:"banco", bankId:it.bankId, merch:merchKey(it.desc)};
+      txs.push(t); added.push(t.id);
+    });
+    if (!added.length) return;
+    save(); closeSheet($("#bank-sheet")); renderAll();
+    const ids = new Set(added);
+    toast(`Se importaron ${plural(added.length, "movimiento", "movimientos")}`, {label:"Deshacer", run:() => { txs = txs.filter(t => !ids.has(t.id)); save(); renderAll(); toast("Importación deshecha"); }});
+    bank = null;
+  };
+
   /* ---------- data tools ---------- */
   $("#export").onclick = async () => {
     // Campos que empiezan con = + - @ o tab se prefijan con ' para que Excel no los ejecute como fórmula
@@ -4549,6 +4808,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
         const t = {id:e.id, type:e.type, amount:e.amount, cat:String(e.cat), note:String(e.note || "").slice(0, 60), date:e.date, method:String(e.method || ""), card:String(e.card || ""), acc:String(e.acc || ""), created:Number(e.created) || Date.now()};
         if (e.recId) t.recId = String(e.recId);
         if (e.src === "applepay") { t.src = "applepay"; if (e.inboxId) t.inboxId = String(e.inboxId); }
+        if (e.src === "banco") { t.src = "banco"; if (e.bankId) t.bankId = String(e.bankId).slice(0, 120); }
         if (e.merch) t.merch = String(e.merch).slice(0, 60);
         if (e.inst && e.inst.g) t.inst = {g:String(e.inst.g), n:Number(e.inst.n) || 1, of:Number(e.inst.of) || 1, total:Number(e.inst.total) || e.amount};
         if (Number(e.usd) > 0) { t.usd = Number(e.usd); t.rate = Number(e.rate) || 0; }
@@ -4678,13 +4938,15 @@ html.hub-skin .fab{border:2px solid #1b2620}
   const parseMonto = s => parseAmount(String(s || "").replace(/[^\d.,-]/g, ""));
   // "CARREFOUR 0123 SA" and "Carrefour" count as the same shop
   const merchKey = s => fold(s).replace(/[^a-z ]+/g, " ").replace(/\b(sa|srl|sas|arg|argentina)\b/g, " ").replace(/\s+/g, " ").trim();
+  // same shop if the names match, or one is the other with extra words ("compra carrefour" ~ "carrefour"); at least 4 letters so "dia" never matches "diaz"
+  const sameShop = (a, b) => !!a && !!b && (a === b || (a.length >= 4 && b.length >= 4 && (` ${a} `.includes(` ${b} `) || ` ${b} `.includes(` ${a} `))));
   function learnedCat(merchant) {
     const k = merchKey(merchant);
     if (!k) return null;
     const tally = {};
     txs.forEach(t => {
       if (t.type !== "gasto" || t.recId || t.inst || !cats.some(c => c.id === t.cat)) return;
-      if (t.merch !== k && merchKey(t.note) !== k) return;
+      if (!sameShop(t.merch, k) && !sameShop(merchKey(t.note), k)) return;
       const e = tally[t.cat] || (tally[t.cat] = {n:0, last:""});
       e.n++; if (t.date > e.last) e.last = t.date;
     });
@@ -5033,6 +5295,17 @@ html.hub-skin .fab{border:2px solid #1b2620}
   refreshOnline();
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+
+  // Self-tests: open the app with ?pruebas=1 to run pruebas.js against the real calculations (nothing is saved)
+  if (/[?&]pruebas=1/.test(location.search)) {
+    window.__gastos = {parseAmount, parseBankAmount, parseBankDate, parseCSV, guessBankColumns, extractBankItems, markBankDuplicates, parseSearch, matchSearch,
+      splitInstallments, occurrences, nextDue, monthDay, cardCycles, inflFactors, fxRate, accBalance, pfFinal, pfEnd, merchKey, learnedCat, txFromInbox, monthForecast,
+      setToday:d => { TODAY = d; },
+      snapshot:() => ({txs, recs, cards, accounts, transfers, settings:JSON.parse(JSON.stringify(settings))}),
+      setState:s => { if (s.txs) txs = s.txs; if (s.recs) recs = s.recs; if (s.cards) cards = s.cards; if (s.accounts) accounts = s.accounts; if (s.transfers) transfers = s.transfers;
+        if (s.settings) { for (const k of Object.keys(settings)) if (!(k in s.settings)) delete settings[k]; Object.assign(settings, JSON.parse(JSON.stringify(s.settings))); } }};
+    const sc = document.createElement("script"); sc.src = "pruebas.js"; document.head.append(sc);
+  }
 })();
 </script>
 <script>
