@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-oyxJddimPx05g0sv0tHnLy5rzIMPNUodEbLIbbjV2iw=' 'sha256-IN3Cb0/Eyu8KwrJfndZe1pB20iCL2RAlzL67N6wCAt8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https:; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-kM7ex4XQCusZpvNgCvroNVBrO7RPm50nO4wpmCQWYUg=' 'sha256-IN3Cb0/Eyu8KwrJfndZe1pB20iCL2RAlzL67N6wCAt8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https:; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
 <title>Gastos</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -780,7 +780,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
       <p class="hint">Tus datos se guardan solo en este iPhone. Guarda una copia de vez en cuando en Archivos o iCloud Drive para no perderlos.</p>
     </div>
   </div>
-  <p class="foot">Gastos · versión 14</p>
+  <p class="foot">Gastos · versión 15</p>
 </div>
 </main>
 
@@ -1259,6 +1259,31 @@ html.hub-skin .fab{border:2px solid #1b2620}
     return Number.isFinite(n) ? round2(n) : NaN;
   };
   const amountToInput = v => v ? String(v).replace(".", ",") : "";
+  /* Puntos de miles mientras escribís: 1234567,5 → 1.234.567,5. Un "." tipeado cuenta como coma decimal.
+     Se conserva un "-" inicial (saldos negativos). Solo en campos de importe, no en porcentajes ni cantidades. */
+  const AMOUNT_FIELDS = ".amount-input, #s-budget, #cat-budget, #goal-target, #goal-amount, #debt-pay-amount, #xfer-to-amount, #asset-capital, #asset-value, #asset-mcost";
+  function formatAmountField(el, ev) {
+    let v = el.value;
+    const pos = el.selectionStart == null ? v.length : el.selectionStart;
+    if (ev && ev.inputType === "insertText" && ev.data === "." && !v.slice(0, pos - 1).includes(",") && !v.slice(pos).includes(","))
+      v = v.slice(0, pos - 1) + "," + v.slice(pos);
+    const before = v.slice(0, pos).replace(/[^\d,]/g, "").length;
+    const neg = /^[-−]/.test(v.trim()) ? "-" : "";
+    v = v.replace(/[^\d,]/g, "");
+    const i = v.indexOf(",");
+    let int = i < 0 ? v : v.slice(0, i), dec = i < 0 ? null : v.slice(i + 1).replace(/,/g, "").slice(0, 2);
+    int = int.replace(/^0+(?=\d)/, "");
+    if (!int && dec !== null) int = "0";
+    int = int.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    const out = neg + int + (dec === null ? "" : "," + dec);
+    if (out === el.value) return;
+    el.value = out;
+    let n = 0, p = neg.length;
+    while (p < out.length && n < before) { if (/[\d,]/.test(out[p])) n++; p++; }
+    try { el.setSelectionRange(p, p); } catch {}
+  }
+  document.addEventListener("input", e => { if (e.target.matches && e.target.matches(AMOUNT_FIELDS)) formatAmountField(e.target, e); }, true);
+  document.addEventListener("focusin", e => { if (e.target.matches && e.target.matches(AMOUNT_FIELDS) && e.target.value) formatAmountField(e.target, null); });
   const fmtShort = s => parseD(s).toLocaleDateString(LOCALE, {day:"numeric", month:"short"}).replace(".", "");
   const fmtLong = s => parseD(s).toLocaleDateString(LOCALE, {weekday:"long", day:"numeric", month:"long"});
   const monthName = d => d.toLocaleDateString(LOCALE, {month:"long", year:"numeric"}).replace(" de ", " ");
