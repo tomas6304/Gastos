@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Pfinu08zihJB0IOLYx8Ox6Avh1J0mbsS4w5tNRkCjGI=' 'sha256-IN3Cb0/Eyu8KwrJfndZe1pB20iCL2RAlzL67N6wCAt8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https:; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-oyxJddimPx05g0sv0tHnLy5rzIMPNUodEbLIbbjV2iw=' 'sha256-IN3Cb0/Eyu8KwrJfndZe1pB20iCL2RAlzL67N6wCAt8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https:; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
 <title>Gastos</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -1820,7 +1820,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
     const c = catById(t.cat, t.type);
     const r = document.createElement("button"); r.className = "row"; r.type = "button";
     r.innerHTML = `<span class="badge" style="background:${cvar(c)}"></span><span class="txt"><span class="t1"></span><span class="t2"></span></span>
-      <span class="amt num ${t.type === "ingreso" ? "pos" : ""}">${t.type === "ingreso" ? "+" : ""}${money(t.amount)}${t.usd ? `<small>${usd(t.usd)}</small>` : ""}</span>`;
+      <span class="amt num ${t.type === "ingreso" ? "pos" : "neg"}">${t.type === "ingreso" ? "+" : "−"}${money(t.amount)}${t.usd ? `<small>${usd(t.usd)}</small>` : ""}</span>`;
     r.querySelector(".badge").textContent = c.name[0].toUpperCase();
     r.querySelector(".t1").textContent = t.note || c.name;
     const t2 = r.querySelector(".t2");
@@ -2013,7 +2013,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
         : d.toLocaleDateString(LOCALE, q ? {weekday:"short", day:"numeric", month:"short", year:"numeric"} : {weekday:"long", day:"numeric"});
       const net = sum(list2.filter(t => t.type === "ingreso")) - sum(list2.filter(t => t.type === "gasto"));
       const day = document.createElement("div"); day.className = "day";
-      day.innerHTML = `<div class="day-head"><span>${esc(name)}</span><span class="num">${net > 0 ? "+" + money(net) : money(-net)}</span></div>`;
+      day.innerHTML = `<div class="day-head"><span>${esc(name)}</span><span class="num ${net > 0 ? "pos" : net < 0 ? "neg" : ""}">${net > 0 ? "+" + money(net) : net < 0 ? "−" + money(-net) : money(0)}</span></div>`;
       const rows = document.createElement("div"); rows.className = "rows";
       list2.forEach(t => rows.append(txRow(t)));
       day.append(rows); wrap.append(day);
