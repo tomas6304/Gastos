@@ -1,11 +1,10 @@
 // Lets Gastos open without internet and shows its notifications. Bump VERSION when you upload a new index.html.
-const VERSION = "gastos-v18";
+const VERSION = "gastos-v17";
 const CORE = ["./", "index.html", "onboarding.js", "manifest.webmanifest", "apple-touch-icon.png", "icon-192.png", "icon-512.png"];
 const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];
 
 self.addEventListener("install", e => {
-  // one file at a time, so a file that was not uploaded yet (like onboarding.js) cannot stop the app from installing
-  e.waitUntil(caches.open(VERSION).then(c => Promise.allSettled(CORE.map(u => c.add(u)))).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", e => {
