@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-PadAGA/W0d+2RsIu0didCgjhpIUZxsa6cw9XATWyduc=' 'sha256-IN3Cb0/Eyu8KwrJfndZe1pB20iCL2RAlzL67N6wCAt8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https:; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Pfinu08zihJB0IOLYx8Ox6Avh1J0mbsS4w5tNRkCjGI=' 'sha256-IN3Cb0/Eyu8KwrJfndZe1pB20iCL2RAlzL67N6wCAt8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https:; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
 <title>Gastos</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -710,6 +710,9 @@ html.hub-skin .fab{border:2px solid #1b2620}
       <p class="hint">La misma clave va en Cloudflare (como secreto TOKEN) y en el atajo. No la compartas.</p>
       <button class="ghost" type="button" id="ib-test">Probar conexión y buscar pagos</button>
       <p class="hint" id="ib-status"></p>
+      <div class="field" id="ib-bad-field" hidden><span class="lbl">Pagos de Apple Pay para revisar</span>
+        <p class="hint" style="margin:0">Llegaron sin un importe que la app pueda leer. Mirá abajo cómo llegó el importe: sirve para corregir el atajo.</p>
+        <div id="ib-bad" style="display:flex;flex-direction:column;gap:12px"></div></div>
       <div class="field" id="ib-map-field" hidden><span class="lbl">Tus tarjetas de Apple Pay</span>
         <div id="ib-map" style="display:flex;flex-direction:column;gap:10px"></div>
         <p class="hint">Elige a qué tarjeta de crédito o cuenta corresponde cada tarjeta de Wallet, para que el gasto vaya al resumen o al saldo correcto.</p></div>
@@ -1204,7 +1207,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
   let alerts = [];    // {id, kind:"px"|"fx", sym, casa, dir:"above"|"below", value, ccy, label, fired:"" }
   let settings = {budget:0, currency:guessCurrency(), remindDays:3, fxSource:"mep", fx:null, fxManual:0, showUsd:false,
     infl:{}, inflManual:{}, inflAt:0, inflAdjust:false, lock:{on:false, hash:"", salt:"", cred:""}, crypto:null, netHist:{},
-    inbox:{url:"", token:"", at:0}, payMap:{}, paySeen:[],
+    inbox:{url:"", token:"", at:0}, payMap:{}, paySeen:[], inboxBad:[],
     notif:{on:false, pay:true, daily:false, hour:21, recap:true, budget:true, applepay:false, weekly:false, hash:"", at:0, count:0}, target:null,
     cloud:{on:false, at:0, hash:""}, mkt:{px:{}, favs:[]}};
   let ui = {tab:"home", period:1, pagosView:"fijos", ahorroView:"cuentas", typeFilter:"todo", catFilter:"", lastCat:{gasto:"comida", ingreso:"sueldo"}, dismissed:{}, lastAcc:"",
@@ -4719,20 +4722,28 @@ html.hub-skin .fab{border:2px solid #1b2620}
       const {items = []} = await ibFetch("/pagos");
       const seen = new Set(txs.map(t => t.inboxId).filter(Boolean)), added = [], bad = [];
       items.sort((a, b) => String(a.fecha).localeCompare(String(b.fecha))).forEach(it => {
-        if (seen.has(String(it.id))) return;
+        if (seen.has(String(it.id)) || badList().some(x => x.id === String(it.id))) return;
         const t = txFromInbox(it);
-        if (t) { txs.push(t); added.push(t); } else bad.push(it);
+        if (t) { txs.push(t); added.push(t); }
+        else {
+          // No se pierde: queda guardado acá para anotarlo a mano, con lo que llegó como importe
+          bad.push(it);
+          const L = badList();
+          L.push({id:String(it.id).slice(0, 60), fecha:String(it.fecha || "").slice(0, 40), comercio:String(it.comercio || "").slice(0, 60),
+            nota:String(it.nota || "").slice(0, 60), tarjeta:String(it.tarjeta || "").slice(0, 40), monto:String(it.monto ?? "").slice(0, 40)});
+          if (L.length > 30) L.shift();
+        }
       });
       settings.inbox.at = Date.now();
       save();
       if (items.length) await ibFetch("/pagos/listo", {method:"POST", body:JSON.stringify({ids:items.map(i => i.id)})});
-      if (added.length) {
-        renderAll();
+      if (added.length) renderAll();
+      if (bad.length) toast(`${plural(bad.length, "pago de Apple Pay llegó", "pagos de Apple Pay llegaron")} sin importe válido. Lo guardé en Ajustes para que lo anotes a mano.`, {label:"Ver", run:() => setTab("mas")});
+      else if (added.length) {
         const one = added[0];
         toast(added.length === 1 ? `Apple Pay: anotado ${one.note || "un pago"} por ${money(one.amount)}` : `Se anotaron ${added.length} pagos de Apple Pay`,
           added.length === 1 ? {label:"Ver", run:() => openTx(one)} : null);
-      } else if (bad.length) toast("Llegó un pago de Apple Pay sin importe válido y no se pudo anotar. Revisa el atajo.");
-      else if (manual) toast("Conectado. No hay pagos nuevos.");
+      } else if (manual) toast("Conectado. No hay pagos nuevos.");
       if (status) status.textContent = `Conectado. Última revisión: ${new Date().toLocaleTimeString(LOCALE, {hour:"2-digit", minute:"2-digit"})}`;
       if (ui.tab === "mas") renderInboxSettings();
     } catch (e) {
@@ -4741,7 +4752,30 @@ html.hub-skin .fab{border:2px solid #1b2620}
       if (manual) toast(msg);
     } finally { ibBusy = false; }
   }
+  function badList() { return settings.inboxBad || (settings.inboxBad = []); }
+  function renderBadInbox() {
+    const field = $("#ib-bad-field"), box = $("#ib-bad"); if (!field || !box) return;
+    const list = badList(); field.hidden = !list.length; box.innerHTML = "";
+    list.forEach(b => {
+      const row = document.createElement("div"); row.style.cssText = "display:flex;flex-direction:column;gap:8px";
+      const d = new Date(b.fecha), date = isNaN(d) ? "" : ymd(d);
+      const info = document.createElement("p"); info.className = "hint"; info.style.margin = "0";
+      info.textContent = `${b.comercio || b.nota || "Pago sin nombre"}${date ? " · " + date : ""} · el importe llegó como: «${b.monto || "vacío"}»`;
+      const act = document.createElement("div"); act.className = "inline";
+      const add = document.createElement("button"); add.type = "button"; add.textContent = "Anotar";
+      add.onclick = () => {
+        const i = badList().findIndex(x => x.id === b.id); if (i >= 0) badList().splice(i, 1);
+        save(); renderBadInbox(); setTab("home");
+        openTx(null, "gasto", {note:(b.nota || b.comercio || "").slice(0, 60)});
+        if (date) $("#tx-date").value = date;
+      };
+      const del = document.createElement("button"); del.type = "button"; del.className = "alt"; del.textContent = "Descartar";
+      del.onclick = () => { const i = badList().findIndex(x => x.id === b.id); if (i >= 0) badList().splice(i, 1); save(); renderBadInbox(); };
+      act.append(add, del); row.append(info, act); box.append(row);
+    });
+  }
   function renderInboxSettings() {
+    renderBadInbox();
     if (document.activeElement !== $("#ib-url")) $("#ib-url").value = settings.inbox.url || "";
     if (document.activeElement !== $("#ib-token")) $("#ib-token").value = settings.inbox.token || "";
     if (!$("#ib-status").textContent && settings.inbox.at) $("#ib-status").textContent = `Última revisión: ${new Date(settings.inbox.at).toLocaleString(LOCALE, {day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"})}`;
