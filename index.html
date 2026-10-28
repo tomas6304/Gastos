@@ -9,13 +9,13 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Gastos">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#f4f6f3" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#070b09" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f5ead8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1f1c18" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
 <style>
 /* Layout: five-tab ledger app (Movimientos, Análisis, Pagos, Ahorro, Ajustes) with a floating add button and bottom sheets */
 :root{
@@ -473,6 +473,118 @@ html.hub-skin .tabbar{background:#1b2620!important;border-top:0!important}
 html.hub-skin .tabbar .tabbtn{color:#c9c2ae!important}
 html.hub-skin .tabbar .tabbtn[aria-selected="true"]{color:#f5e36a!important}
 html.hub-skin .fab{border:2px solid #1b2620}
+</style>
+<style id="organic">
+/* Look v3: Organic (crema y arena, terracota + salvia, Caprasimo sobre Figtree, todo redondeado) */
+:root{
+  --bg:#f5ead8; --surface:#ebddc5; --ink:#201e1d; --muted:#645c50; --line:#dcd3c4;
+  --accent:#c67139; --accent-ink:#f5ead8; --accent-soft:#ffe1d0; --accent-deep:#8c491a;
+  --ok:#728157; --ok-ink:#56633f; --ok-soft:#e1eecc;
+  --warn:#b2622d; --warn-soft:#fff2eb; --danger:#8c491a; --danger-soft:#ffc6a5;
+  --c1:#c67139; --c2:#7a8a5e; --c3:#8c491a; --c4:#56633f; --c5:#b2622d; --c6:#728157; --c7:#645c50; --c8:#643312; --c9:#a19786;
+  --f-display:"Caprasimo",ui-rounded,system-ui,sans-serif; --f-body:"Figtree",system-ui,-apple-system,sans-serif; --f-mono:"Figtree",system-ui,sans-serif;
+  --shadow:0 12px 32px rgba(46,43,37,.22); --r:28px; --hair:0 0 0 0 transparent; --knob:#f9f4ed}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1f1c18; --surface:#2b2721; --ink:#f5ead8; --muted:#c0b6a5; --line:#3a362f;
+  --accent:#d67f48; --accent-ink:#1f1c18; --accent-soft:#643312; --accent-deep:#ffc6a5;
+  --ok:#aebf92; --ok-ink:#ccdbb2; --ok-soft:#3d472b;
+  --warn:#f6a06b; --warn-soft:#402310; --danger:#ffc6a5; --danger-soft:#643312;
+  --c1:#d67f48; --c2:#8fa073; --c3:#b2622d; --c4:#728157; --c5:#8c491a; --c6:#56633f; --c7:#82796a; --c8:#643312; --c9:#645c50;
+  --shadow:0 12px 32px rgba(0,0,0,.55); --knob:#f5ead8; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1f1c18; --surface:#2b2721; --ink:#f5ead8; --muted:#c0b6a5; --line:#3a362f;
+  --accent:#d67f48; --accent-ink:#1f1c18; --accent-soft:#643312; --accent-deep:#ffc6a5;
+  --ok:#aebf92; --ok-ink:#ccdbb2; --ok-soft:#3d472b;
+  --warn:#f6a06b; --warn-soft:#402310; --danger:#ffc6a5; --danger-soft:#643312;
+  --c1:#d67f48; --c2:#8fa073; --c3:#b2622d; --c4:#728157; --c5:#8c491a; --c6:#56633f; --c7:#82796a; --c8:#643312; --c9:#645c50;
+  --shadow:0 12px 32px rgba(0,0,0,.55); --knob:#f5ead8; color-scheme:dark}
+::selection{background:var(--accent-soft)}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline-color:var(--accent)}
+/* tipografía: Caprasimo tiene un solo peso */
+.top h1,.page-head h1,.card h2,.total,.kpi .v,.badge,.empty h2,.goal-top h3,.sheet-head h2,.amount-input,.amount-wrap span,.up .when b,.bigres,.net-v,
+.recap-hero .v,.recap-top h2,.lock-inner h2,.keypad button,.ins .ic,.fab{font-weight:400}
+.top h1{font-size:1.75rem;text-align:left;letter-spacing:-.01em}
+.page-head h1{font-size:2.25rem;letter-spacing:-.01em}
+.card h2{font-size:1.3rem;letter-spacing:0}
+.total{letter-spacing:-.02em}
+.legend .pct,.kv .v,.up .amt,.row .amt,.goal-top span,.ctable .pc,.hb-top span:last-child,.hist span:last-child,.bk-amt,.chart .axis{font-variant-numeric:tabular-nums}
+.kv .v,.up .amt,.row .amt,.bk-amt{font-weight:700}
+.pos{color:var(--ok-ink)} .neg{color:var(--danger)}
+/* formas: contenedores muy redondeados, controles en píldora */
+.card,.kpi,.goal,.rows,.empty,.qchip,.set-card,.cat-list,.bk-list{border-radius:var(--r);box-shadow:none}
+.rows-in{border-radius:0 0 var(--r) var(--r)}
+.input,.search,.seg,.seg button,.primary,.ghost,.danger,.inline button,.qchip,.pills button,.chip,.pill,.delta,.toast{border-radius:999px}
+.ghost{padding:12px 18px;border-color:var(--line)}
+.ghost:active,.chip:active{background:color-mix(in srgb,var(--ink) 8%,transparent)}
+.search{background:var(--surface);border-color:transparent}
+.input{background:var(--bg)}
+.sheet .input,.lock .input{background:var(--surface)}
+.badge{border-radius:50%;box-shadow:none}
+.icon-btn{border-radius:50%;background:var(--surface);color:var(--ink)}
+.icon-btn svg,.tabbtn svg,.fab svg{stroke-width:2.6}
+/* segmentado: la opción elegida va en terracota */
+.seg{background:var(--surface)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);box-shadow:none}
+.pills button{background:var(--surface);border-color:transparent}
+.chip{border-color:transparent;background:var(--surface)}
+/* barras, interruptores, estados buenos en salvia */
+.bar{background:var(--line)}
+.bar>i{background:var(--ok)}
+.bar.warn>i{background:var(--accent)} .bar.over>i{background:var(--danger)}
+.switch{background:var(--line)} .switch::after{background:var(--knob)}
+.switch[aria-checked="true"]{background:var(--ok)}
+.pill{background:var(--accent-soft);color:var(--accent-deep)}
+.delta.down,.risk.low{background:var(--ok-soft);color:var(--ok-ink)}
+.delta.up,.risk.high{background:var(--accent-soft);color:var(--accent-deep)}
+.dl.down,.pct.up{color:var(--ok-ink)} .dl.up,.pct.down{color:var(--danger)}
+.ins.good .ic{background:var(--ok-soft);color:var(--ok-ink)}
+.ins.bad .ic,.ins.warn .ic{background:var(--accent-soft);color:var(--accent-deep)}
+.ins .ic{border-radius:50%}
+.link,.mk-more,details summary,.cat-item.add,.keypad button.plain{color:var(--accent-deep)}
+.chart .ref{stroke:var(--warn)} .chart .reflbl{fill:var(--warn)}
+/* botones principales */
+.primary{font-family:var(--f-display);font-weight:400;font-size:1.1rem;box-shadow:var(--shadow)}
+.primary:active{background:var(--accent-deep);color:var(--accent-ink)}
+.fab{font-family:var(--f-display);font-size:1.1rem;box-shadow:var(--shadow)}
+.fab:active{background:var(--accent-deep)}
+/* barra de pestañas: píldora detrás del ícono activo */
+.tabbar{background:color-mix(in srgb,var(--bg) 82%,transparent);border-top:1px solid var(--line)}
+.tabbtn{font-weight:700}
+.tabbtn svg{padding:4px 16px;border-radius:999px;box-sizing:content-box;transition:background .2s ease}
+.tabbtn[aria-selected="true"]{color:var(--accent-deep)}
+.tabbtn[aria-selected="true"] svg{transform:none;background:var(--accent-soft)}
+.tabbtn[aria-selected="true"]::before{display:none}
+.tabbtn .count{background:var(--accent-deep);color:var(--bg)}
+/* hojas */
+.sheet{background:var(--bg);border-radius:36px 36px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.25)}
+.scrim{background:rgba(32,30,29,.5)}
+.grip{background:var(--line)}
+.amount-wrap{border-bottom-color:var(--line)}
+/* formas suaves de decoración */
+.summary{position:relative;isolation:isolate}
+.summary::before{content:"";position:absolute;right:-70px;top:-50px;width:210px;height:210px;border-radius:50%;background:var(--accent-soft);opacity:.6;z-index:-1;pointer-events:none}
+.recap-hero{position:relative;overflow:hidden;isolation:isolate;border-radius:32px}
+.recap-hero::before{content:"";position:absolute;right:-40px;top:-50px;width:190px;height:190px;border-radius:50%;background:color-mix(in srgb,#f6a06b 65%,transparent);z-index:-1}
+.recap-hero::after{content:"";position:absolute;right:80px;top:30px;width:70px;height:70px;border-radius:50%;background:color-mix(in srgb,#aebf92 80%,transparent);z-index:-1}
+.lock{overflow:hidden;isolation:isolate}
+.lock::before{content:"";position:absolute;left:-90px;top:-70px;width:260px;height:260px;border-radius:50%;background:var(--accent-soft);z-index:-1}
+.lock::after{content:"";position:absolute;right:-70px;bottom:-60px;width:220px;height:220px;border-radius:50%;background:var(--ok-soft);z-index:-1}
+.keypad button{box-shadow:none;background:var(--surface)}
+.pin-dots i.on{background:var(--ink);border-color:var(--ink)}
+.toast button{color:#f6a06b}
+:root[data-theme="dark"] .toast button{color:#8c491a}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .toast button{color:#8c491a}}
+/* bienvenida (onboarding.js) */
+html #intro{align-items:flex-end;padding:28px 28px 56px}
+html #intro .in{text-align:left;max-width:420px}
+html #intro h2{font-family:var(--f-display);font-weight:400;font-size:2.2rem;line-height:1.05}
+html #intro .dots{justify-content:flex-start}
+html #intro .dots i{border-radius:999px;background:var(--line)}
+html #intro .dots i.on{width:28px;background:var(--accent)}
+html #intro button{border-radius:999px}
+html #intro .next{font-family:var(--f-display);font-weight:400;font-size:1.1rem;padding:15px 18px}
+html #intro .skip{font-weight:700}
+@media (prefers-reduced-motion:reduce){.tabbtn svg{transition:none}}
 </style>
 </head>
 <body>
