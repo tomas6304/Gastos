@@ -98,7 +98,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 .banner{background:var(--warn-soft);color:var(--ink);border-radius:14px;padding:12px 14px;font-size:.88rem;line-height:1.4}
 
 /* quick add */
-.quick{display:flex;gap:8px;overflow-x:auto;margin-inline:-16px;padding-inline:16px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.quick{display:flex;flex-wrap:wrap;gap:8px}
 .quick::-webkit-scrollbar{display:none}
 .qchip{flex:none;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:9px 12px;font-size:.88rem;white-space:nowrap;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .qchip b{font-weight:600;font-variant-numeric:tabular-nums}
@@ -329,7 +329,7 @@ details ol{padding-left:20px;margin:8px 0 0}
 :root[data-theme="dark"] .toast button{color:#0e7a5c}
 
 /* markets (information only) */
-.pills{display:flex;gap:6px;overflow-x:auto;margin-inline:-16px;padding:2px 16px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.pills{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0}
 .pills::-webkit-scrollbar{display:none}
 .pills button{flex:none;padding:8px 14px;border-radius:99px;background:var(--surface);border:1px solid var(--line);font-size:.86rem;font-weight:600;color:var(--muted);white-space:nowrap}
 .pills button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
@@ -562,6 +562,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 .amount-wrap{border-bottom-color:var(--line)}
 /* formas suaves de decoración */
 .summary{position:relative;isolation:isolate}
+html,body{overflow-x:hidden;overscroll-behavior-x:none}
+.app{overflow-x:clip}
 .summary::before{content:"";position:absolute;right:-70px;top:-50px;width:210px;height:210px;border-radius:50%;background:var(--accent-soft);opacity:.6;z-index:-1;pointer-events:none}
 .recap-hero{position:relative;overflow:hidden;isolation:isolate;border-radius:32px}
 .recap-hero::before{content:"";position:absolute;right:-40px;top:-50px;width:190px;height:190px;border-radius:50%;background:color-mix(in srgb,#f6a06b 65%,transparent);z-index:-1}
@@ -904,7 +906,7 @@ html #intro .skip{font-weight:700}
       <p class="hint">Tus datos se guardan solo en este iPhone. Guarda una copia de vez en cuando en Archivos o iCloud Drive para no perderlos.</p>
     </div>
   </div>
-  <p class="foot">Gastos · versión 19</p>
+  <p class="foot">Gastos · versión 20</p>
 </div>
 </main>
 
