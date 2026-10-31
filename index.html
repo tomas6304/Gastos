@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-qCDJg+JvlsoABWhXA16Di4jp3v5RQuOEVeZf0wINTuc=' 'sha256-IN3Cb0/Eyu8KwrJfndZe1pB20iCL2RAlzL67N6wCAt8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https:; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-65TPTRHdXonErtywyPfEYPHomN/pFWrwGZ/jZEfnHog=' 'sha256-IN3Cb0/Eyu8KwrJfndZe1pB20iCL2RAlzL67N6wCAt8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https:; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
 <title>Gastos</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -493,6 +493,51 @@ html.hub-skin .fab{border:2px solid #1b2620}
 .fab{bottom:calc(max(8px,calc(env(safe-area-inset-bottom,0px) - 14px)) + 82px)}
 .toast{bottom:calc(max(8px,calc(env(safe-area-inset-bottom,0px) - 14px)) + 148px)}
 @media (prefers-reduced-motion:reduce){.tab-glass{transition:none}}
+
+/* ===== v25: inicio claro, teclado propio, filas deslizables, animaciones, gráfico 6 meses ===== */
+#inc-row{flex-wrap:nowrap;white-space:nowrap;overflow:hidden;gap:14px}
+#inc-row>*{min-width:0}
+.sum-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sum-more{font-size:.78rem;font-weight:600;color:var(--muted);padding:4px 0;display:flex;align-items:center;gap:4px;position:relative}
+.sum-more::after{content:"";position:absolute;inset:-12px -8px}
+#inc-extra{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.9rem;color:var(--muted)}
+#inc-extra b{font-weight:600}
+.fold-head{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;padding:0;min-height:28px}
+.fold-head h2,.fold-head .eyebrow{margin:0}
+.fold-head .meta{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.8rem;font-weight:600}
+.chev{width:9px;height:9px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-135deg);transition:transform .25s ease;margin-top:4px;flex:none}
+.folded .chev{transform:rotate(45deg);margin-top:-3px}
+.folded .fold-body{display:none}
+.card.folded{gap:8px}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:2px 0 4px}
+.numpad button{height:54px;border-radius:16px;background:var(--bg);border:1px solid var(--line);font-family:var(--f-display);font-size:1.45rem;font-weight:600;color:var(--ink);display:grid;place-items:center;touch-action:manipulation}
+.numpad button:active{background:var(--accent-soft);transform:scale(.96)}
+.numpad button.del svg{width:26px;height:26px}
+.more{border-top:1px solid var(--line);padding-top:6px}
+.more>summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;justify-content:space-between;font-weight:600;font-size:.92rem;color:var(--accent)}
+.more>summary::-webkit-details-marker{display:none}
+.more>summary small{font-weight:500;color:var(--muted);font-size:.78rem;margin-left:8px}
+.more>summary::after{content:"";width:9px;height:9px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);transition:transform .25s;margin-right:4px;flex:none}
+.more[open]>summary::after{transform:rotate(-135deg)}
+.more-body{display:flex;flex-direction:column;gap:14px;padding-top:8px}
+#tx-cats .chip{min-height:40px}
+.swipe{position:relative;overflow:hidden;background:var(--surface)}
+.swipe+.swipe{border-top:1px solid var(--line)}
+.swipe .row{border-top:0;background:var(--surface);position:relative;z-index:1;touch-action:pan-y;transition:transform .28s cubic-bezier(.2,.9,.3,1)}
+.swipe.drag .row{transition:none}
+.swipe-actions{position:absolute;inset:0 0 0 auto;display:flex;width:152px}
+.swipe-actions button{flex:1;color:#fff;font-weight:600;font-size:.84rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.swipe-actions .sa-edit{background:var(--accent);color:var(--accent-ink)}
+.swipe-actions .sa-del{background:var(--danger);color:#fff}
+.swipe-actions svg{width:20px;height:20px}
+@keyframes rowin{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+.swipe.fresh{animation:rowin .45s cubic-bezier(.2,.9,.3,1) both}
+.sm-line{stroke-dasharray:1;stroke-dashoffset:1;animation:smdraw 1s .1s ease forwards}
+@keyframes smdraw{to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){.swipe.fresh{animation:none}.sm-line{animation:none;stroke-dashoffset:0}.swipe .row{transition:none}}
+.seg-pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.numpad button{height:50px}
+.amount-wrap{margin-top:2px}
 </style>
 </head>
 <body>
@@ -509,9 +554,10 @@ html.hub-skin .fab{border:2px solid #1b2620}
   <div class="banner" id="safari-banner" hidden>Esto se abrió en Safari, no en la app de tu pantalla de inicio. Lo que anotes aquí no aparece en tu app.</div>
 
   <section class="summary" aria-label="Resumen del mes">
-    <span class="eyebrow" id="total-label">Gastado este mes</span>
+    <div class="sum-top"><span class="eyebrow" id="total-label">Gastado este mes</span><button type="button" class="sum-more" id="sum-more" aria-expanded="false" hidden>Detalle <i class="chev"></i></button></div>
     <p class="total num" id="total">—</p>
     <div class="minirow num" id="inc-row"></div>
+    <div id="inc-extra" class="num" hidden></div>
     <div class="budget" id="budget"></div>
     <div class="alerts" id="alerts"></div>
   </section>
@@ -525,9 +571,9 @@ html.hub-skin .fab{border:2px solid #1b2620}
   <section class="card" id="insights" hidden aria-label="Avisos"></section>
 
   <section class="card" id="cats" hidden aria-label="Por categoría">
-    <span class="eyebrow">Gastos por categoría</span>
+    <button type="button" class="fold-head" id="cats-head" aria-expanded="false"><span class="eyebrow">Gastos por categoría</span><span class="meta"><i class="chev"></i></span></button>
     <div class="strip" id="strip"></div>
-    <ul class="legend" id="legend"></ul>
+    <ul class="legend fold-body" id="legend"></ul>
   </section>
 
   <section class="filters" aria-label="Buscar y filtrar">
@@ -812,7 +858,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
       <p class="hint">Tus datos se guardan solo en este iPhone. Guarda una copia de vez en cuando en Archivos o iCloud Drive para no perderlos.</p>
     </div>
   </div>
-  <p class="foot">Gastos · versión 24</p>
+  <p class="foot">Gastos · versión 25</p>
 </div>
 </main>
 
@@ -839,6 +885,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
   <form class="sheet" id="tx-form" role="dialog" aria-modal="true" aria-labelledby="tx-title" novalidate>
     <div class="grip"></div>
     <div class="sheet-head"><h2 id="tx-title">Nuevo gasto</h2><button type="button" class="link" data-close>Cancelar</button></div>
+    <div class="seg-pair">
     <div class="seg" id="tx-type" role="group" aria-label="Tipo">
       <button type="button" data-t="gasto" aria-pressed="true">Gasto</button>
       <button type="button" data-t="ingreso" aria-pressed="false">Ingreso</button>
@@ -847,11 +894,14 @@ html.hub-skin .fab{border:2px solid #1b2620}
       <button type="button" data-t="local" aria-pressed="true">Pesos</button>
       <button type="button" data-t="usd" aria-pressed="false">Dólares</button>
     </div>
-    <div class="amount-wrap"><span id="tx-sym">$</span><input id="tx-amount" class="amount-input" inputmode="decimal" autocomplete="off" placeholder="0" aria-label="Importe"></div>
+    </div>
+    <div class="amount-wrap"><span id="tx-sym">$</span><input id="tx-amount" class="amount-input" inputmode="none" autocomplete="off" placeholder="0" aria-label="Importe"></div>
     <p class="calc" id="tx-calc" hidden></p>
     <div class="field" id="tx-rate-field"><label for="tx-rate">Cotización del dólar</label>
       <input class="input num" id="tx-rate" inputmode="decimal" autocomplete="off"></div>
     <div class="field"><span class="lbl">Categoría</span><div class="chips" id="tx-cats" role="group" aria-label="Categoría"></div></div>
+    <div class="numpad" id="tx-pad" role="group" aria-label="Teclado numérico"></div>
+    <details class="more" id="tx-more"><summary><span>Más opciones<small>fecha, nota, medio de pago…</small></span></summary><div class="more-body">
     <div class="two">
       <div class="field"><label for="tx-date">Fecha</label><input class="input" type="date" id="tx-date"></div>
       <div class="field"><label for="tx-note">Nota</label><input class="input" id="tx-note" maxlength="60" placeholder="Opcional" autocomplete="off"></div>
@@ -873,6 +923,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
         <button type="button" class="link" id="tx-photo-del" hidden>Quitar</button></div></div>
     <div class="switch-row" id="tx-fav-row"><span>Guardar como gasto rápido<small>Para anotarlo con un toque la próxima vez</small></span>
       <button type="button" class="switch" id="tx-fav" role="switch" aria-checked="false" aria-label="Guardar como gasto rápido"></button></div>
+    </div></details>
     <p class="hint" id="tx-rec-note" hidden></p>
     <p class="err" id="tx-err" hidden></p>
     <button class="primary" id="tx-save" type="submit">Guardar</button>
@@ -1869,6 +1920,37 @@ html.hub-skin .fab{border:2px solid #1b2620}
     hit.addEventListener("pointerleave", ev => { if (ev.pointerType !== "touch") { cross.setAttribute("visibility", "hidden"); hideTip(); } });
     host.append(f.s);
   }
+  function sixMonthCard(host, T) {
+    const now = new Date(), months = [];
+    for (let i = 5; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); months.push({d, key:ym(d)}); }
+    const vals = months.map(m => sum(T.filter(t => t.type === "gasto" && t.date.startsWith(m.key))));
+    if (!vals.some(v => v > 0)) return;
+    const c = card("Últimos 6 meses", "Lo que gastaste mes a mes. El mes actual va resaltado."); host.append(c);
+    const chartBox = chartHost(c), f = frame(chartBox, Math.max(...vals)), n = months.length, base = f.y(0);
+    const x = i => f.L + 14 + (f.W - f.L - f.R - 28) * i / (n - 1), pts = vals.map((v, i) => [x(i), f.y(v)]);
+    const defs = svg("defs", {}, f.s), gr = svg("linearGradient", {id:"sm-grad", x1:0, y1:0, x2:0, y2:1}, defs);
+    svg("stop", {offset:"0", "stop-color":"var(--accent)", "stop-opacity":".30"}, gr); svg("stop", {offset:"1", "stop-color":"var(--accent)", "stop-opacity":"0"}, gr);
+    const line = "M" + pts.map(p => p.join(",")).join("L");
+    svg("path", {d:`${line}L${pts[n - 1][0]},${base}L${pts[0][0]},${base}Z`, fill:"url(#sm-grad)"}, f.s);
+    svg("path", {d:line, pathLength:1, class:"sm-line", fill:"none", stroke:"var(--accent)", "stroke-width":2.5, "stroke-linejoin":"round", "stroke-linecap":"round"}, f.s);
+    months.forEach((m, i) => {
+      const cur = i === n - 1;
+      svg("circle", {cx:pts[i][0], cy:pts[i][1], r:cur ? 6.5 : 3.5, fill:cur ? "var(--accent)" : "var(--surface)", stroke:cur ? "var(--surface)" : "var(--accent)", "stroke-width":cur ? 3 : 2}, f.s);
+      const lb = svg("text", {x:pts[i][0], y:f.H - 7, "text-anchor":"middle", class:"axis"}, f.s);
+      lb.textContent = m.d.toLocaleDateString(LOCALE, {month:"short"}).replace(".", "");
+      if (cur) { lb.style.fontWeight = 700; lb.style.fill = "var(--ink)"; }
+    });
+    const cx = pts[n - 1][0], lx = svg("text", {x:cx > f.W - 60 ? cx - 10 : cx + 10, y:Math.max(f.T + 10, pts[n - 1][1] - 12), "text-anchor":cx > f.W - 60 ? "end" : "start", class:"dlbl"}, f.s);
+    lx.textContent = kmoney(vals[n - 1]); lx.style.fontWeight = 700;
+    months.forEach((m, i) => {
+      const band = (f.W - f.L - f.R) / n, hit = svg("rect", {x:f.L + i * band, y:f.T, width:band, height:base - f.T, class:"hit", tabindex:0, "aria-label":`${monthName(m.d)}: ${money(vals[i])}`}, f.s);
+      const show = ev => showTip(ev, monthName(m.d), [{color:"var(--accent)", value:money(vals[i]), label:i ? deltaText(vals[i], vals[i - 1]) : ""}]);
+      hit.addEventListener("pointerdown", show); hit.addEventListener("pointermove", show);
+      hit.addEventListener("pointerleave", ev => { if (ev.pointerType !== "touch") hideTip(); });
+    });
+    chartBox.append(f.s);
+  }
+  const deltaText = (cur, prev) => prev > 0 ? `${fmtPct((cur - prev) / prev)} vs mes anterior` : "";
   function card(title, sub) {
     const c = document.createElement("section"); c.className = "card";
     c.innerHTML = `<h2>${esc(title)}</h2>` + (sub ? `<p class="sub">${esc(sub)}</p>` : "");
@@ -1925,6 +2007,23 @@ html.hub-skin .fab{border:2px solid #1b2620}
   }
 
   /* ---------- MOVIMIENTOS ---------- */
+  /* ---------- v25: helpers de animación y plegables ---------- */
+  const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function countTo(el, to, fmt = money) {
+    const from = el._v == null ? 0 : el._v; el._v = to;
+    cancelAnimationFrame(el._raf);
+    if (from === to || reduceMotion() || Math.abs(to - from) < 1) { el.textContent = fmt(to); return; }
+    const t0 = performance.now(), dur = 650;
+    const step = now => {
+      const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = fmt(k < 1 ? from + (to - from) * e : to);
+      if (k < 1) el._raf = requestAnimationFrame(step);
+    };
+    el._raf = requestAnimationFrame(step);
+  }
+  const foldGet = (k, def) => { try { const v = JSON.parse(localStorage.getItem("gastos.fold") || "{}")[k]; return v == null ? def : v; } catch { return def; } };
+  const foldSet = (k, v) => { try { const o = JSON.parse(localStorage.getItem("gastos.fold") || "{}"); o[k] = v; localStorage.setItem("gastos.fold", JSON.stringify(o)); } catch {} };
+  let homeDetail = false;
   function renderHome() {
     const key = ym(view), now = new Date(), isCurrent = key === ym(now);
     $("#month-label").textContent = monthName(view);
@@ -1935,12 +2034,16 @@ html.hub-skin .fab{border:2px solid #1b2620}
     const month = txs.filter(t => t.date.startsWith(key));
     const g = month.filter(t => t.type === "gasto"), inc = month.filter(t => t.type === "ingreso");
     const tg = sum(g), ti = sum(inc), rate = fxRate();
-    $("#total").textContent = money(tg);
+    countTo($("#total"), tg);
     const usdBit = (settings.showUsd && usesUsd() && rate ? `<span>≈ <b>${usd(tg / rate)}</b></span>` : "")
       + (isCurrent && accounts.some(a => !isUsdAcc(a)) ? `<span>Disponible <b>${moneyExact(accounts.filter(a => !isUsdAcc(a)).reduce((s, a) => s + accBalance(a), 0))}</b></span>` : "");
-    $("#inc-row").innerHTML = (ti > 0
+    $("#inc-row").innerHTML = ti > 0
       ? `<span>Ingresos <b class="pos">+${money(ti)}</b></span><span>Balance <b class="${ti - tg >= 0 ? "pos" : "neg"}">${signed(ti - tg)}</b></span>`
-      : `<button class="link" type="button" id="add-income">+ Anotar un ingreso</button>`) + usdBit;
+      : `<button class="link" type="button" id="add-income">+ Anotar un ingreso</button>`;
+    const ex = $("#inc-extra"), sm = $("#sum-more");
+    ex.innerHTML = usdBit; sm.hidden = !usdBit; ex.hidden = !usdBit || !homeDetail;
+    sm.setAttribute("aria-expanded", homeDetail); sm.classList.toggle("folded", !homeDetail);
+    sm.onclick = () => { homeDetail = !homeDetail; renderHome(); };
     const ai = $("#add-income"); if (ai) ai.onclick = () => openTx(null, "ingreso");
 
     const b = $("#budget"); b.innerHTML = "";
@@ -1992,7 +2095,14 @@ html.hub-skin .fab{border:2px solid #1b2620}
     // smart notices (current month only)
     const insBox = $("#insights"), ins = isCurrent ? insights().slice(0, 3) : [];
     insBox.hidden = !ins.length; insBox.innerHTML = "";
-    if (ins.length) { insBox.innerHTML = `<h2>Para tener en cuenta</h2>`; insBox.append(insightList(ins)); }
+    insBox.classList.toggle("folded", !foldGet("ins", false));
+    if (ins.length) {
+      const hd = document.createElement("button"); hd.type = "button"; hd.className = "fold-head"; hd.setAttribute("aria-expanded", foldGet("ins", false));
+      hd.innerHTML = `<h2>Para tener en cuenta</h2><span class="meta">${plural(ins.length, "aviso", "avisos")}<i class="chev"></i></span>`;
+      hd.onclick = () => { const o = !foldGet("ins", false); foldSet("ins", o); insBox.classList.toggle("folded", !o); hd.setAttribute("aria-expanded", o); };
+      const body = document.createElement("div"); body.className = "fold-body"; body.append(insightList(ins));
+      insBox.append(hd, body);
+    }
 
     // last month's recap, during the first week
     const rp = $("#recap-prompt"), pk = addMonthsYm(ym(now), -1);
@@ -2011,6 +2121,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
     g.forEach(e => byCat[e.cat] = (byCat[e.cat] || 0) + e.amount);
     const ranked = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
     $("#cats").hidden = !ranked.length;
+    $("#cats").classList.toggle("folded", !foldGet("cats", false)); $("#cats-head").setAttribute("aria-expanded", foldGet("cats", false));
     $("#strip").innerHTML = ranked.map(([c, v]) => `<i style="width:${(v / tg * 100).toFixed(2)}%;background:${cvar(catById(c))}"></i>`).join("");
     $("#legend").innerHTML = ranked.map(([c, v]) =>
       `<li><span class="dot" style="background:${cvar(catById(c))}"></span><span class="name">${esc(catById(c).name)}</span><span class="pct num">${Math.round(v / tg * 100)}%</span></li>`).join("");
@@ -2018,6 +2129,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
     renderList(month);
   }
 
+  $("#cats-head").onclick = () => { const o = !foldGet("cats", false); foldSet("cats", o); $("#cats").classList.toggle("folded", !o); $("#cats-head").setAttribute("aria-expanded", o); };
   function renderQuick() {
     const box = $("#quick"); box.innerHTML = "";
     favs.forEach(f => {
@@ -2095,6 +2207,48 @@ html.hub-skin .fab{border:2px solid #1b2620}
     const amt = String(t.amount);
     return q.words.every(w => hay.includes(w) || (/^\d/.test(w) && (amt.includes(w.replace(",", ".")) || String(Math.round(t.amount)).includes(w.replace(/[.,]/g, "")))));
   }
+  /* ---------- filas deslizables: editar / eliminar ---------- */
+  let seenTx = null, openSwipe = null;
+  function closeSwipe() { if (openSwipe) { openSwipe.classList.remove("drag"); openSwipe.querySelector(".row").style.transform = ""; openSwipe = null; } }
+  document.addEventListener("pointerdown", e => { if (openSwipe && !openSwipe.contains(e.target)) closeSwipe(); }, true);
+  function swipeRow(t) {
+    const W = 152, row = txRow(t), wrap = document.createElement("div"); wrap.className = "swipe"; wrap.dataset.id = t.id;
+    const act = document.createElement("div"); act.className = "swipe-actions";
+    act.innerHTML = `<button type="button" class="sa-edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Editar</button>
+      <button type="button" class="sa-del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>Eliminar</button>`;
+    wrap.append(act, row);
+    act.querySelector(".sa-edit").onclick = () => { closeSwipe(); openTx(t); };
+    act.querySelector(".sa-del").onclick = () => {
+      closeSwipe();
+      if (t.photo || t.inst) { openTx(t); return; }   // fotos y cuotas se eliminan desde la hoja, con su confirmación
+      txs = txs.filter(x => x.id !== t.id); save(); renderAll();
+      toast("Movimiento eliminado", {label:"Deshacer", run:() => { txs.push(t); save(); renderAll(); }});
+    };
+    let x0 = 0, y0 = 0, dx = 0, mode = "", base = 0, moved = false;
+    row.addEventListener("pointerdown", e => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      x0 = e.clientX; y0 = e.clientY; dx = 0; mode = ""; moved = false; base = openSwipe === wrap ? -W : 0;
+    });
+    row.addEventListener("pointermove", e => {
+      if (x0 === null) return;
+      const mx = e.clientX - x0, my = e.clientY - y0;
+      if (!mode) { if (Math.abs(mx) > 8 && Math.abs(mx) > Math.abs(my) * 1.4) { mode = "h"; if (openSwipe && openSwipe !== wrap) closeSwipe(); wrap.classList.add("drag"); try { row.setPointerCapture(e.pointerId); } catch {} } else if (Math.abs(my) > 8) mode = "v"; }
+      if (mode !== "h") return;
+      moved = true; dx = Math.max(-W - 24, Math.min(0, base + mx));
+      row.style.transform = `translateX(${dx}px)`;
+    });
+    const end = () => {
+      if (mode === "h") {
+        wrap.classList.remove("drag");
+        if (dx < -W / 2.4) { row.style.transform = `translateX(${-W}px)`; openSwipe = wrap; } else { row.style.transform = ""; if (openSwipe === wrap) openSwipe = null; }
+      }
+      mode = ""; x0 = null; setTimeout(() => { moved = false; }, 0);
+    };
+    ["pointerup", "pointercancel"].forEach(ev => row.addEventListener(ev, end));
+    row.addEventListener("click", e => { if (moved) { e.stopImmediatePropagation(); e.preventDefault(); return; } if (openSwipe === wrap) { e.stopImmediatePropagation(); closeSwipe(); } }, true);
+    if (seenTx && !seenTx.has(t.id)) (swipeRow.fresh = swipeRow.fresh || []).push(wrap);
+    return wrap;
+  }
   function renderList(month) {
     const q = fold($("#q").value.trim());
     let items = q ? txs.slice() : month.slice();
@@ -2112,8 +2266,10 @@ html.hub-skin .fab{border:2px solid #1b2620}
         + (sg ? ` · gastos ${money(sg)}` : "") + (si ? ` · ingresos ${money(si)}` : "");
     }
 
+    swipeRow.fresh = [];
     const list = $("#list"); list.innerHTML = "";
     if (!items.length) {
+      seenTx = seenTx || new Set();
       const isCurrent = ym(view) === ym(new Date());
       list.innerHTML = filtering
         ? `<div class="empty"><h2>Sin resultados</h2><p>Prueba con otra palabra o quita los filtros.</p></div>`
@@ -2133,10 +2289,13 @@ html.hub-skin .fab{border:2px solid #1b2620}
       const day = document.createElement("div"); day.className = "day";
       day.innerHTML = `<div class="day-head"><span>${esc(name)}</span><span class="num ${net > 0 ? "pos" : net < 0 ? "neg" : ""}">${net > 0 ? "+" + money(net) : net < 0 ? "−" + money(-net) : money(0)}</span></div>`;
       const rows = document.createElement("div"); rows.className = "rows";
-      list2.forEach(t => rows.append(txRow(t)));
+      list2.forEach(t => rows.append(swipeRow(t)));
       day.append(rows); wrap.append(day);
     }
     list.append(wrap);
+    const fresh = swipeRow.fresh || []; swipeRow.fresh = [];
+    if (fresh.length && fresh.length <= 3) fresh.forEach(w => w.classList.add("fresh"));
+    seenTx = seenTx || new Set(); items.forEach(t => seenTx.add(t.id));
   }
 
   $("#q").addEventListener("input", () => renderHome());
@@ -2245,6 +2404,8 @@ html.hub-skin .fab{border:2px solid #1b2620}
     const fixedG = sum(g.filter(t => t.recId)), instG = sum(g.filter(t => t.inst));
     const biggest = g.length ? g.reduce((a, b) => b.amount > a.amount ? b : a) : null;
     const saved = ti - tg, rate = fxRate();
+
+    sixMonthCard(host, T);
 
     const kp = document.createElement("div"); kp.className = "kpis";
     let third;
@@ -2894,12 +3055,34 @@ html.hub-skin .fab{border:2px solid #1b2620}
   // movimiento
   let txEdit = null, txType = "gasto", txCat = "", txMethod = "", txCur = "local", txFav = false, txAccTouched = false;
   let txPhotoBlob = null, txPhotoId = "", txPhotoRemoved = false, txThumbUrl = "";
+  // las categorías que más usás van primero
+  function topCats(type) {
+    const since = addDays(todayStr(), -120), n = {};
+    txs.forEach(t => { if (t.type === type && t.date >= since) n[t.cat] = (n[t.cat] || 0) + 1; });
+    const list = catsOf(type);
+    return list.map((c, i) => [c, i]).sort((a, b) => (n[b[0].id] || 0) - (n[a[0].id] || 0) || a[1] - b[1]).map(x => x[0]);
+  }
+  (function buildPad() {
+    const pad = $("#tx-pad");
+    ["1","2","3","4","5","6","7","8","9",",","0","del"].forEach(k => {
+      const b = document.createElement("button"); b.type = "button"; b.dataset.k = k;
+      if (k === "del") { b.className = "del"; b.setAttribute("aria-label", "Borrar"); b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H9l-6 7 6 7h12z"/><path d="M14 9.5l5 5M19 9.5l-5 5"/></svg>'; }
+      else b.textContent = k;
+      b.addEventListener("click", () => {
+        const el = $("#tx-amount"); let v = el.value;
+        v = k === "del" ? v.slice(0, -1) : v + k;
+        el.value = v; try { el.setSelectionRange(v.length, v.length); } catch {}
+        el.dispatchEvent(new InputEvent("input", {bubbles:true, inputType:k === "del" ? "deleteContentBackward" : "insertText", data:k === "del" ? null : k}));
+      });
+      pad.append(b);
+    });
+  })();
   function drawTxForm() {
     setSeg($("#tx-type"), txType);
     const what = txType === "gasto" ? "gasto" : "ingreso";
     $("#tx-title").textContent = txEdit ? (txEdit.inst ? `Cuota ${txEdit.inst.n} de ${txEdit.inst.of}` : `Editar ${what}`) : `Nuevo ${what}`;
     if (!catsOf(txType).some(c => c.id === txCat)) txCat = ui.lastCat[txType] && catsOf(txType).some(c => c.id === ui.lastCat[txType]) ? ui.lastCat[txType] : catsOf(txType)[0].id;
-    chips($("#tx-cats"), catsOf(txType), txCat, id => { txCat = id; drawTxForm(); });
+    chips($("#tx-cats"), topCats(txType), txCat, id => { txCat = id; drawTxForm(); });
     $("#tx-cur").hidden = !usesUsd();
     $("#tx-cur [data-t=local]").textContent = settings.currency === "ARS" ? "Pesos" : settings.currency;
     setSeg($("#tx-cur"), txCur);
@@ -2971,8 +3154,8 @@ html.hub-skin .fab{border:2px solid #1b2620}
       txs.filter(x => x.inst?.g === t.inst.g && x.photo).forEach(x => delPhoto(x.photo));
       txs = txs.filter(x => x.inst?.g !== t.inst.g); save(); closeSheet($("#tx-sheet")); renderAll(); toast("Compra en cuotas eliminada");
     });
+    $("#tx-more").open = !!t;
     drawTxForm(); setThumb(); openSheet($("#tx-sheet"));
-    if (!t && !prefill.amount) setTimeout(() => $("#tx-amount").focus(), 60);
   }
   $$("#tx-type button").forEach(b => b.onclick = () => { if (txType !== b.dataset.t) { txType = b.dataset.t; txCat = ""; drawTxForm(); } });
   $$("#tx-cur button").forEach(b => b.onclick = () => {
