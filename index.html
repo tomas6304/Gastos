@@ -476,7 +476,7 @@ html.hub-skin .tabbar .tabbtn[aria-selected="true"]{color:#f5e36a!important}
 html.hub-skin .fab{border:2px solid #1b2620}
 
 /* barra inferior flotante de cristal (liquid glass) */
-.tabbar{left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));margin-inline:auto;max-width:496px;padding:6px;border-radius:999px;border-top:0;
+.tabbar{left:12px;right:12px;bottom:max(8px,calc(env(safe-area-inset-bottom,0px) - 14px));margin-inline:auto;max-width:496px;padding:6px;border-radius:999px;border-top:0;
   background:color-mix(in srgb,var(--surface) 58%,transparent);
   -webkit-backdrop-filter:saturate(190%) blur(26px);backdrop-filter:saturate(190%) blur(26px);
   border:1px solid color-mix(in srgb,var(--ink) 11%,transparent);
@@ -490,8 +490,8 @@ html.hub-skin .fab{border:2px solid #1b2620}
 .tabbtn{padding:8px 0 7px;border-radius:999px}
 .tabbtn[aria-selected="true"]::before{display:none}
 .tabbtn[aria-selected="true"] svg{transform:none}
-.fab{bottom:calc(98px + env(safe-area-inset-bottom,0px))}
-.toast{bottom:calc(165px + env(safe-area-inset-bottom,0px))}
+.fab{bottom:calc(max(8px,calc(env(safe-area-inset-bottom,0px) - 14px)) + 82px)}
+.toast{bottom:calc(max(8px,calc(env(safe-area-inset-bottom,0px) - 14px)) + 148px)}
 @media (prefers-reduced-motion:reduce){.tab-glass{transition:none}}
 </style>
 </head>
@@ -812,7 +812,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
       <p class="hint">Tus datos se guardan solo en este iPhone. Guarda una copia de vez en cuando en Archivos o iCloud Drive para no perderlos.</p>
     </div>
   </div>
-  <p class="foot">Gastos · versión 23</p>
+  <p class="foot">Gastos · versión 24</p>
 </div>
 </main>
 
