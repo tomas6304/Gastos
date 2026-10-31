@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-q7JHFmKjoBr4W3vsBo0PGQxgZL70dsqa8i4FuH7mX68=' 'sha256-IN3Cb0/Eyu8KwrJfndZe1pB20iCL2RAlzL67N6wCAt8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https:; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-t4JMSAECv+GozCJysDphv6FWZYFYCz3QWDH/yB6Jlqo=' 'sha256-IN3Cb0/Eyu8KwrJfndZe1pB20iCL2RAlzL67N6wCAt8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https:; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
 <title>Gastos</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -61,7 +61,7 @@ button{transition:transform .12s ease,opacity .12s ease}
 .grip{margin-block:2px 6px;width:44px}
 @media (prefers-reduced-motion:reduce){button{transition:none}}
 [hidden]{display:none!important}
-.app{max-width:520px;margin:0 auto;padding-inline:16px;padding-block:8px 190px}
+.app{max-width:520px;margin:0 auto;padding-inline:16px;padding-block:8px 250px}
 .tab{display:flex;flex-direction:column;gap:20px}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -94,13 +94,14 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 .pill.warn{background:var(--warn-soft);color:var(--warn)}
 .pill.muted{background:var(--bg);color:var(--muted)}
 .alerts{display:flex;flex-wrap:wrap;gap:6px}
-.link{color:var(--accent);font-weight:600;font-size:.88rem;padding:0}
+.link{color:var(--accent);font-weight:600;font-size:.88rem;padding:0;position:relative}
+.link::after{content:"";position:absolute;inset:-14px -10px}
 .banner{background:var(--warn-soft);color:var(--ink);border-radius:14px;padding:12px 14px;font-size:.88rem;line-height:1.4}
 
 /* quick add */
 .quick{display:flex;flex-wrap:wrap;gap:8px}
 .quick::-webkit-scrollbar{display:none}
-.qchip{flex:none;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:9px 12px;font-size:.88rem;white-space:nowrap;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.qchip{min-height:44px;flex:none;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:9px 12px;font-size:.88rem;white-space:nowrap;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .qchip b{font-weight:600;font-variant-numeric:tabular-nums}
 .qchip.add{border-style:dashed;color:var(--muted)}
 
@@ -189,7 +190,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 
 /* segmented */
 .seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--line);border-radius:12px;padding:3px;gap:3px}
-.seg button{padding:8px 4px;border-radius:9px;font-size:.86rem;font-weight:600;color:var(--muted)}
+.seg button{min-height:44px;padding:8px 4px;border-radius:9px;font-size:.86rem;font-weight:600;color:var(--muted)}
 .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .range{font-size:.82rem;color:var(--muted);margin:0;line-height:1.4}
 
@@ -792,7 +793,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
       <p class="hint">Tus datos se guardan solo en este iPhone. Guarda una copia de vez en cuando en Archivos o iCloud Drive para no perderlos.</p>
     </div>
   </div>
-  <p class="foot">Gastos · versión 21</p>
+  <p class="foot">Gastos · versión 22</p>
 </div>
 </main>
 
@@ -5002,6 +5003,8 @@ html.hub-skin .fab{border:2px solid #1b2620}
       : t === "ahorro" ? ({cuentas:"Nueva cuenta", inversiones:"Nueva inversión", metas:"Nueva meta", deudas:"Nueva deuda"})[ui.ahorroView] || "Añadir" : "Añadir";
   }
   function renderAll() {
+    // Buscador y filtros solo cuando ya hay movimientos que buscar
+    $(".filters").style.display = txs.length ? "" : "none";
     fillCatFilter();
     renderHome();
     if (ui.tab === "dash") renderDash();
