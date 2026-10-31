@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-t4JMSAECv+GozCJysDphv6FWZYFYCz3QWDH/yB6Jlqo=' 'sha256-IN3Cb0/Eyu8KwrJfndZe1pB20iCL2RAlzL67N6wCAt8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https:; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-qCDJg+JvlsoABWhXA16Di4jp3v5RQuOEVeZf0wINTuc=' 'sha256-IN3Cb0/Eyu8KwrJfndZe1pB20iCL2RAlzL67N6wCAt8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https:; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
 <title>Gastos</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -474,6 +474,25 @@ html.hub-skin .tabbar{background:#1b2620!important;border-top:0!important}
 html.hub-skin .tabbar .tabbtn{color:#c9c2ae!important}
 html.hub-skin .tabbar .tabbtn[aria-selected="true"]{color:#f5e36a!important}
 html.hub-skin .fab{border:2px solid #1b2620}
+
+/* barra inferior flotante de cristal (liquid glass) */
+.tabbar{left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));margin-inline:auto;max-width:496px;padding:6px;border-radius:999px;border-top:0;
+  background:color-mix(in srgb,var(--surface) 58%,transparent);
+  -webkit-backdrop-filter:saturate(190%) blur(26px);backdrop-filter:saturate(190%) blur(26px);
+  border:1px solid color-mix(in srgb,var(--ink) 11%,transparent);
+  box-shadow:0 10px 32px rgba(0,0,0,.20),0 1px 0 rgba(255,255,255,.45) inset,0 -1px 0 rgba(0,0,0,.06) inset}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.tabbar{background:var(--surface)}}
+.tabbar-inner{position:relative;isolation:isolate}
+.tab-glass{position:absolute;z-index:-1;top:0;bottom:0;left:0;width:20%;border-radius:999px;pointer-events:none;
+  background:color-mix(in srgb,var(--ink) 11%,transparent);
+  box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 0 0 1px color-mix(in srgb,var(--ink) 6%,transparent) inset;
+  transform:translateX(calc(var(--i,0) * 100%));transition:transform .42s cubic-bezier(.3,1.25,.4,1)}
+.tabbtn{padding:8px 0 7px;border-radius:999px}
+.tabbtn[aria-selected="true"]::before{display:none}
+.tabbtn[aria-selected="true"] svg{transform:none}
+.fab{bottom:calc(98px + env(safe-area-inset-bottom,0px))}
+.toast{bottom:calc(165px + env(safe-area-inset-bottom,0px))}
+@media (prefers-reduced-motion:reduce){.tab-glass{transition:none}}
 </style>
 </head>
 <body>
@@ -793,7 +812,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
       <p class="hint">Tus datos se guardan solo en este iPhone. Guarda una copia de vez en cuando en Archivos o iCloud Drive para no perderlos.</p>
     </div>
   </div>
-  <p class="foot">Gastos · versión 22</p>
+  <p class="foot">Gastos · versión 23</p>
 </div>
 </main>
 
@@ -801,6 +820,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
 
 <nav class="tabbar" aria-label="Secciones">
   <div class="tabbar-inner" role="tablist">
+    <span class="tab-glass" aria-hidden="true"></span>
     <button class="tabbtn" role="tab" data-tab="home" aria-selected="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>Movimientos</button>
     <button class="tabbtn" role="tab" data-tab="dash" aria-selected="false">
@@ -5018,6 +5038,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
     for (const id of ["home", "dash", "pagos", "ahorro", "mas"]) $("#tab-" + id).hidden = id !== t;
     const shown = $("#tab-" + t); shown.classList.remove("enter"); void shown.offsetWidth; shown.classList.add("enter");
     $$(".tabbtn").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t));
+    $(".tabbar-inner").style.setProperty("--i", ["home", "dash", "pagos", "ahorro", "mas"].indexOf(t));
     hideTip(); scrollTo(0, 0);
     renderAll();
   }
