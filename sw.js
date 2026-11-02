@@ -1,5 +1,5 @@
 // Lets Gastos open without internet and shows its notifications. Bump VERSION when you upload a new index.html.
-const VERSION = "gastos-v29";
+const VERSION = "gastos-v32";
 const CORE = ["./", "index.html", "onboarding.js", "manifest.webmanifest", "apple-touch-icon.png", "icon-192.png", "icon-512.png"];
 const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];
 
@@ -18,7 +18,7 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET") return;
   // Pages: try the network first so updates show up, fall back to the saved copy offline
   if (req.mode === "navigate") {
-    e.respondWith(fetch(req).then(res => {
+    e.respondWith(fetch(req, {cache:"no-cache"}).then(res => {
       const copy = res.clone(); caches.open(VERSION).then(c => c.put("index.html", copy));
       return res;
     }).catch(() => caches.match("index.html")));
@@ -26,7 +26,7 @@ self.addEventListener("fetch", e => {
   }
   // Only the app's own files and its fonts are cached; live data (dólar, inflación) always goes to the network
   if (url.origin !== location.origin && !FONT_HOSTS.includes(url.hostname)) return;
-  e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => {
+  e.respondWith(caches.match(req).then(hit => hit || fetch(req, {cache:"no-cache"}).then(res => {
     if (res.ok || res.type === "opaque") { const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)); }
     return res;
   })));

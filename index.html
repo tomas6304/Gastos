@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Ti50D9i3lb9Q+OERNC9t0OxqaGdm1mF9T0fM5E5f7Ho=' 'sha256-IN3Cb0/Eyu8KwrJfndZe1pB20iCL2RAlzL67N6wCAt8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https:; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-qXL1fvsFBdaPK6EPZ26keFK+DRBNHXmu3GLHD/XBA1c=' 'sha256-IN3Cb0/Eyu8KwrJfndZe1pB20iCL2RAlzL67N6wCAt8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https:; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
 <title>Gastos</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -522,6 +522,9 @@ html.hub-skin .fab{border:2px solid #1b2620}
 .avail-s{font-size:.8rem;color:var(--muted);line-height:1.35;display:flex;flex-direction:column}
 .avail-s b{color:var(--ink);font-weight:600}
 .avail-go{flex:none;color:var(--muted);width:18px;height:18px}
+.avail-eye{flex:none;display:grid;place-items:center;width:36px;height:36px;margin-right:-4px;border-radius:50%;color:var(--muted)}
+.avail-eye:active{background:var(--accent-soft)}
+.avail-eye svg{width:22px;height:22px}
 .numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:2px 0 4px}
 .numpad button{height:54px;border-radius:16px;background:var(--bg);border:1px solid var(--line);font-family:var(--f-display);font-size:1.45rem;font-weight:600;color:var(--ink);display:grid;place-items:center;touch-action:manipulation}
 .numpad button:active{background:var(--accent-soft);transform:scale(.96)}
@@ -873,7 +876,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
       <p class="hint">Tus datos se guardan solo en este iPhone. Guarda una copia de vez en cuando en Archivos o iCloud Drive para no perderlos.</p>
     </div>
   </div>
-  <p class="foot">Gastos · versión 29</p>
+  <p class="foot">Gastos · versión 32</p>
 </div>
 </main>
 
@@ -1471,7 +1474,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
     catch { toast("No se pudo guardar. Libera espacio en el iPhone e inténtalo de nuevo."); }
     if (!quiet) { clearTimeout(syncTimer); syncTimer = setTimeout(() => runSync(), 5000); }
   }
-  function saveUI() { try { localStorage.setItem("gastos.ui", JSON.stringify({tab:ui.tab, period:ui.period, pagosView:ui.pagosView, ahorroView:ui.ahorroView, lastCat:ui.lastCat, dismissed:ui.dismissed, lastAcc:ui.lastAcc, dineroMode:ui.dineroMode, mkView:ui.mkView, mkSet:ui.mkSet, mkSort:ui.mkSort, mkPeriod:ui.mkPeriod, mkCmp:ui.mkCmp, mkCmpP:ui.mkCmpP, mkCmpB:ui.mkCmpB, calc:ui.calc, conv:ui.conv, cuo:ui.cuo, mmReal:ui.mmReal})); } catch {} }
+  function saveUI() { try { localStorage.setItem("gastos.ui", JSON.stringify({tab:ui.tab, period:ui.period, pagosView:ui.pagosView, ahorroView:ui.ahorroView, lastCat:ui.lastCat, dismissed:ui.dismissed, lastAcc:ui.lastAcc, dineroMode:ui.dineroMode, mkView:ui.mkView, mkSet:ui.mkSet, mkSort:ui.mkSort, mkPeriod:ui.mkPeriod, mkCmp:ui.mkCmp, mkCmpP:ui.mkCmpP, mkCmpB:ui.mkCmpB, calc:ui.calc, conv:ui.conv, cuo:ui.cuo, mmReal:ui.mmReal, hideAvail:ui.hideAvail})); } catch {} }
   try { navigator.storage?.persist?.(); } catch {}
 
   /* ---------- photos (IndexedDB) ---------- */
@@ -5312,16 +5315,19 @@ html.hub-skin .fab{border:2px solid #1b2620}
   function drawAvail(isCurrent) {
     const box = $("#avail"), real = accounts.filter(a => !isUsdAcc(a));
     box.hidden = !(isCurrent && real.length); if (box.hidden) return;
-    const total = real.reduce((s, a) => s + accBalance(a), 0), p = moneyParts(total);
+    const total = real.reduce((s, a) => s + accBalance(a), 0), p = moneyParts(total), hid = !!ui.hideAvail;
     const owed = cards.reduce((s, c) => { const cy = cardCycles(c); return s + (cardPaid(c, cy.last) ? 0 : cy.last.amount) + cy.current.amount; }, 0);
     box.innerHTML = `<span class="avail-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"/><path d="M4 7.5V17a2 2 0 0 0 2 2h12.5a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 18.5 8H6.5A2.5 2.5 0 0 1 4 7.5z"/><circle cx="16" cy="13.5" r="1.1" fill="currentColor"/></svg></span>
       <span class="avail-main"><span class="avail-k">Disponible</span><span class="avail-v num ${total < 0 ? "neg" : ""}"></span><span class="avail-s"></span></span>
+      <span class="avail-eye" role="button" tabindex="0" aria-label="${hid ? "Mostrar" : "Ocultar"} el monto disponible"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${hid ? '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>' : '<path d="M3 3l18 18"/><path d="M10.6 5.7A9.6 9.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a16 16 0 0 1-3 3.8M6.5 7.5C4 9.2 2.5 12 2.5 12s3.5 6.5 9.5 6.5c1.6 0 3-.4 4.2-1"/><path d="M9.9 10a3 3 0 0 0 4.1 4.1"/>'}</svg></span>
       <svg class="avail-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>`;
-    const v = box.querySelector(".avail-v"); v.textContent = p.main; if (p.cents) { const s = document.createElement("small"); s.textContent = p.cents; v.append(s); }
+    const v = box.querySelector(".avail-v"); v.textContent = hid ? "******" : p.main; if (p.cents && !hid) { const s = document.createElement("small"); s.textContent = p.cents; v.append(s); }
     const sub = box.querySelector(".avail-s");
     sub.innerHTML = `<span>${real.length > 1 ? `En ${plural(real.length, "cuenta", "cuentas")}` : esc(real[0].name)}</span>`
-      + (owed > 0 ? `<span>Tarjeta por pagar <b>${esc(money(owed))}</b></span>` : "");
-    box.onclick = () => { ui.ahorroView = "cuentas"; saveUI(); setTab("ahorro"); };
+      + (owed > 0 ? `<span>Tarjeta por pagar <b>${hid ? "****" : esc(money(owed))}</b></span>` : "");
+    const flip = () => { ui.hideAvail = !ui.hideAvail; saveUI(); drawAvail(isCurrent); };
+    box.onkeydown = e => { if ((e.key === "Enter" || e.key === " ") && e.target.closest(".avail-eye")) { e.preventDefault(); e.stopPropagation(); flip(); } };
+    box.onclick = e => { if (e.target.closest(".avail-eye")) return flip();  ui.ahorroView = "cuentas"; saveUI(); setTab("ahorro"); };
   }
   // where an Apple Pay payment goes, by what you chose for that Wallet card
   const payTarget = map => map === "credit" ? {method:"credito", card:"", acc:""}
