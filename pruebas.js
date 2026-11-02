@@ -164,6 +164,37 @@
     } finally { G.setState(s); }
   });
 
+  test("Apple Pay con crédito no toca ninguna cuenta; con débito sí", () => {
+    const s = G.snapshot();
+    try {
+      G.setState({txs:[], cards:[{id:"k1", name:"Mastercard Galicia", closeDay:25, dueDay:5}], accounts:[{id:"a1", name:"Banco", kind:"banco", initial:1000}],
+        settings:{...s.settings, payMap:{"Mastercard 8637":"card:k1", "Visa débito":"acc:a1", "Otra":"credit", "Sin cuenta":"none"}, paySeen:[]}});
+      const mk = (tarjeta, id) => G.txFromInbox({id, monto:"500", comercio:"Cafe", tarjeta, fecha:"2026-10-15T12:00:00-03:00"});
+      const cr = mk("Mastercard 8637", "1"), db = mk("Visa débito", "2"), c2 = mk("Otra", "3"), nn = mk("Sin cuenta", "4"), dflt = mk("Desconocida", "5");
+      eq([cr.method, cr.card, cr.acc], ["credito", "k1", ""]); eq([db.method, db.acc], ["debito", "a1"]); eq([c2.method, c2.card, c2.acc], ["credito", "", ""]);
+      eq([nn.method, nn.acc], ["debito", ""]); eq(cr.payCard, "Mastercard 8637");
+      G.setState({txs:[cr, c2, nn]});
+      close(G.accBalance({id:"a1", kind:"banco", initial:1000}, "2026-12-31"), 1000, "crédito y «sin cuenta» no bajan el disponible");
+      G.setState({txs:[cr, db]});
+      close(G.accBalance({id:"a1", kind:"banco", initial:1000}, "2026-12-31"), 500, "el débito sí baja el saldo");
+    } finally { G.setState(s); }
+  });
+  test("applyPayMap: cambiar la tarjeta corrige los pagos ya recibidos", () => {
+    const s = G.snapshot();
+    try {
+      const a = tx({src:"applepay", payCard:"Mastercard 8637", method:"debito", acc:"a1"}), b = tx({src:"applepay", payCard:"Visa", method:"debito", acc:"a1"}), c = tx({payCard:"Mastercard 8637", method:"debito", acc:"a1"});
+      G.setState({txs:[a, b, c], cards:[{id:"k1", name:"MC", closeDay:25, dueDay:5}], accounts:[{id:"a1", name:"Banco", kind:"banco", initial:0}], settings:{...s.settings, payMap:{"Mastercard 8637":"card:k1"}}});
+      eq(G.applyPayMap("Mastercard 8637"), 1);
+      const now = G.snapshot().txs;
+      eq([now[0].method, now[0].card, now[0].acc], ["credito", "k1", ""]); eq(now[1].method, "debito", "otra tarjeta intacta"); eq(now[2].method, "debito", "un gasto que no es de Apple Pay intacto");
+    } finally { G.setState(s); }
+  });
+  test("moneyParts: separa los centavos del importe", () => {
+    const p = G.moneyParts(123456.7);
+    truthy(/456/.test(p.main) && /70$/.test(p.cents) && p.cents.length === 3 && !/70/.test(p.main), JSON.stringify(p));
+    eq(G.moneyParts(-5).cents.length, 3);
+  });
+
   /* ----- buscador ----- */
   const S = [tx({note:"Café", amount:1500, date:"2026-10-05", cat:"comida"}), tx({note:"Alquiler", amount:350000, date:"2026-10-01", cat:"casa", recId:"r"}), tx({note:"Zapatillas", amount:90000, date:"2026-09-12", cat:"compras", inst:{g:"g", n:1, of:3, total:270000}}),
     tx({note:"Sueldo", type:"ingreso", amount:900000, date:"2026-10-02", cat:"sueldo"}), tx({note:"Super", amount:15000.5, date:"2025-10-20", cat:"super", src:"applepay"}), tx({note:"Cine", amount:5000, date:"2026-10-30", cat:"ocio", photo:"p"})];

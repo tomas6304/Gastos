@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-65TPTRHdXonErtywyPfEYPHomN/pFWrwGZ/jZEfnHog=' 'sha256-IN3Cb0/Eyu8KwrJfndZe1pB20iCL2RAlzL67N6wCAt8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https:; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Ti50D9i3lb9Q+OERNC9t0OxqaGdm1mF9T0fM5E5f7Ho=' 'sha256-IN3Cb0/Eyu8KwrJfndZe1pB20iCL2RAlzL67N6wCAt8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https:; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
 <title>Gastos</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -509,10 +509,23 @@ html.hub-skin .fab{border:2px solid #1b2620}
 .folded .chev{transform:rotate(45deg);margin-top:-3px}
 .folded .fold-body{display:none}
 .card.folded{gap:8px}
+.avail{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:16px 18px;border-radius:22px;color:var(--ink);
+  background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 16%,var(--surface)),var(--surface) 70%);box-shadow:var(--hair);position:relative;overflow:hidden}
+.avail:active{transform:scale(.985)}
+.avail-ic{flex:none;width:46px;height:46px;border-radius:15px;display:grid;place-items:center;color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 22%,transparent)}
+.avail-ic svg{width:24px;height:24px}
+.avail-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.avail-k{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.avail-v{font-family:var(--f-display);font-weight:700;font-size:clamp(1.55rem,7.4vw,2rem);letter-spacing:-.02em;line-height:1.1;overflow-wrap:anywhere}
+.avail-v small{font-size:.6em;font-weight:600;color:var(--muted);letter-spacing:0}
+.avail-v.neg{color:var(--danger)}
+.avail-s{font-size:.8rem;color:var(--muted);line-height:1.35;display:flex;flex-direction:column}
+.avail-s b{color:var(--ink);font-weight:600}
+.avail-go{flex:none;color:var(--muted);width:18px;height:18px}
 .numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:2px 0 4px}
 .numpad button{height:54px;border-radius:16px;background:var(--bg);border:1px solid var(--line);font-family:var(--f-display);font-size:1.45rem;font-weight:600;color:var(--ink);display:grid;place-items:center;touch-action:manipulation}
 .numpad button:active{background:var(--accent-soft);transform:scale(.96)}
-.numpad button.del svg{width:26px;height:26px}
+.numpad button.del svg{width:26px;height:26px;display:block}
 .more{border-top:1px solid var(--line);padding-top:6px}
 .more>summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;justify-content:space-between;font-weight:600;font-size:.92rem;color:var(--accent)}
 .more>summary::-webkit-details-marker{display:none}
@@ -561,6 +574,8 @@ html.hub-skin .fab{border:2px solid #1b2620}
     <div class="budget" id="budget"></div>
     <div class="alerts" id="alerts"></div>
   </section>
+
+  <button type="button" class="avail" id="avail" hidden aria-label="Dinero disponible. Ver mis cuentas"></button>
 
   <section aria-label="Gastos rápidos"><div class="quick" id="quick"></div></section>
 
@@ -858,7 +873,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
       <p class="hint">Tus datos se guardan solo en este iPhone. Guarda una copia de vez en cuando en Archivos o iCloud Drive para no perderlos.</p>
     </div>
   </div>
-  <p class="foot">Gastos · versión 25</p>
+  <p class="foot">Gastos · versión 29</p>
 </div>
 </main>
 
@@ -1125,6 +1140,18 @@ html.hub-skin .fab{border:2px solid #1b2620}
     <button class="primary" type="submit">Guardar alerta</button>
     <button class="danger" id="al-delete" type="button" hidden>Eliminar alerta</button>
   </form>
+</div>
+
+<!-- ¿con qué tarjeta de Wallet pagaste? -->
+<div class="scrim" id="pm-sheet" hidden>
+  <div class="sheet" id="pm-form" role="dialog" aria-modal="true" aria-labelledby="pm-title">
+    <div class="grip"></div>
+    <div class="sheet-head"><h2 id="pm-title">¿Cómo es esta tarjeta?</h2><button type="button" class="link" data-close>Ahora no</button></div>
+    <p class="hint" id="pm-hint"></p>
+    <div class="field"><label for="pm-sel">Esta tarjeta es</label><select class="input" id="pm-sel"></select></div>
+    <p class="hint">Con crédito, el pago no baja tu dinero disponible hasta que pagues el resumen. Lo eliges una sola vez y vale también para los pagos que ya llegaron.</p>
+    <button class="primary" type="button" id="pm-save">Guardar</button>
+  </div>
 </div>
 
 <!-- importar del banco -->
@@ -2036,7 +2063,8 @@ html.hub-skin .fab{border:2px solid #1b2620}
     const tg = sum(g), ti = sum(inc), rate = fxRate();
     countTo($("#total"), tg);
     const usdBit = (settings.showUsd && usesUsd() && rate ? `<span>≈ <b>${usd(tg / rate)}</b></span>` : "")
-      + (isCurrent && accounts.some(a => !isUsdAcc(a)) ? `<span>Disponible <b>${moneyExact(accounts.filter(a => !isUsdAcc(a)).reduce((s, a) => s + accBalance(a), 0))}</b></span>` : "");
+      ;
+    drawAvail(isCurrent);
     $("#inc-row").innerHTML = ti > 0
       ? `<span>Ingresos <b class="pos">+${money(ti)}</b></span><span>Balance <b class="${ti - tg >= 0 ? "pos" : "neg"}">${signed(ti - tg)}</b></span>`
       : `<button class="link" type="button" id="add-income">+ Anotar un ingreso</button>`;
@@ -3054,7 +3082,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
 
   // movimiento
   let txEdit = null, txType = "gasto", txCat = "", txMethod = "", txCur = "local", txFav = false, txAccTouched = false;
-  let txPhotoBlob = null, txPhotoId = "", txPhotoRemoved = false, txThumbUrl = "";
+  let txPhotoBlob = null, txPhotoId = "", txPhotoRemoved = false, txThumbUrl = "", txPayRef = null;
   // las categorías que más usás van primero
   function topCats(type) {
     const since = addDays(todayStr(), -120), n = {};
@@ -3066,7 +3094,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
     const pad = $("#tx-pad");
     ["1","2","3","4","5","6","7","8","9",",","0","del"].forEach(k => {
       const b = document.createElement("button"); b.type = "button"; b.dataset.k = k;
-      if (k === "del") { b.className = "del"; b.setAttribute("aria-label", "Borrar"); b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H9l-6 7 6 7h12z"/><path d="M14 9.5l5 5M19 9.5l-5 5"/></svg>'; }
+      if (k === "del") { b.className = "del"; b.setAttribute("aria-label", "Borrar"); b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H9l-6 7 6 7h12z"/><path d="M11.5 9.5l5 5M16.5 9.5l-5 5"/></svg>'; }
       else b.textContent = k;
       b.addEventListener("click", () => {
         const el = $("#tx-amount"); let v = el.value;
@@ -3135,9 +3163,10 @@ html.hub-skin .fab{border:2px solid #1b2620}
     $("#tx-date").value = t ? t.date : (ym(view) === ym(now) || ym(view) > ym(now) ? ymd(now) : ymd(new Date(view.getFullYear(), view.getMonth() + 1, 0)));
     $("#tx-note").value = t ? (t.note || "") : (prefill.note || "");
     $("#tx-repeat").value = ""; $("#tx-inst").value = "1"; $("#tx-first").value = "0";
-    cardOptions($("#tx-card"), t?.card || "");
-    txAccTouched = !!t;
-    accOptions($("#tx-acc"), t ? (t.acc || "") : defaultAcc(txMethod, txCur));
+    cardOptions($("#tx-card"), t?.card || prefill.card || "");
+    txAccTouched = !!t || "acc" in prefill;
+    accOptions($("#tx-acc"), t ? (t.acc || "") : ("acc" in prefill ? prefill.acc : defaultAcc(txMethod, txCur)));
+    txPayRef = t ? null : (prefill.pay || null);
     const rec = t?.recId ? recs.find(r => r.id === t.recId) : null;
     const note = $("#tx-rec-note");
     note.hidden = !(rec || t?.inst);
@@ -3217,6 +3246,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
       msg = `Anotado en ${inst} cuotas de ${money(each)}`;
     } else {
       const t = extra({id:uid(), ...base, created:Date.now()});
+      if (txPayRef) { t.src = "applepay"; t.inboxId = txPayRef.id; t.payCard = txPayRef.tarjeta; t.merch = merchKey(txPayRef.comercio || note); txPayRef = null; }
       if (repeat) {
         const r = {id:uid(), type:txType, amount, cat:txCat, note, method, card:cardId, freq:repeat, start:date, lastGen:date, active:true};
         recs.push(r); t.recId = r.id;
@@ -5121,7 +5151,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
       const fresh = d.expenses.map(normTx).filter(e => e && !have.has(e.id)).map(e => {
         const t = {id:e.id, type:e.type, amount:e.amount, cat:String(e.cat), note:String(e.note || "").slice(0, 60), date:e.date, method:String(e.method || ""), card:String(e.card || ""), acc:String(e.acc || ""), created:Number(e.created) || Date.now()};
         if (e.recId) t.recId = String(e.recId);
-        if (e.src === "applepay") { t.src = "applepay"; if (e.inboxId) t.inboxId = String(e.inboxId); }
+        if (e.src === "applepay") { t.src = "applepay"; if (e.inboxId) t.inboxId = String(e.inboxId); if (e.payCard) t.payCard = String(e.payCard).slice(0, 40); }
         if (e.src === "banco") { t.src = "banco"; if (e.bankId) t.bankId = String(e.bankId).slice(0, 120); }
         if (e.merch) t.merch = String(e.merch).slice(0, 60);
         if (e.inst && e.inst.g) t.inst = {g:String(e.inst.g), n:Number(e.inst.n) || 1, of:Number(e.inst.of) || 1, total:Number(e.inst.total) || e.amount};
@@ -5270,6 +5300,41 @@ html.hub-skin .fab{border:2px solid #1b2620}
     const best = Object.keys(tally).sort((a, b) => tally[b].n - tally[a].n || tally[b].last.localeCompare(tally[a].last))[0];
     return best ? catById(best) : null;
   }
+  // the cents get their own smaller type: "$ 123.456" + ",78"
+  function moneyParts(v) {
+    try {
+      const fmt = new Intl.NumberFormat(LOCALE, {style:"currency", currency:settings.currency, minimumFractionDigits:settings.currency === "CLP" ? 0 : 2, maximumFractionDigits:settings.currency === "CLP" ? 0 : 2}).formatToParts(v);
+      const i = fmt.findIndex(p => p.type === "decimal");
+      return i < 0 ? {main:fmt.map(p => p.value).join(""), cents:""} : {main:fmt.slice(0, i).concat(fmt.slice(i + 2)).map(p => p.value).join(""), cents:fmt[i].value + fmt.slice(i + 1).filter(p => p.type === "fraction").map(p => p.value).join("")};
+    } catch { return {main:moneyExact(v), cents:""}; }
+  }
+  // money in your accounts, shown on its own. Credit card spending is not taken out of it: that money is still there until you pay the card.
+  function drawAvail(isCurrent) {
+    const box = $("#avail"), real = accounts.filter(a => !isUsdAcc(a));
+    box.hidden = !(isCurrent && real.length); if (box.hidden) return;
+    const total = real.reduce((s, a) => s + accBalance(a), 0), p = moneyParts(total);
+    const owed = cards.reduce((s, c) => { const cy = cardCycles(c); return s + (cardPaid(c, cy.last) ? 0 : cy.last.amount) + cy.current.amount; }, 0);
+    box.innerHTML = `<span class="avail-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"/><path d="M4 7.5V17a2 2 0 0 0 2 2h12.5a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 18.5 8H6.5A2.5 2.5 0 0 1 4 7.5z"/><circle cx="16" cy="13.5" r="1.1" fill="currentColor"/></svg></span>
+      <span class="avail-main"><span class="avail-k">Disponible</span><span class="avail-v num ${total < 0 ? "neg" : ""}"></span><span class="avail-s"></span></span>
+      <svg class="avail-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>`;
+    const v = box.querySelector(".avail-v"); v.textContent = p.main; if (p.cents) { const s = document.createElement("small"); s.textContent = p.cents; v.append(s); }
+    const sub = box.querySelector(".avail-s");
+    sub.innerHTML = `<span>${real.length > 1 ? `En ${plural(real.length, "cuenta", "cuentas")}` : esc(real[0].name)}</span>`
+      + (owed > 0 ? `<span>Tarjeta por pagar <b>${esc(money(owed))}</b></span>` : "");
+    box.onclick = () => { ui.ahorroView = "cuentas"; saveUI(); setTab("ahorro"); };
+  }
+  // where an Apple Pay payment goes, by what you chose for that Wallet card
+  const payTarget = map => map === "credit" ? {method:"credito", card:"", acc:""}
+    : map === "none" ? {method:"debito", card:"", acc:""}
+    : String(map || "").startsWith("card:") && cardById(map.slice(5)) ? {method:"credito", card:map.slice(5), acc:""}
+    : String(map || "").startsWith("acc:") && accById(map.slice(4)) ? {method:"debito", card:"", acc:map.slice(4)}
+    : {method:"debito", card:"", acc:defaultAcc("debito", "local")};
+  // changing a Wallet card's choice also fixes the payments already received from it
+  function applyPayMap(name) {
+    const target = payTarget(settings.payMap[name]); let n = 0;
+    txs.forEach(t => { if (t.src === "applepay" && t.payCard === name) { Object.assign(t, target); n++; } });
+    return n;
+  }
   function txFromInbox(it) {
     const amount = parseMonto(it.monto);
     if (!(amount > 0)) return null;
@@ -5281,13 +5346,29 @@ html.hub-skin .fab{border:2px solid #1b2620}
     if ((!cat || cat.id === "otros") && merchant) cat = learnedCat(merchant) || cat;
     const cardName = String(it.tarjeta || "").trim();
     if (cardName && settings.paySeen.length < 30 && !settings.paySeen.includes(cardName.slice(0, 40))) settings.paySeen.push(cardName.slice(0, 40));
-    const map = settings.payMap[cardName] || "";
-    const t = {id:uid(), type:"gasto", amount, cat:(cat || fallbackCat("gasto")).id, note, date, created:Date.now(), src:"applepay", inboxId:String(it.id), merch:merchKey(merchant)};
-    if (map.startsWith("card:") && cardById(map.slice(5))) Object.assign(t, {method:"credito", card:map.slice(5), acc:""});
-    else if (map.startsWith("acc:") && accById(map.slice(4))) Object.assign(t, {method:"debito", card:"", acc:map.slice(4)});
-    else Object.assign(t, {method:"debito", card:"", acc:defaultAcc("debito", "local")});
-    return t;
+    const t = {id:uid(), type:"gasto", amount, cat:(cat || fallbackCat("gasto")).id, note, date, created:Date.now(), src:"applepay", inboxId:String(it.id), merch:merchKey(merchant), payCard:cardName.slice(0, 40)};
+    return Object.assign(t, payTarget(settings.payMap[cardName]));
   }
+  function payOptions(sel) {
+    sel.innerHTML = `<option value="">Débito (cuenta habitual)</option>`
+      + cards.map(c => `<option value="card:${esc(c.id)}">Crédito · ${esc(c.name)}</option>`).join("")
+      + `<option value="credit">Crédito (sin elegir una tarjeta)</option>`
+      + accounts.map(a => `<option value="acc:${esc(a.id)}">Débito · ${esc(a.name)}</option>`).join("")
+      + `<option value="none">Débito (no descontar de ninguna cuenta)</option>`;
+  }
+  // first payment from a Wallet card you never classified: ask once if it is credit or debit
+  let pmName = "";
+  function askPayCard(name) {
+    pmName = name; payOptions($("#pm-sel")); $("#pm-sel").value = cards.length ? "card:" + cards[0].id : "credit";
+    $("#pm-hint").textContent = `Llegó un pago de Apple Pay con la tarjeta «${name}». ¿Es de crédito o de débito?`;
+    openSheet($("#pm-sheet"));
+  }
+  $("#pm-save").onclick = () => {
+    if (!pmName) return;
+    settings.payMap[pmName] = $("#pm-sel").value; const n = applyPayMap(pmName); save(); closeSheet($("#pm-sheet")); renderAll();
+    toast(n ? `Listo. Se actualizaron ${plural(n, "pago", "pagos")} de esta tarjeta.` : "Guardado"); pmName = "";
+  };
+  $("#pm-sheet [data-close]").addEventListener("click", () => { if (pmName && !(pmName in settings.payMap)) { settings.payMap[pmName] = ""; save(); } pmName = ""; });
   let ibBusy = false;
   async function pullInbox(manual) {
     if (!ibReady() || ibBusy || !unlocked) { if (manual && !ibReady()) toast("Completa la dirección del buzón y la clave"); return; }
@@ -5314,6 +5395,8 @@ html.hub-skin .fab{border:2px solid #1b2620}
       save();
       if (items.length) await ibFetch("/pagos/listo", {method:"POST", body:JSON.stringify({ids:items.map(i => i.id)})});
       if (added.length) renderAll();
+      const unknownCard = items.map(i => String(i.tarjeta || "").trim().slice(0, 40)).find(n => n && !(n in settings.payMap));
+      if (unknownCard && $("#pm-sheet").hidden && ui.tab !== "mas") setTimeout(() => { if (!document.querySelector(".scrim:not([hidden])")) askPayCard(unknownCard); }, 700);
       if (bad.length) toast(`${plural(bad.length, "pago de Apple Pay llegó", "pagos de Apple Pay llegaron")} sin importe válido. Lo guardé en Ajustes para que lo anotes a mano.`, {label:"Ver", run:() => setTab("mas")});
       else if (added.length) {
         const one = added[0];
@@ -5342,7 +5425,11 @@ html.hub-skin .fab{border:2px solid #1b2620}
       add.onclick = () => {
         const i = badList().findIndex(x => x.id === b.id); if (i >= 0) badList().splice(i, 1);
         save(); renderBadInbox(); setTab("home");
-        openTx(null, "gasto", {note:(b.nota || b.comercio || "").slice(0, 60)});
+        // lleva la tarjeta que ya elegiste para ese pago de Wallet (crédito, débito de una cuenta…)
+        const tg = payTarget(settings.payMap[b.tarjeta]), known = String(b.tarjeta || "").trim() in settings.payMap;
+        const learned = b.comercio ? learnedCat(b.comercio) : null;
+        openTx(null, "gasto", {note:(b.nota || b.comercio || "").slice(0, 60), cat:learned?.id, pay:{id:b.id, tarjeta:String(b.tarjeta || "").slice(0, 40), comercio:b.comercio},
+          ...(known ? {method:tg.method, card:tg.card, acc:tg.acc} : {})});
         if (date) $("#tx-date").value = date;
       };
       const del = document.createElement("button"); del.type = "button"; del.className = "alt"; del.textContent = "Descartar";
@@ -5362,11 +5449,9 @@ html.hub-skin .fab{border:2px solid #1b2620}
       l.innerHTML = `<span class="lbl" style="text-transform:none;letter-spacing:0"></span><select class="input"></select>`;
       l.querySelector("span").textContent = name;
       const sel = l.querySelector("select");
-      sel.innerHTML = `<option value="">Débito (cuenta habitual)</option>`
-        + cards.map(c => `<option value="card:${esc(c.id)}">Crédito · ${esc(c.name)}</option>`).join("")
-        + accounts.map(a => `<option value="acc:${esc(a.id)}">Débito · ${esc(a.name)}</option>`).join("");
+      payOptions(sel);
       sel.value = [...sel.options].some(o => o.value === settings.payMap[name]) ? settings.payMap[name] : "";
-      sel.onchange = () => { settings.payMap[name] = sel.value; save(); toast("Guardado"); };
+      sel.onchange = () => { settings.payMap[name] = sel.value; const n = applyPayMap(name); save(); renderAll(); toast(n ? `Guardado. Se actualizaron ${plural(n, "pago", "pagos")} de esta tarjeta.` : "Guardado"); };
       box.append(l);
     });
   }
@@ -5647,7 +5732,7 @@ html.hub-skin .fab{border:2px solid #1b2620}
   // Self-tests: open the app with ?pruebas=1 to run pruebas.js against the real calculations (nothing is saved)
   if (/[?&]pruebas=1/.test(location.search)) {
     window.__gastos = {parseAmount, parseBankAmount, parseBankDate, parseCSV, guessBankColumns, extractBankItems, markBankDuplicates, parseSearch, matchSearch, readXlsx, parseHtmlTable, formatMoneyInput, amountToInput, moneyExact,
-      splitInstallments, occurrences, nextDue, monthDay, cardCycles, inflFactors, fxRate, accBalance, pfFinal, pfEnd, merchKey, learnedCat, txFromInbox, monthForecast,
+      splitInstallments, occurrences, nextDue, monthDay, cardCycles, inflFactors, fxRate, accBalance, pfFinal, pfEnd, merchKey, learnedCat, txFromInbox, monthForecast, payTarget, applyPayMap, moneyParts,
       setToday:d => { TODAY = d; },
       snapshot:() => ({txs, recs, cards, accounts, transfers, settings:JSON.parse(JSON.stringify(settings))}),
       setState:s => { if (s.txs) txs = s.txs; if (s.recs) recs = s.recs; if (s.cards) cards = s.cards; if (s.accounts) accounts = s.accounts; if (s.transfers) transfers = s.transfers;
